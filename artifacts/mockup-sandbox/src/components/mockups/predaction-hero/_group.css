@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root, .dark {
+  --background: 44 33% 94%;
+  --foreground: 222 47% 11%;
+  --border: 40 18% 82%;
+  --card: 45 40% 98%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 40 18% 82%;
+  --popover: 45 40% 98%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 40 18% 82%;
+  --primary: 12 92% 52%;
+  --primary-foreground: 44 40% 97%;
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 44 33% 94%;
+  --muted: 42 24% 88%;
+  --muted-foreground: 222 14% 40%;
+  --accent: 74 92% 54%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 352 78% 46%;
+  --destructive-foreground: 44 40% 97%;
+  --input: 40 18% 78%;
+  --ring: 12 92% 52%;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Big Shoulders Display', sans-serif;
+  --app-font-mono: 'JetBrains Mono', monospace;
+  --radius: 0.5rem;
+}
+
+.predaction-preview {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: 'DM Sans', sans-serif;
+}
+.predaction-preview .font-display {font-family:'Big Shoulders Display',sans-serif;letter-spacing:-0.01em}
+.predaction-preview .font-mono {font-family:'JetBrains Mono',monospace}
+.predaction-preview .tabular {font-variant-numeric:tabular-nums}
+.predaction-preview .stripes {background-image:repeating-linear-gradient(135deg,hsl(var(--foreground)/.06) 0 2px,transparent 2px 10px)}
+@keyframes predaction-rise {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.predaction-preview .rise {animation:predaction-rise .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes predaction-pulse {0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.predaction-preview .live-dot {animation:predaction-pulse 1.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce) {
+  .predaction-preview *, .predaction-preview *::before, .predaction-preview *::after {animation:none!important;transition:none!important}
+}
