@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Predaction"
+description = "Live sports prediction market discovery powered by Kalshi, with filters by sport and league, market probabilities, watchlists and event details."
+version = "1.0.0"
+id = "artifacts/predaction"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24726
+
+[services.development]
+run = "pnpm --filter @workspace/predaction run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/predaction", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/predaction/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24726"
+BASE_PATH = "/"

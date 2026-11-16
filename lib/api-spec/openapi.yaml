@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+paths:
+  /sports/events:
+    get:
+      operationId: listSportsEvents
+      summary: Browse live sports events from Kalshi
+      parameters:
+        - { name: sport, in: query, schema: { type: string } }
+        - { name: league, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest] } }
+      responses:
+        "200":
+          description: Sports market feed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SportsFeed" }
+  /sports/events/{ticker}:
+    get:
+      operationId: getSportsEvent
+      summary: Event details and resolution rules
+      parameters:
+        - { name: ticker, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SportsEvent" }
+  /sports/overview:
+    get:
+      operationId: getSportsOverview
+      summary: Sport counts and feed statistics
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SportsOverview" }
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    SportsMarket:
+      type: object
+      required: [ticker, title, subtitle, probability, yesAsk, noAsk, volume, volume24h, change, status, closeTime, rules, url]
+      properties:
+        ticker: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        probability: { type: number }
+        yesAsk: { type: number }
+        noAsk: { type: number }
+        volume: { type: number }
+        volume24h: { type: number }
+        change: { type: number }
+        status: { type: string }
+        closeTime: { type: string }
+        rules: { type: string }
+        url: { type: string }
+    SportsEvent:
+      type: object
+      required: [ticker, seriesTicker, title, subtitle, sport, league, volume, volume24h, closeTime, url, markets]
+      properties:
+        ticker: { type: string }
+        seriesTicker: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        sport: { type: string }
+        league: { type: string }
+        volume: { type: number }
+        volume24h: { type: number }
+        closeTime: { type: string }
+        url: { type: string }
+        markets:
+          type: array
+          items: { $ref: "#/components/schemas/SportsMarket" }
+    SportsFeed:
+      type: object
+      required: [events, total, updatedAt, source, partial]
+      properties:
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/SportsEvent" }
+        total: { type: integer }
+        updatedAt: { type: string }
+        source: { type: string }
+        partial: { type: boolean }
+    SportCategory:
+      type: object
+      required: [name, count, leagues]
+      properties:
+        name: { type: string }
+        count: { type: integer }
+        leagues: { type: array, items: { type: string } }
+    SportsOverview:
+      type: object
+      required: [sports, totalEvents, totalMarkets, totalVolume, volume24h, updatedAt]
+      properties:
+        sports:
+          type: array
+          items: { $ref: "#/components/schemas/SportCategory" }
+        totalEvents: { type: integer }
+        totalMarkets: { type: integer }
+        totalVolume: { type: number }
+        volume24h: { type: number }
+        updatedAt: { type: string }
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
