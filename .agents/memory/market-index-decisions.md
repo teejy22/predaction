@@ -32,3 +32,8 @@ Keep third-party intelligence visibly separate from the direct Kalshi event inde
 **Why:** The sources have different coverage, ranking definitions, and update windows. A visually identical fallback would suggest the same ranking had refreshed when it had not.
 
 **How to apply:** Preserve source attribution, source-specific time windows and timestamps, and explicit stale/unavailable states when extending intelligence panels.
+
+## Transient Kalshi timeouts during the crawl
+A single page timeout must never fail the whole crawl: retry the page, and treat an interrupted first crawl as "still indexing" (keep the largest progressive snapshot), not as a partial-data failure.
+**Why:** In production one 20s timeout left the sports page stuck on a small partial index with a raw "operation was aborted" warning; the user finds repeated index warnings unacceptable.
+**How to apply:** Only show a prominent warning when a refresh fails after a complete index exists, as one user-readable notice — never raw error text or stacked banners.

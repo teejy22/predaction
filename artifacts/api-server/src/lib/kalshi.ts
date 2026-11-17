@@ -24,6 +24,8 @@ type Snapshot = {
   indexing: boolean; warnings: string[];
 };
 let snapshot: Snapshot | undefined;
+// False until one crawl has finished; until then the index grows progressively.
+let completed = false;
 let pending: Promise<void> | undefined;
 let retryAfter = 0;
 let lastError: unknown;
@@ -56,9 +58,17 @@ async function request<T>(path: string): Promise<T> {
   else active++;
   try {
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await fetch(`${API}${path}`, {
-        headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20_000),
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${API}${path}`, {
+          headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20_000),
+        });
+      } catch (err) {
+        // Timeouts and dropped connections are transient; one slow page must not fail a crawl.
+        if (attempt < 2) { await sleep(1500 * (attempt + 1)); continue; }
+        logger.warn({ err, path }, "Kalshi request failed after retries");
+        throw new KalshiError("Kalshi did not respond in time. Showing the most recent indexed results.");
+      }
       if (response.ok) return await response.json() as T;
       if (response.status === 429) {
         if (attempt < 2) {
@@ -212,7 +222,6 @@ export function attachKalshiVisual(event: PredictionEvent) {
 }
 
 async function refresh(): Promise<void> {
-  const previous = snapshot;
   const events = new Map<string, PredictionEvent>();
   let cursor = "";
   const seen = new Set<string>();
@@ -235,7 +244,7 @@ async function refresh(): Promise<void> {
       if (cursor && seen.has(cursor)) throw new KalshiError("Kalshi repeated a pagination cursor; coverage is incomplete.");
       if (cursor) seen.add(cursor);
       // First boot is progressively browsable. Subsequent refreshes swap atomically.
-      if (!previous) snapshot = {
+      if (!completed && events.size >= (snapshot?.events.length ?? 0)) snapshot = {
         events: [...events.values()], updatedAt: new Date().toISOString(),
         partial: !!cursor || warnings.length > 0, indexing: !!cursor,
         warnings: [...warnings, ...(cursor ? ["Indexing open events across categories. Counts and search cover only the events indexed so far."] : [])],
@@ -243,15 +252,17 @@ async function refresh(): Promise<void> {
       if (cursor) await sleep(200);
     } while (cursor);
     snapshot = { events: [...events.values()], updatedAt: new Date().toISOString(), partial: warnings.length > 0, indexing: false, warnings };
+    completed = true;
     // Keep newest ordering metadata bounded to the current index and recent details.
     for (const ticker of createdTimes.keys()) if (!events.has(ticker) && !detailCache.has(ticker)) createdTimes.delete(ticker);
   } catch (err) {
     lastError = err;
     logger.warn({ err }, "Open-event index refresh failed");
-    if (snapshot) snapshot = {
-      ...snapshot, partial: true, indexing: false,
-      warnings: [...warnings, err instanceof Error ? err.message : "Kalshi refresh failed; indexed results are incomplete or stale."],
-    };
+    const message = err instanceof KalshiError ? err.message : "Kalshi refresh failed; indexed results are incomplete or stale.";
+    // An interrupted first crawl is still building: it restarts shortly and keeps what it has.
+    if (snapshot) snapshot = completed
+      ? { ...snapshot, partial: true, indexing: false, warnings: [...warnings, message] }
+      : { ...snapshot, partial: true, indexing: true, warnings: [...warnings, "Indexing open events across categories. Counts and search cover only the events indexed so far."] };
     retryAfter = Date.now() + 30_000;
   }
 }

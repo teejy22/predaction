@@ -85,12 +85,12 @@ export function Shell({ children }: { children: ReactNode }) {
           <div>
             <Logo className="h-7 w-auto" />
             <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-              The main market board covers open Kalshi events. Separate intelligence pages surface sourced Kalshi and Polymarket movers, tracked-wallet trades and FlowFrame publications. Prediction Pro is not affiliated with or endorsed by Kalshi or Polymarket; it does not take orders, hold funds, or give financial advice.
+              Independent market tracker. Not affiliated with Kalshi or Polymarket. Not financial advice.
             </p>
           </div>
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-primary">Data source</p>
-            <p>The main board uses Kalshi public data: regular open events only (multivariate combos excluded, no historical archive). FlowFrame intelligence includes Polymarket data; existing insight feeds cache up to 20 minutes, while Smart Money and Football Sharps cache up to 60 minutes. Pages check every 60 seconds.</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-primary">Data sources</p>
+            <p>Open Kalshi events and FlowFrame intelligence, refreshed every minute.</p>
             <a href="https://kalshi.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:text-primary hover:underline" data-testid="link-kalshi-footer">
               kalshi.com <ExternalLink className="h-3 w-3" />
             </a>
