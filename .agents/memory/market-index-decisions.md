@@ -42,3 +42,7 @@ A single page timeout must never fail the whole crawl: retry the page, and treat
 The last complete crawl is saved to the database (compressed, at most every 30 minutes) and restored at boot; it is served with `indexing: true` and its original timestamp until a fresh crawl replaces it.
 **Why:** A cold start otherwise means a multi-minute re-crawl with partial counts, which the user explicitly rejected.
 **How to apply:** Keep persistence optional (injected store) so unit tests and DB outages fall back to memory-only; never let a store error fail a market request. Don't save more often — the payload is ~10 MB per write.
+
+## Production crawl stalls
+In the published (autoscale) app, Kalshi page requests repeatedly timed out mid-crawl around the same point while local crawls finished in under a minute; failures clustered when no visitor requests were in flight. Cause not proven (suspected background CPU throttling).
+**How to apply:** The crawl must resume from the failed cursor (smaller pages on retry), never restart from scratch, and the body read must sit inside the retry/timeout handling. With a partial index, main-line sports (football/basketball) can show events in the sidebar but zero grouped games.

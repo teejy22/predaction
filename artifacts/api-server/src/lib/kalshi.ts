@@ -76,15 +76,16 @@ async function request<T>(path: string): Promise<T> {
       let response: Response;
       try {
         response = await fetch(`${API}${path}`, {
-          headers: { Accept: "application/json" }, signal: AbortSignal.timeout(20_000),
+          headers: { Accept: "application/json" }, signal: AbortSignal.timeout(30_000),
         });
+        // The timeout also covers the body download, so read it inside the retry.
+        if (response.ok) return await response.json() as T;
       } catch (err) {
         // Timeouts and dropped connections are transient; one slow page must not fail a crawl.
         if (attempt < 2) { await sleep(1500 * (attempt + 1)); continue; }
         logger.warn({ err, path }, "Kalshi request failed after retries");
         throw new KalshiError("Kalshi did not respond in time. Showing the most recent indexed results.");
       }
-      if (response.ok) return await response.json() as T;
       if (response.status === 429) {
         if (attempt < 2) {
           const seconds = Number(response.headers.get("retry-after"));
@@ -236,10 +237,18 @@ export function attachKalshiVisual(event: PredictionEvent) {
   return attachKalshiVisuals([event], 1)[0] ?? event;
 }
 
+// An interrupted crawl continues from the page that failed instead of starting over.
+type Crawl = { events: Map<string, PredictionEvent>; cursor: string; seen: Set<string>; limit: number; failures: number; startedAt: number };
+let interrupted: Crawl | undefined;
+const CRAWL_RESUME_WINDOW = 20 * 60_000;
+
 async function refresh(): Promise<void> {
-  const events = new Map<string, PredictionEvent>();
-  let cursor = "";
-  const seen = new Set<string>();
+  const crawl: Crawl = interrupted && Date.now() - interrupted.startedAt < CRAWL_RESUME_WINDOW
+    ? interrupted
+    : { events: new Map(), cursor: "", seen: new Set(), limit: 200, failures: 0, startedAt: Date.now() };
+  interrupted = undefined;
+  const { events, seen } = crawl;
+  let cursor = crawl.cursor;
   const warnings: string[] = [];
   try {
     try { await loadMetadata(); }
@@ -249,13 +258,15 @@ async function refresh(): Promise<void> {
     }
     do {
       const result = await request<{ events: RawEvent[]; cursor?: string }>(
-        `/events?status=open&with_nested_markets=true&limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+        `/events?status=open&with_nested_markets=true&limit=${crawl.limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
       );
       for (const raw of result.events) {
         const event = normalize(raw, metadata.get(raw.series_ticker));
         if (event.markets.length) events.set(event.ticker, event);
       }
       cursor = result.cursor || "";
+      crawl.cursor = cursor;
+      crawl.failures = 0;
       if (cursor && seen.has(cursor)) throw new KalshiError("Kalshi repeated a pagination cursor; coverage is incomplete.");
       if (cursor) seen.add(cursor);
       // First boot is progressively browsable. Subsequent refreshes swap atomically.
@@ -286,6 +297,16 @@ async function refresh(): Promise<void> {
       ? { ...snapshot, partial: true, indexing: false, warnings: [...warnings, message] }
       : { ...snapshot, partial: true, indexing: true, warnings: [...warnings, "Indexing open events across categories. Counts and search cover only the events indexed so far."] };
     retryAfter = Date.now() + 30_000;
+    // Resume a stalled page soon, in smaller pages; give up and start over after repeated failures.
+    const stalled = !(err instanceof KalshiError) || err.message.startsWith("Kalshi did not respond");
+    if (stalled && crawl.failures < 4) {
+      crawl.failures++;
+      crawl.limit = Math.max(25, Math.floor(crawl.limit / 2));
+      interrupted = crawl;
+      retryAfter = Date.now() + 3_000;
+      // Continue without waiting for the next visitor request.
+      setTimeout(() => void getSnapshot().catch(() => {}), 3_500).unref();
+    }
   }
 }
 

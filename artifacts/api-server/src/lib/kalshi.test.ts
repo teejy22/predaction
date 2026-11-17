@@ -143,3 +143,35 @@ test("shared index follows cursors, deduplicates, retains saved details and expo
     Date.now = originalNow;
   }
 });
+
+test("an interrupted crawl resumes from the stalled page instead of starting over", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalNow = Date.now;
+  let firstPages = 0;
+  let stalls = 0;
+  const limits: string[] = [];
+  globalThis.fetch = async input => {
+    const url = new URL(String(input));
+    if (url.pathname.endsWith("/series")) return Response.json({ series: [] });
+    if (!url.searchParams.has("cursor")) { firstPages++; return Response.json({ events: [raw("RESUME-A")], cursor: "resume-two" }); }
+    limits.push(url.searchParams.get("limit")!);
+    if (stalls < 3) { stalls++; throw new DOMException("The operation was aborted due to timeout", "TimeoutError"); }
+    return Response.json({ events: [raw("RESUME-B")], cursor: "" });
+  };
+  try {
+    Date.now = () => originalNow() + 900_000;
+    let snapshot = await getSnapshot();
+    for (let i = 0; i < 150 && !snapshot.events.some(e => e.ticker === "RESUME-B"); i++) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      snapshot = await getSnapshot();
+    }
+    assert.deepEqual(snapshot.events.map(e => e.ticker).sort(), ["RESUME-A", "RESUME-B"]);
+    assert.equal(snapshot.partial, false);
+    assert.equal(firstPages, 1, "the first page must not be fetched again");
+    assert.deepEqual(limits, ["200", "200", "200", "100"]);
+    assert.ok(!snapshot.warnings.some(w => w.includes("aborted")));
+  } finally {
+    globalThis.fetch = originalFetch;
+    Date.now = originalNow;
+  }
+});
