@@ -34,11 +34,14 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
       (!sport || sport === "all" || e.sport.toLowerCase() === sport.toLowerCase()) &&
       (!league || league === "all" || e.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(e, text)),
-    )).map(event => attachEventTeamLogos(event, teams));
+    ));
     if (sort === "closing") events.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.ticker.localeCompare(b.ticker));
     else if (sort === "newest") events.sort((a, b) => newestFirst(a, b) || a.ticker.localeCompare(b.ticker));
     else events.sort((a, b) => b.volume24h - a.volume24h || a.ticker.localeCompare(b.ticker));
-    const pageEvents = await attachKalshiVisuals(events.slice(offset, offset + limit), 12);
+    const pageEvents = attachKalshiVisuals(
+      events.slice(offset, offset + limit).map(event => attachEventTeamLogos(event, teams)),
+      12,
+    );
     res.json(ListEventsResponse.parse({
       events: pageEvents, total: events.length,
       updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · Kalshi market images · ESPN team logos",
@@ -107,7 +110,7 @@ router.get(["/events/:ticker", "/sports/events/:ticker"], async (req, res): Prom
   }
   try {
     const [event, teams] = await Promise.all([getEvent(parsed.data.ticker), getEspnTeams()]);
-    res.json(GetEventResponse.parse(await attachKalshiVisual(attachEventTeamLogos(event, teams))));
+    res.json(GetEventResponse.parse(attachKalshiVisual(attachEventTeamLogos(event, teams))));
   }
   catch (err) {
     req.log.warn({ err }, "Kalshi event request failed");

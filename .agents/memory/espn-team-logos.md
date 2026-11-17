@@ -14,3 +14,9 @@ Logo enrichment should include national soccer teams, not only club teams, becau
 **Why:** The user expects homepage sports cards to show logos for both club/league games and international games such as Denmark vs Norway.
 
 **How to apply:** Keep ESPN's international soccer team directory in the cached team list and reuse the same safe, enrichment-only matching for individual event cards as grouped game cards.
+
+Apply team matching after filtering, sorting, and pagination, not to the full open-event index.
+
+**Why:** Matching logos for every indexed event delayed `/api/events` by more than ten seconds; matching only the visible page keeps market browsing fast.
+
+**How to apply:** Slice the requested page first, then attach ESPN teams and cached Kalshi visuals to those rows only.

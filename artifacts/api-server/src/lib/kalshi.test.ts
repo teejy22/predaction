@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applyEventVisuals, getEvent, getSnapshot, normalize, type RawEvent } from "./kalshi";
+import { applyEventVisuals, attachKalshiVisuals, getEvent, getSnapshot, normalize, type RawEvent } from "./kalshi";
 
 const raw = (ticker = "ECON-26", category = "Economics"): RawEvent => ({
   event_ticker: ticker, series_ticker: "SERIES", title: "Original API title?",
@@ -61,6 +61,27 @@ test("Kalshi metadata attaches official event and market visuals safely", () => 
   assert.equal(enriched.markets[0]?.color, "#AA00FF");
   const unsafe = applyEventVisuals(event, { image_url: "https://example.com/image.png" });
   assert.equal(unsafe.image, undefined);
+});
+
+test("visual enrichment returns market data immediately and caches background results", async () => {
+  const originalFetch = globalThis.fetch;
+  let resolveVisual: ((response: Response) => void) | undefined;
+  globalThis.fetch = async () => new Promise<Response>((resolve) => { resolveVisual = resolve; });
+  try {
+    const event = normalize(raw("VISUAL-ASYNC-26"));
+    const immediate = attachKalshiVisuals([event], 1);
+    assert.equal(immediate[0]?.image, undefined);
+    assert.ok(resolveVisual, "metadata should load in the background");
+    resolveVisual(Response.json({ image_url: "https://assets.kalshi.com/market-images/VISUAL.webp" }));
+    let enriched = immediate;
+    for (let i = 0; i < 20 && !enriched[0]?.image; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      enriched = attachKalshiVisuals([event], 1);
+    }
+    assert.equal(enriched[0]?.image, "https://assets.kalshi.com/market-images/VISUAL.webp");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("shared index follows cursors, deduplicates, retains saved details and exposes rate-limit failures", async () => {

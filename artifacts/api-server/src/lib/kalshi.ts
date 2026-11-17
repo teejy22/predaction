@@ -196,16 +196,19 @@ async function loadEventVisuals(ticker: string) {
   return task;
 }
 
-export async function attachKalshiVisuals(events: PredictionEvent[], limit = 12) {
-  return Promise.all(events.map(async (event, index) => {
-    if (index >= limit) return event;
-    const metadata = await loadEventVisuals(event.ticker);
-    return metadata ? applyEventVisuals(event, metadata) : event;
-  }));
+export function attachKalshiVisuals(events: PredictionEvent[], limit = 12) {
+  return events.map((event, index) => {
+    if (index >= limit || event.teams?.length) return event;
+    const cached = visualCache.get(event.ticker);
+    const fresh = cached && Date.now() - cached.at < (cached.metadata ? VISUAL_TTL : VISUAL_MISS_TTL);
+    // Visual metadata is best-effort. Never hold market data hostage to it.
+    if (!fresh) void loadEventVisuals(event.ticker);
+    return cached?.metadata ? applyEventVisuals(event, cached.metadata) : event;
+  });
 }
 
-export async function attachKalshiVisual(event: PredictionEvent) {
-  return (await attachKalshiVisuals([event], 1))[0] ?? event;
+export function attachKalshiVisual(event: PredictionEvent) {
+  return attachKalshiVisuals([event], 1)[0] ?? event;
 }
 
 async function refresh(): Promise<void> {
