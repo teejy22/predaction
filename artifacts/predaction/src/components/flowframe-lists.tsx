@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowUpRight, ExternalLink } from "lucide-react";
 import type { FlowframeItem } from "@workspace/api-client-react";
 import { externalHref, formatSourceTime, shortWallet } from "@/components/flowframe-data";
 import { SourceLink } from "@/components/flowframe-feed-ui";
+import { formatDistanceToNowStrict } from "date-fns";
 
 export function MoversList({ items, limit }: { items: FlowframeItem[]; limit?: number }) {
   return <div className="overflow-hidden rounded-md border border-border/80 bg-background/35">
@@ -26,21 +27,30 @@ export function TradeList({ items, limit }: { items: FlowframeItem[]; limit?: nu
   return <div className="divide-y divide-border/70 overflow-hidden rounded-md border border-border/80 bg-background/35">
     {items.slice(0, limit).map((item) => {
       const profile = externalHref(item.profileUrl);
-      return <article key={item.id} data-testid={`row-flowframe-trade-${item.id}`} className="grid gap-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4">
+      const time = item.publishedAt ? new Date(item.publishedAt) : undefined;
+      const validTime = time && Number.isFinite(time.getTime());
+      const action = item.side === "BUY" ? "Bought" : item.side === "SELL" ? "Sold" : "Traded";
+      return <article key={item.id} data-testid={`row-flowframe-trade-${item.id}`} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 px-4 py-4 sm:px-5">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            {item.wallet ? profile ? <a href={profile} target="_blank" rel="noopener noreferrer" title={item.wallet} className="font-mono text-[10px] font-semibold text-primary underline-offset-4 hover:underline">{shortWallet(item.wallet)}<ExternalLink className="ml-1 inline h-2.5 w-2.5" /></a> : <span title={item.wallet} className="font-mono text-[10px] font-semibold text-primary">{shortWallet(item.wallet)}</span> : <span className="font-mono text-[10px] text-muted-foreground">Wallet unavailable</span>}
-            {item.side && <span className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold ${item.side === "BUY" ? "bg-emerald-400/10 text-emerald-200" : "bg-rose-400/10 text-rose-200"}`}>{item.side}</span>}
-            {item.publishedAt && <time dateTime={item.publishedAt} className="font-mono text-[9px] text-muted-foreground">{formatSourceTime(item.publishedAt)}</time>}
+          <SourceLink item={item} testId={`link-flowframe-trade-${item.id}`}><span className="line-clamp-2 text-sm font-semibold leading-5">{item.title}</span></SourceLink>
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            <span className={item.side === "BUY" ? "font-medium text-emerald-200" : item.side === "SELL" ? "font-medium text-rose-200" : ""}>{action}</span>{" "}
+            <span className="font-medium text-foreground">{item.outcome || "an outcome"}</span>
+            {item.probability !== undefined && <> at <span className="text-foreground">{formatNumber(item.probability)}¢</span></>}
+          </p>
+        </div>
+        <div className="text-right">
+          {item.usdcSize !== undefined && <><p className="text-sm font-semibold tabular sm:text-base">${formatNumber(item.usdcSize)}</p><p className="mt-1 text-[10px] text-muted-foreground">USDC value</p></>}
+          {validTime && <time dateTime={item.publishedAt} title={formatSourceTime(item.publishedAt)} className="mt-1 block text-[10px] text-muted-foreground">{formatDistanceToNowStrict(time, { addSuffix: true })}</time>}
+        </div>
+        <details className="col-span-2 text-[11px] text-muted-foreground">
+          <summary className="w-fit cursor-pointer rounded text-muted-foreground/80 underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Trade details</summary>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md bg-white/[.025] px-3 py-2.5">
+            {item.wallet ? profile ? <a href={profile} target="_blank" rel="noopener noreferrer" title={item.wallet} className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline">Wallet {shortWallet(item.wallet)}<ExternalLink className="h-3 w-3" /></a> : <span title={item.wallet}>Wallet {shortWallet(item.wallet)}</span> : <span>Wallet unavailable</span>}
+            {item.shares !== undefined && <span>{formatNumber(item.shares)} shares</span>}
+            {item.publishedAt && <span>{formatSourceTime(item.publishedAt)}</span>}
           </div>
-          <SourceLink item={item} testId={`link-flowframe-trade-${item.id}`}><span className="mt-1 block line-clamp-2 text-xs font-semibold leading-5">{item.title}</span></SourceLink>
-          {item.outcome && <p className="mt-1 text-[10px] text-muted-foreground">Outcome: <span className="text-foreground/80">{item.outcome}</span></p>}
-        </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] tabular text-muted-foreground sm:justify-end sm:text-right">
-          {item.probability !== undefined && <span><b className="font-semibold text-foreground">{item.probability}%</b> traded outcome</span>}
-          {item.shares !== undefined && <span><b className="font-semibold text-foreground">{formatNumber(item.shares)}</b> shares</span>}
-          {item.usdcSize !== undefined && <span><b className="font-semibold text-foreground">${formatNumber(item.usdcSize)}</b> USDC</span>}
-        </div>
+        </details>
       </article>;
     })}
   </div>;

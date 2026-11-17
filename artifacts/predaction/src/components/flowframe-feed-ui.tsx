@@ -3,13 +3,14 @@ import { ExternalLink, RotateCw } from "lucide-react";
 import type { FlowframeFeed, FlowframeItem } from "@workspace/api-client-react";
 import { externalHref, formatSourceTime } from "@/components/flowframe-data";
 
-export function FeedStatus({ feed, loading, error, retrying, onRetry, children }: {
+export function FeedStatus({ feed, loading, error, retrying, onRetry, children, compact = false }: {
   feed?: FlowframeFeed;
   loading: boolean;
   error: boolean;
   retrying: boolean;
   onRetry: () => void;
   children: ReactNode;
+  compact?: boolean;
 }) {
   if (loading) return <div className="mt-4 space-y-2" aria-busy="true" aria-label="Loading source feed">
     {[0, 1, 2].map((i) => <div key={i} className="h-[68px] animate-pulse rounded-md border border-border/70 bg-card/70" />)}
@@ -20,19 +21,21 @@ export function FeedStatus({ feed, loading, error, retrying, onRetry, children }
   const label = feed.status === "ready" ? "Current source data" : feed.status === "stale" ? "Stale source data" : feed.status === "unconfigured" ? "Source not configured" : "Source unavailable";
   const timestamp = feed.fetchedAt || feed.checkedAt;
   return <div className="mt-4">
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <div className={`mb-3 flex flex-wrap items-center gap-2 ${compact && feed.status === "ready" ? "justify-end" : "justify-between"}`}>
+      {(!compact || feed.status !== "ready") && (
       <span className={`inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider ${feed.status === "ready" ? "text-emerald-200" : feed.status === "stale" ? "text-amber-200" : "text-muted-foreground"}`}>
         <span className={`h-1.5 w-1.5 rounded-full ${feed.status === "ready" ? "bg-emerald-300" : feed.status === "stale" ? "bg-amber-300" : "bg-muted-foreground"}`} />{label}
       </span>
-      <span className="font-mono text-[9px] text-muted-foreground">{timestamp ? `${feed.fetchedAt ? "Fetched" : "Checked"} ${formatSourceTime(timestamp)}` : "No source timestamp"}</span>
+      )}
+      <span className="text-[10px] text-muted-foreground">{timestamp ? `${feed.fetchedAt ? compact ? "Updated" : "Fetched" : "Checked"} ${formatSourceTime(timestamp)}` : "No source timestamp"}</span>
     </div>
     {feed.status === "stale" && feed.fetchedAt && <p className="mb-3 text-[10px] leading-4 text-amber-100/80">Showing the last successful source data from {formatSourceTime(feed.fetchedAt)}.</p>}
     {unavailable ? <FeedMessage title={feed.status === "unconfigured" ? "Not connected yet" : "Source is unavailable"} message={feed.message || "The source could not provide data."} retrying={retrying} onRetry={onRetry} compact /> :
       feed.items.length ? children : <div className="rounded-md border border-dashed border-border/80 px-3 py-5 text-xs text-muted-foreground">{feed.message || "No items are available in this feed yet."}</div>}
     {!unavailable && feed.message && feed.items.length > 0 && <p className="mt-2 text-[10px] leading-4 text-muted-foreground">{feed.message}</p>}
-    <button type="button" onClick={onRetry} disabled={retrying} className="mt-3 inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+    {(!compact || feed.status !== "ready") && <button type="button" onClick={onRetry} disabled={retrying} className="mt-3 inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
       <RotateCw className={`h-3 w-3 ${retrying ? "animate-spin" : ""}`} /> Retry feed
-    </button>
+    </button>}
   </div>;
 }
 
