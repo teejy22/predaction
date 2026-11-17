@@ -7,11 +7,15 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function ProbBar({ value, className = "" }: { value: number; className?: string }) {
+export function ProbBar({ value, className = "", color }: { value: number; className?: string; color?: string }) {
   const v = Math.max(0, Math.min(100, value || 0));
+  const barColor = color && /^#[0-9a-f]{6}$/i.test(color) ? color : undefined;
   return (
     <div className={`relative h-2 w-full overflow-hidden rounded-full bg-muted ${className}`}>
-      <div className="fillbar absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${v}%` }} />
+      <div
+        className={`fillbar absolute inset-y-0 left-0 rounded-full ${barColor ? "" : "bg-primary"}`}
+        style={{ width: `${v}%`, ...(barColor ? { backgroundColor: barColor } : {}) }}
+      />
       <div className="absolute inset-y-0 left-1/2 w-px bg-foreground/30" />
     </div>
   );

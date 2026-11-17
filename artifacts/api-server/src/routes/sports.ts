@@ -3,8 +3,11 @@ import {
   ListEventsQueryParams, ListEventsResponse, GetEventParams, GetEventResponse, GetOverviewResponse,
   ListSportsGamesQueryParams, ListSportsGamesResponse, GetSportsGameParams, GetSportsGameResponse,
 } from "@workspace/api-zod";
-import { getSnapshot, getEvent, KalshiError, newestFirst, categoryNames, eventCreatedAt, type PredictionEvent } from "../lib/kalshi";
-import { attachTeamLogos, getEspnTeams } from "../lib/espn";
+import {
+  attachKalshiVisual, attachKalshiVisuals, getSnapshot, getEvent, KalshiError,
+  newestFirst, categoryNames, eventCreatedAt, type PredictionEvent,
+} from "../lib/kalshi";
+import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
 import { groupSportsGames, selectMainMarketEvents } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -23,7 +26,7 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
   const parsed = ListEventsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: "Invalid market filters." }); return; }
   try {
-    const data = await getSnapshot();
+    const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const { category, sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
     const text = search?.trim().toLowerCase();
     const events = selectMainMarketEvents(data.events.filter(e =>
@@ -31,13 +34,14 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
       (!sport || sport === "all" || e.sport.toLowerCase() === sport.toLowerCase()) &&
       (!league || league === "all" || e.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(e, text)),
-    ));
+    )).map(event => attachEventTeamLogos(event, teams));
     if (sort === "closing") events.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.ticker.localeCompare(b.ticker));
     else if (sort === "newest") events.sort((a, b) => newestFirst(a, b) || a.ticker.localeCompare(b.ticker));
     else events.sort((a, b) => b.volume24h - a.volume24h || a.ticker.localeCompare(b.ticker));
+    const pageEvents = await attachKalshiVisuals(events.slice(offset, offset + limit), 12);
     res.json(ListEventsResponse.parse({
-      events: events.slice(offset, offset + limit), total: events.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total)",
+      events: pageEvents, total: events.length,
+      updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · Kalshi market images · ESPN team logos",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < events.length,
       nextOffset: Math.min(offset + limit, events.length),
@@ -101,7 +105,10 @@ router.get(["/events/:ticker", "/sports/events/:ticker"], async (req, res): Prom
   if (!parsed.success || !/^[A-Za-z0-9_.-]{1,150}$/.test(parsed.data.ticker)) {
     res.status(400).json({ error: "Invalid event ticker." }); return;
   }
-  try { res.json(GetEventResponse.parse(await getEvent(parsed.data.ticker))); }
+  try {
+    const [event, teams] = await Promise.all([getEvent(parsed.data.ticker), getEspnTeams()]);
+    res.json(GetEventResponse.parse(await attachKalshiVisual(attachEventTeamLogos(event, teams))));
+  }
   catch (err) {
     req.log.warn({ err }, "Kalshi event request failed");
     res.status(err instanceof KalshiError ? err.status : 502).json({ error: err instanceof Error ? err.message : "Unable to load this event from Kalshi." });

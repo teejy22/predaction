@@ -569,6 +569,13 @@ export const ListEventsResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})).optional(),
+  "image": zod.string().url().optional(),
+  "featuredImage": zod.string().url().optional(),
   "volume": zod.number(),
   "volume24h": zod.number(),
   "closeTime": zod.string(),
@@ -586,7 +593,9 @@ export const ListEventsResponse = zod.object({
   "status": zod.string(),
   "closeTime": zod.string(),
   "rules": zod.string(),
-  "url": zod.string()
+  "url": zod.string(),
+  "image": zod.string().url().optional(),
+  "color": zod.string().optional()
 }))
 })),
   "total": zod.number().int(),
@@ -617,6 +626,13 @@ export const GetEventResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})).optional(),
+  "image": zod.string().url().optional(),
+  "featuredImage": zod.string().url().optional(),
   "volume": zod.number(),
   "volume24h": zod.number(),
   "closeTime": zod.string(),
@@ -634,7 +650,9 @@ export const GetEventResponse = zod.object({
   "status": zod.string(),
   "closeTime": zod.string(),
   "rules": zod.string(),
-  "url": zod.string()
+  "url": zod.string(),
+  "image": zod.string().url().optional(),
+  "color": zod.string().optional()
 }))
 })
 
@@ -688,6 +706,13 @@ export const ListSportsGamesResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})).optional(),
+  "image": zod.string().url().optional(),
+  "featuredImage": zod.string().url().optional(),
   "volume": zod.number(),
   "volume24h": zod.number(),
   "closeTime": zod.string(),
@@ -705,7 +730,9 @@ export const ListSportsGamesResponse = zod.object({
   "status": zod.string(),
   "closeTime": zod.string(),
   "rules": zod.string(),
-  "url": zod.string()
+  "url": zod.string(),
+  "image": zod.string().url().optional(),
+  "color": zod.string().optional()
 }))
 }))
 })),
@@ -756,6 +783,13 @@ export const GetSportsGameResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})).optional(),
+  "image": zod.string().url().optional(),
+  "featuredImage": zod.string().url().optional(),
   "volume": zod.number(),
   "volume24h": zod.number(),
   "closeTime": zod.string(),
@@ -773,7 +807,9 @@ export const GetSportsGameResponse = zod.object({
   "status": zod.string(),
   "closeTime": zod.string(),
   "rules": zod.string(),
-  "url": zod.string()
+  "url": zod.string(),
+  "image": zod.string().url().optional(),
+  "color": zod.string().optional()
 }))
 }))
 })

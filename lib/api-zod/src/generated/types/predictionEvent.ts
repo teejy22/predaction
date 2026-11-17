@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PredictionMarket } from './predictionMarket';
+import type { TeamLogo } from './teamLogo';
 
 export interface PredictionEvent {
   ticker: string;
@@ -16,6 +17,9 @@ export interface PredictionEvent {
   categories: string[];
   sport: string;
   league: string;
+  teams?: TeamLogo[];
+  image?: string;
+  featuredImage?: string;
   volume: number;
   volume24h: number;
   closeTime: string;

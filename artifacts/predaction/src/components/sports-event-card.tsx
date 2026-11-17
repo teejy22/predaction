@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
 import { WatchButton } from "@/components/bits";
+import { TeamLogos } from "@/components/team-logos";
 import { closeLabel, fmtContracts } from "@/lib/format";
 
 function topOutcomes(event: PredictionEvent): PredictionMarket[] {
@@ -21,10 +22,13 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
           <Link
             href={`/event/${encodeURIComponent(event.ticker)}`}
             data-testid={`link-sports-event-${event.ticker}`}
-            className="group mt-2 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group mt-2 flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">{event.title}</h3>
-            {event.subtitle && <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{event.subtitle}</p>}
+            <TeamLogos teams={event.teams ?? []} size="sm" />
+            <span className="min-w-0">
+              <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">{event.title}</h3>
+              {event.subtitle && <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{event.subtitle}</p>}
+            </span>
           </Link>
         </div>
         <WatchButton event={{ ticker: event.ticker, title: event.title, category: event.category, sport: event.sport, league: event.league }} />

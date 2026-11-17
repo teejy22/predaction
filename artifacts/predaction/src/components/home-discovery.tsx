@@ -2,8 +2,10 @@ import { useRef, type ReactNode } from "react";
 import { ArrowRight, ArrowUpRight, Clock3, RotateCw } from "lucide-react";
 import { Link } from "wouter";
 import { getGetOverviewQueryKey, getListEventsQueryKey, useGetOverview, useListEvents, type PredictionEvent, type PredictionMarket } from "@workspace/api-client-react";
-import { CategoryTag, Change } from "@/components/bits";
+import { CategoryTag, Change, ProbBar } from "@/components/bits";
 import { FlowframeInsights } from "@/components/flowframe-insights";
+import { MarketVisual } from "@/components/market-visual";
+import { PromoBars } from "@/components/promo-bars";
 import { SportsEventCard } from "@/components/sports-event-card";
 import { closeLabel, fmtContracts, updatedLabel } from "@/lib/format";
 
@@ -48,15 +50,7 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
   });
 
   return <div className="mx-auto max-w-7xl px-4 pt-5 md:px-6 md:pt-7">
-    <nav aria-label="Quick access" className="mb-5 flex flex-wrap items-center gap-x-1 gap-y-1 rounded-lg border border-border bg-card/65 p-1.5">
-      <span className="px-3 py-2 font-mono text-[9px] uppercase tracking-[.16em] text-muted-foreground">Quick access</span>
-      <QuickLink href="/sports" label="Sports" />
-      <QuickLink href="/movers" label="Market movers" />
-      <QuickLink href="/traders" label="Tracked wallets" />
-      <QuickLink href="/pulse" label="Pulse updates" />
-      <QuickLink href="/watchlist" label="Watchlist" />
-      <button onClick={() => onBrowse()} data-testid="button-quick-all-markets" className="ml-auto inline-flex items-center gap-1 rounded-md bg-primary/15 px-3 py-2 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">All markets <ArrowUpRight className="h-3 w-3" /></button>
-    </nav>
+    <PromoBars />
 
     <section aria-label="Featured market discovery" className="grid gap-3 lg:grid-cols-[minmax(0,1.75fr)_minmax(260px,.8fr)]">
       <div className="flex min-h-[250px] flex-col justify-between rounded-lg border border-border bg-card/75 p-5 sm:p-6">
@@ -138,21 +132,22 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
   </div>;
 }
 
-function QuickLink({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="rounded-md px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{label}</Link>;
-}
-
 function FeaturedEvent({ event }: { event: PredictionEvent }) {
   const lead = marketOf(event);
   const outcomes = [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
   return <article className="rounded-md border border-border/80 bg-background/45 p-4 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Featured · current sample</span></div>
     <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-      <h2 className="font-display text-lg font-bold leading-snug tracking-[-.035em] transition-colors group-hover:text-primary sm:text-xl">{event.title}</h2>
-      {event.subtitle && <p className="mt-1 text-[11px] text-muted-foreground">{event.subtitle}</p>}
+      <div className="flex items-start gap-3">
+        <MarketVisual event={event} size="lg" />
+        <div className="min-w-0">
+          <h2 className="font-display text-lg font-bold leading-snug tracking-[-.035em] transition-colors group-hover:text-primary sm:text-xl">{event.title}</h2>
+          {event.subtitle && <p className="mt-1 text-[11px] text-muted-foreground">{event.subtitle}</p>}
+        </div>
+      </div>
     </EventLink>
     {outcomes.length > 0 ? <div className="mt-4 divide-y divide-border/70 border-y border-border/70">
-      {outcomes.map((market) => <OutcomeLine key={market.ticker} market={market} />)}
+      {outcomes.map((market) => <OutcomeLine key={market.ticker} event={event} market={market} />)}
     </div> : <p className="mt-4 border-y border-border/70 py-3 text-xs text-muted-foreground">No open outcomes available for this event.</p>}
     <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
       <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground"><Clock3 className="h-3 w-3" /> Event · {closeLabel(event.closeTime)}</span>
@@ -162,22 +157,46 @@ function FeaturedEvent({ event }: { event: PredictionEvent }) {
   </article>;
 }
 
-function OutcomeLine({ market }: { market: PredictionMarket }) {
-  return <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2.5">
-    <div className="min-w-0"><p className="truncate text-xs font-semibold">{market.subtitle || market.title}</p><p className="mt-0.5 text-[9px] text-muted-foreground">Market · {closeLabel(market.closeTime)} · {fmtContracts(market.volume)} contracts</p></div>
-    <div className="text-right"><p className="font-mono text-sm font-semibold tabular">{Math.round(market.probability)}<span className="text-[10px] text-muted-foreground">%</span></p><Change value={market.change} /></div>
+function OutcomeLine({ event, market }: { event: PredictionEvent; market: PredictionMarket }) {
+  return <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 py-3">
+    <MarketVisual event={event} market={market} size="sm" />
+    <div className="min-w-0">
+      <div className="flex items-center justify-between gap-3">
+        <p className="truncate text-xs font-semibold">{market.subtitle || market.title}</p>
+        <span className="shrink-0 font-mono text-[9px] text-muted-foreground">{fmtContracts(market.volume)} contracts</span>
+      </div>
+      <ProbBar className="mt-2 h-1.5" value={market.probability} color={market.color} />
+      <p className="mt-1 text-[9px] text-muted-foreground">Market · {closeLabel(market.closeTime)}</p>
+    </div>
+    <div className="text-right">
+      <p className="font-mono text-sm font-semibold tabular">{Math.round(market.probability)}<span className="text-[10px] text-muted-foreground">%</span></p>
+      <Change value={market.change} />
+    </div>
   </div>;
 }
 
 function CompactFeature({ event, index }: { event: PredictionEvent; index: number }) {
   const lead = marketOf(event);
-  return <article className="flex min-h-[112px] flex-col justify-between rounded-lg border border-border bg-card/65 p-4 transition-colors hover:border-primary/35">
+  return <article className="flex min-h-[148px] flex-col justify-between rounded-lg border border-border bg-card/65 p-4 transition-colors hover:border-primary/35">
     <div className="flex items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] text-muted-foreground">Sample {String(index).padStart(2, "0")}</span></div>
-    <EventLink event={event} className="group mt-2 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-      <p className="line-clamp-2 text-xs font-semibold leading-4 group-hover:text-primary">{event.title}</p>
-      {event.subtitle && <p className="mt-1 truncate text-[10px] text-muted-foreground">{event.subtitle}</p>}
-    </EventLink>
-    <div className="mt-2 flex items-end justify-between gap-2"><span className="text-[9px] text-muted-foreground">{lead ? `${lead.subtitle || lead.title} · ${fmtContracts(lead.volume)} contracts` : `${fmtContracts(event.volume)} contracts`}</span><span className="shrink-0 font-mono text-sm font-semibold tabular">{lead ? `${Math.round(lead.probability)}%` : "—"}</span></div>
+    <div className="mt-3 flex items-center gap-3">
+      <MarketVisual event={event} market={lead} size="md" />
+      <EventLink event={event} className="group min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <p className="line-clamp-2 text-xs font-semibold leading-4 group-hover:text-primary">{event.title}</p>
+        {event.subtitle && <p className="mt-1 truncate text-[10px] text-muted-foreground">{event.subtitle}</p>}
+      </EventLink>
+    </div>
+    <div className="mt-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-[9px] text-muted-foreground">{lead ? (lead.subtitle || lead.title) : "Event"}</span>
+        <span className="shrink-0 font-mono text-sm font-semibold tabular">{lead ? `${Math.round(lead.probability)}%` : "—"}</span>
+      </div>
+      <ProbBar className="mt-1.5 h-1.5" value={lead?.probability ?? 0} color={lead?.color} />
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(lead?.volume ?? event.volume)} contracts</span>
+        {lead ? <Change value={lead.change} /> : null}
+      </div>
+    </div>
   </article>;
 }
 
@@ -185,11 +204,27 @@ function MarketEventCard({ event }: { event: PredictionEvent }) {
   const markets = [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
   return <article className="rounded-lg border border-border bg-card/60 p-4 transition-colors hover:border-primary/35">
     <div className="flex items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(event.volume)} contracts</span></div>
-    <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 group-hover:text-primary">{event.title}</h3>{event.subtitle && <p className="mt-1 truncate text-[10px] text-muted-foreground">{event.subtitle}</p>}</EventLink>
+    <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+      <div className="flex items-start gap-3">
+        <MarketVisual event={event} size="md" />
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 group-hover:text-primary">{event.title}</h3>
+          {event.subtitle && <p className="mt-1 truncate text-[10px] text-muted-foreground">{event.subtitle}</p>}
+        </div>
+      </div>
+    </EventLink>
     <div className="mt-3 divide-y divide-border/70 border-y border-border/70">
-      {markets.length ? markets.map((market) => <div key={market.ticker} className="flex items-center justify-between gap-2 py-2">
-        <div className="min-w-0"><p className="truncate text-[10px] font-medium">{market.subtitle || market.title}</p><p className="text-[9px] text-muted-foreground">{fmtContracts(market.volume)} contracts</p></div>
-        <span className="font-mono text-xs font-semibold tabular">{Math.round(market.probability)}%</span>
+      {markets.length ? markets.map((market) => <div key={market.ticker} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 py-2">
+        <MarketVisual event={event} market={market} size="sm" />
+        <div className="min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-[10px] font-medium">{market.subtitle || market.title}</p>
+            <span className="font-mono text-xs font-semibold tabular">{Math.round(market.probability)}%</span>
+          </div>
+          <ProbBar className="mt-1 h-1" value={market.probability} color={market.color} />
+          <p className="mt-1 text-[9px] text-muted-foreground">{fmtContracts(market.volume)} contracts</p>
+        </div>
+        <Change value={market.change} />
       </div>) : <p className="py-2 text-[10px] text-muted-foreground">No open outcomes available.</p>}
     </div>
     <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-muted-foreground"><span>Event · {closeLabel(event.closeTime)}</span><EventLink event={event} className="font-semibold text-primary hover:underline">Details <ArrowUpRight className="inline h-3 w-3" /></EventLink></div>

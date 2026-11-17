@@ -34,6 +34,16 @@ const createdTimes = new Map<string, number>();
 const detailCache = new Map<string, { event: PredictionEvent; at: number }>();
 const detailPending = new Map<string, Promise<PredictionEvent>>();
 
+export type EventVisualMetadata = {
+  image_url?: string;
+  featured_image_url?: string;
+  market_details?: { market_ticker?: string; image_url?: string; color_code?: string }[];
+};
+const VISUAL_TTL = 6 * 60 * 60 * 1000;
+const VISUAL_MISS_TTL = 10 * 60 * 1000;
+const visualCache = new Map<string, { metadata?: EventVisualMetadata; at: number }>();
+const visualPending = new Map<string, Promise<EventVisualMetadata | undefined>>();
+
 export class KalshiError extends Error {
   constructor(message: string, public status = 502) { super(message); }
 }
@@ -129,6 +139,73 @@ export function normalize(event: RawEvent, info?: Series, openOnly = true): Pred
     volume24h: markets.reduce((sum, m) => sum + m.volume24h, 0),
     closeTime: markets.map(m => m.closeTime).filter(Boolean).sort()[0] ?? "", url, markets,
   };
+}
+
+function officialImage(value?: string) {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "assets.kalshi.com" ? value : undefined;
+  } catch { return undefined; }
+}
+
+function officialColor(value?: string) {
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : undefined;
+}
+
+export function applyEventVisuals(event: PredictionEvent, metadata: EventVisualMetadata): PredictionEvent {
+  const details = new Map((metadata.market_details ?? []).map(detail => [detail.market_ticker, detail]));
+  const markets = event.markets.map(market => {
+    const detail = details.get(market.ticker);
+    const image = officialImage(detail?.image_url);
+    const color = officialColor(detail?.color_code);
+    if (!image && !color) return market;
+    return { ...market, ...(image ? { image } : {}), ...(color ? { color } : {}) };
+  });
+  const image = officialImage(metadata.image_url);
+  const featuredImage = officialImage(metadata.featured_image_url);
+  const marketsChanged = markets.some((market, index) => market !== event.markets[index]);
+  if (!image && !featuredImage && !marketsChanged) return event;
+  return {
+    ...event,
+    ...(image ? { image } : {}),
+    ...(featuredImage ? { featuredImage } : {}),
+    markets,
+  };
+}
+
+async function loadEventVisuals(ticker: string) {
+  const cached = visualCache.get(ticker);
+  if (cached && Date.now() - cached.at < (cached.metadata ? VISUAL_TTL : VISUAL_MISS_TTL)) return cached.metadata;
+  const existing = visualPending.get(ticker);
+  if (existing) return existing;
+  const task = request<EventVisualMetadata>(`/events/${encodeURIComponent(ticker)}/metadata`)
+    .then(metadata => {
+      if (visualCache.size >= 1000) visualCache.delete(visualCache.keys().next().value!);
+      visualCache.set(ticker, { metadata, at: Date.now() });
+      return metadata;
+    })
+    .catch(err => {
+      logger.warn({ err, ticker }, "Kalshi event visual metadata unavailable");
+      if (visualCache.size >= 1000) visualCache.delete(visualCache.keys().next().value!);
+      visualCache.set(ticker, { at: Date.now() });
+      return undefined;
+    })
+    .finally(() => { visualPending.delete(ticker); });
+  visualPending.set(ticker, task);
+  return task;
+}
+
+export async function attachKalshiVisuals(events: PredictionEvent[], limit = 12) {
+  return Promise.all(events.map(async (event, index) => {
+    if (index >= limit) return event;
+    const metadata = await loadEventVisuals(event.ticker);
+    return metadata ? applyEventVisuals(event, metadata) : event;
+  }));
+}
+
+export async function attachKalshiVisual(event: PredictionEvent) {
+  return (await attachKalshiVisuals([event], 1))[0] ?? event;
 }
 
 async function refresh(): Promise<void> {

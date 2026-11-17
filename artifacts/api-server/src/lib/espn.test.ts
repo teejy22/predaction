@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { dedupeEspnTeams, matchGameTeams, normalizeTeamName, teamNameAliases, type EspnTeam } from "./espn";
+import { attachEventTeamLogos, dedupeEspnTeams, matchGameTeams, normalizeTeamName, teamNameAliases, type EspnTeam } from "./espn";
 
 const team = (
   id: string, sport: string, league: string, name: string, abbreviation: string, aliases: string[],
@@ -58,4 +58,17 @@ test("normalizes college abbreviations without confusing Ohio schools", () => {
 test("leaves futures and non-matchup titles without logos", () => {
   const teams = [team("9", "Basketball", "NBA", "Boston Celtics", "BOS", ["Boston Celtics", "Boston", "Celtics", "BOS"])];
   assert.deepEqual(matchGameTeams("NBA Championship Winner", teams), []);
+});
+
+test("attaches matchup logos to individual events, including international soccer", () => {
+  const teams = [
+    team("1", "Basketball", "NBA", "New York Knicks", "NY", ["New York Knicks", "New York", "NY"]),
+    team("2", "Basketball", "NBA", "Toronto Raptors", "TOR", ["Toronto Raptors", "Toronto", "TOR"]),
+    team("15", "Soccer", "International", "Denmark", "DEN", ["Denmark", "DEN"]),
+    team("16", "Soccer", "International", "Norway", "NOR", ["Norway", "NOR"]),
+  ];
+  const basketball = attachEventTeamLogos({ title: "New York vs Toronto: Spread", sport: "Basketball", league: "NBA" }, teams);
+  const soccer = attachEventTeamLogos({ title: "Denmark vs Norway", sport: "Soccer", league: "" }, teams);
+  assert.deepEqual(basketball.teams.map(item => item.abbreviation), ["NY", "TOR"]);
+  assert.deepEqual(soccer.teams.map(item => item.abbreviation), ["DEN", "NOR"]);
 });

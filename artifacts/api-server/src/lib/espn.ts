@@ -17,6 +17,7 @@ const ENDPOINTS: Endpoint[] = [
   { sport: "Soccer", league: "EPL", path: "soccer/eng.1" },
   { sport: "Soccer", league: "UCL", path: "soccer/uefa.champions" },
   { sport: "Soccer", league: "MLS", path: "soccer/usa.1" },
+  { sport: "Soccer", league: "International", path: "soccer/fifa.worldq.uefa" },
   { sport: "Soccer", league: "La Liga", path: "soccer/esp.1" },
   { sport: "Soccer", league: "Bundesliga", path: "soccer/ger.1" },
   { sport: "Soccer", league: "Serie A", path: "soccer/ita.1" },
@@ -146,4 +147,11 @@ export function matchGameTeams(title: string, teams: EspnTeam[]): TeamLogo[] {
 
 export function attachTeamLogos(game: SportsGame, teams: EspnTeam[]): SportsGame {
   return { ...game, teams: matchGameTeams(game.title, candidateTeams(game, teams)) };
+}
+
+type EventTeamIdentity = Pick<SportsGame, "title" | "sport" | "league">;
+
+export function attachEventTeamLogos<T extends EventTeamIdentity>(event: T, teams: EspnTeam[]): T & { teams: TeamLogo[] } {
+  const title = (event.title.split(":")[0] ?? event.title).trim();
+  return { ...event, teams: matchGameTeams(title, candidateTeams(event, teams)) };
 }

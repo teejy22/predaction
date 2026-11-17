@@ -216,6 +216,8 @@ components:
         closeTime: { type: string }
         rules: { type: string }
         url: { type: string }
+        image: { type: string, format: uri }
+        color: { type: string }
     PredictionEvent:
       type: object
       required: [ticker, seriesTicker, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, markets]
@@ -228,6 +230,11 @@ components:
         categories: { type: array, items: { type: string } }
         sport: { type: string }
         league: { type: string }
+        teams:
+          type: array
+          items: { $ref: "#/components/schemas/TeamLogo" }
+        image: { type: string, format: uri }
+        featuredImage: { type: string, format: uri }
         volume: { type: number }
         volume24h: { type: number }
         closeTime: { type: string }

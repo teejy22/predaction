@@ -20,4 +20,6 @@ export interface PredictionMarket {
   closeTime: string;
   rules: string;
   url: string;
+  image?: string;
+  color?: string;
 }

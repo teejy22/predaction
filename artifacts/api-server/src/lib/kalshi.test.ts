@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getEvent, getSnapshot, normalize, type RawEvent } from "./kalshi";
+import { applyEventVisuals, getEvent, getSnapshot, normalize, type RawEvent } from "./kalshi";
 
 const raw = (ticker = "ECON-26", category = "Economics"): RawEvent => ({
   event_ticker: ticker, series_ticker: "SERIES", title: "Original API title?",
@@ -42,6 +42,25 @@ test("normalization preserves source copy, contract units, close time and reliab
   initialized.markets![0]!.status = "initialized";
   assert.equal(normalize(initialized).markets.length, 0);
   assert.equal(normalize(initialized, undefined, false).markets[0]?.status, "initialized");
+});
+
+test("Kalshi metadata attaches official event and market visuals safely", () => {
+  const event = normalize(raw());
+  const enriched = applyEventVisuals(event, {
+    image_url: "https://assets.kalshi.com/series-images-webp/SERIES.webp",
+    featured_image_url: "https://assets.kalshi.com/market-images/FEATURED.webp",
+    market_details: [{
+      market_ticker: "ECON-26-YES",
+      image_url: "https://assets.kalshi.com/market-images/ECON-26-YES.png",
+      color_code: "#AA00FF",
+    }],
+  });
+  assert.equal(enriched.image, "https://assets.kalshi.com/series-images-webp/SERIES.webp");
+  assert.equal(enriched.featuredImage, "https://assets.kalshi.com/market-images/FEATURED.webp");
+  assert.equal(enriched.markets[0]?.image, "https://assets.kalshi.com/market-images/ECON-26-YES.png");
+  assert.equal(enriched.markets[0]?.color, "#AA00FF");
+  const unsafe = applyEventVisuals(event, { image_url: "https://example.com/image.png" });
+  assert.equal(unsafe.image, undefined);
 });
 
 test("shared index follows cursors, deduplicates, retains saved details and exposes rate-limit failures", async () => {

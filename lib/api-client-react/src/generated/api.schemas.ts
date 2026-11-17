@@ -126,6 +126,14 @@ export interface PredictionMarket {
   closeTime: string;
   rules: string;
   url: string;
+  image?: string;
+  color?: string;
+}
+
+export interface TeamLogo {
+  name: string;
+  abbreviation: string;
+  logo: string;
 }
 
 export interface PredictionEvent {
@@ -137,6 +145,9 @@ export interface PredictionEvent {
   categories: string[];
   sport: string;
   league: string;
+  teams?: TeamLogo[];
+  image?: string;
+  featuredImage?: string;
   volume: number;
   volume24h: number;
   closeTime: string;
@@ -155,12 +166,6 @@ export interface EventFeed {
   indexedEvents: number;
   hasMore: boolean;
   nextOffset: number;
-}
-
-export interface TeamLogo {
-  name: string;
-  abbreviation: string;
-  logo: string;
 }
 
 export interface SportsGame {
