@@ -640,6 +640,136 @@ export const GetEventResponse = zod.object({
 
 
 /**
+ * @summary Browse sports events grouped by matchup
+ */
+export const listSportsGamesQueryOffsetDefault = 0;
+export const listSportsGamesQueryOffsetMin = 0;
+
+export const listSportsGamesQueryLimitDefault = 50;
+export const listSportsGamesQueryLimitMax = 100;
+
+
+
+export const ListSportsGamesQueryParams = zod.object({
+  "sport": zod.coerce.string().optional(),
+  "league": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional(),
+  "sort": zod.enum(['volume', 'closing', 'newest']).optional(),
+  "offset": zod.coerce.number().int().min(listSportsGamesQueryOffsetMin).default(listSportsGamesQueryOffsetDefault),
+  "limit": zod.coerce.number().int().min(1).max(listSportsGamesQueryLimitMax).default(listSportsGamesQueryLimitDefault)
+})
+
+export const ListSportsGamesResponse = zod.object({
+  "games": zod.array(zod.object({
+  "key": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
+  "sport": zod.string(),
+  "league": zod.string(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "closeTime": zod.string(),
+  "url": zod.string(),
+  "eventCount": zod.number().int(),
+  "marketCount": zod.number().int(),
+  "events": zod.array(zod.object({
+  "ticker": zod.string(),
+  "seriesTicker": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
+  "sport": zod.string(),
+  "league": zod.string(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "closeTime": zod.string(),
+  "url": zod.string(),
+  "markets": zod.array(zod.object({
+  "ticker": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "probability": zod.number(),
+  "yesAsk": zod.number(),
+  "noAsk": zod.number(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "change": zod.number(),
+  "status": zod.string(),
+  "closeTime": zod.string(),
+  "rules": zod.string(),
+  "url": zod.string()
+}))
+}))
+})),
+  "total": zod.number().int(),
+  "updatedAt": zod.string(),
+  "source": zod.string(),
+  "partial": zod.boolean(),
+  "warnings": zod.array(zod.string()),
+  "indexing": zod.boolean(),
+  "indexedEvents": zod.number().int(),
+  "hasMore": zod.boolean(),
+  "nextOffset": zod.number().int()
+})
+
+
+/**
+ * @summary All indexed events for one grouped sports matchup
+ */
+export const GetSportsGameParams = zod.object({
+  "key": zod.coerce.string()
+})
+
+export const GetSportsGameResponse = zod.object({
+  "key": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
+  "sport": zod.string(),
+  "league": zod.string(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "closeTime": zod.string(),
+  "url": zod.string(),
+  "eventCount": zod.number().int(),
+  "marketCount": zod.number().int(),
+  "events": zod.array(zod.object({
+  "ticker": zod.string(),
+  "seriesTicker": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
+  "sport": zod.string(),
+  "league": zod.string(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "closeTime": zod.string(),
+  "url": zod.string(),
+  "markets": zod.array(zod.object({
+  "ticker": zod.string(),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "probability": zod.number(),
+  "yesAsk": zod.number(),
+  "noAsk": zod.number(),
+  "volume": zod.number(),
+  "volume24h": zod.number(),
+  "change": zod.number(),
+  "status": zod.string(),
+  "closeTime": zod.string(),
+  "rules": zod.string(),
+  "url": zod.string()
+}))
+}))
+})
+
+
+/**
  * @summary Indexed category counts and feed statistics
  */
 export const GetOverviewResponse = zod.object({

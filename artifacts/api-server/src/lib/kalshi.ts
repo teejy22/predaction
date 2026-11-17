@@ -182,6 +182,9 @@ export async function getSnapshot(): Promise<Snapshot> {
 export function newestFirst(a: PredictionEvent, b: PredictionEvent) {
   return (createdTimes.get(b.ticker) ?? 0) - (createdTimes.get(a.ticker) ?? 0);
 }
+export function eventCreatedAt(event: PredictionEvent) {
+  return createdTimes.get(event.ticker) ?? 0;
+}
 export function categoryNames() {
   return [...new Set([...metadata.values()].flatMap(s => [s.category, ...(s.categories ?? [])]).filter(Boolean))].sort();
 }

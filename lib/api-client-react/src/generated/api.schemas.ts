@@ -157,6 +157,36 @@ export interface EventFeed {
   nextOffset: number;
 }
 
+export interface SportsGame {
+  key: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  categories: string[];
+  sport: string;
+  league: string;
+  volume: number;
+  volume24h: number;
+  closeTime: string;
+  url: string;
+  eventCount: number;
+  marketCount: number;
+  events: PredictionEvent[];
+}
+
+export interface SportsGameFeed {
+  games: SportsGame[];
+  total: number;
+  updatedAt: string;
+  source: string;
+  partial: boolean;
+  warnings: string[];
+  indexing: boolean;
+  indexedEvents: number;
+  hasMore: boolean;
+  nextOffset: number;
+}
+
 export interface SportCategory {
   name: string;
   count: number;
@@ -206,6 +236,31 @@ export type ListEventsSort = typeof ListEventsSort[keyof typeof ListEventsSort];
 
 
 export const ListEventsSort = {
+  volume: 'volume',
+  closing: 'closing',
+  newest: 'newest',
+} as const;
+
+export type ListSportsGamesParams = {
+sport?: string;
+league?: string;
+search?: string;
+sort?: ListSportsGamesSort;
+/**
+ * @minimum 0
+ */
+offset?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListSportsGamesSort = typeof ListSportsGamesSort[keyof typeof ListSportsGamesSort];
+
+
+export const ListSportsGamesSort = {
   volume: 'volume',
   closing: 'closing',
   newest: 'newest',

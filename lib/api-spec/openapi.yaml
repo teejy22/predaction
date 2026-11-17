@@ -61,6 +61,35 @@ paths:
           content:
             application/json:
                schema: { $ref: "#/components/schemas/PredictionEvent" }
+  /sports/games:
+    get:
+      operationId: listSportsGames
+      summary: Browse sports events grouped by matchup
+      parameters:
+        - { name: sport, in: query, schema: { type: string } }
+        - { name: league, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest] } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        "200":
+          description: Grouped sports game feed
+          content:
+            application/json:
+               schema: { $ref: "#/components/schemas/SportsGameFeed" }
+  /sports/games/{key}:
+    get:
+      operationId: getSportsGame
+      summary: All indexed events for one grouped sports matchup
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Grouped sports game
+          content:
+            application/json:
+               schema: { $ref: "#/components/schemas/SportsGame" }
   /overview:
     get:
       operationId: getOverview
@@ -213,6 +242,42 @@ components:
         events:
           type: array
           items: { $ref: "#/components/schemas/PredictionEvent" }
+        total: { type: integer }
+        updatedAt: { type: string }
+        source: { type: string }
+        partial: { type: boolean }
+        warnings: { type: array, items: { type: string } }
+        indexing: { type: boolean }
+        indexedEvents: { type: integer }
+        hasMore: { type: boolean }
+        nextOffset: { type: integer }
+    SportsGame:
+      type: object
+      required: [key, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, eventCount, marketCount, events]
+      properties:
+        key: { type: string }
+        title: { type: string }
+        subtitle: { type: string }
+        category: { type: string }
+        categories: { type: array, items: { type: string } }
+        sport: { type: string }
+        league: { type: string }
+        volume: { type: number }
+        volume24h: { type: number }
+        closeTime: { type: string }
+        url: { type: string }
+        eventCount: { type: integer }
+        marketCount: { type: integer }
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/PredictionEvent" }
+    SportsGameFeed:
+      type: object
+      required: [games, total, updatedAt, source, partial, warnings, indexing, indexedEvents, hasMore, nextOffset]
+      properties:
+        games:
+          type: array
+          items: { $ref: "#/components/schemas/SportsGame" }
         total: { type: integer }
         updatedAt: { type: string }
         source: { type: string }

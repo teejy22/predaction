@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearch } from "wouter";
 import { AlertTriangle, ArrowDownWideNarrow, ChevronLeft, ChevronRight, Info, RotateCw, Search, X } from "lucide-react";
-import { getGetOverviewQueryKey, getListEventsQueryKey, useGetOverview, useListEvents, type ListEventsParams } from "@workspace/api-client-react";
+import { getGetOverviewQueryKey, getListSportsGamesQueryKey, useGetOverview, useListSportsGames, type ListSportsGamesParams } from "@workspace/api-client-react";
 import { ErrorPanel } from "@/components/bits";
-import { SportsEventCard } from "@/components/sports-event-card";
+import { SportsGameCard } from "@/components/sports-game-card";
 import { updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
@@ -121,8 +121,7 @@ export default function SportsPage() {
   );
 
   // Uncommitted search edits hold results on page one; no stale offset request is issued.
-  const params: ListEventsParams = {
-    category: "Sports",
+  const params: ListSportsGamesParams = {
     sort,
     offset: page * PAGE_SIZE,
     limit: PAGE_SIZE,
@@ -130,11 +129,11 @@ export default function SportsPage() {
   if (sport) params.sport = sport;
   if (league) params.league = league;
   if (search) params.search = search;
-  const feed = useListEvents(params, {
-    query: { queryKey: getListEventsQueryKey(params), refetchInterval: 60000 },
+  const feed = useListSportsGames(params, {
+    query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });
   const data = feed.data;
-  const events = data?.events ?? [];
+  const games = data?.games ?? [];
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
   const canGoPrev = page > 0;
   const canGoNext = !!data?.hasMore;
@@ -183,7 +182,7 @@ export default function SportsPage() {
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Kalshi · sports markets</p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-[-.045em] sm:text-4xl">Sports</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Browse open sports events and compare the outcomes Kalshi traders are pricing.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Every open matchup, grouped. Winner and spread up front; open a game for totals, halves and props.</p>
           </div>
           <div className="text-left sm:text-right">
             <p className="font-mono text-xl font-semibold tabular">{indexedSports !== undefined ? indexedSports.toLocaleString() : "—"}</p>
@@ -266,7 +265,7 @@ export default function SportsPage() {
             </h2>
             <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
               {feed.isFetching && !feed.isLoading && <span className="inline-flex items-center gap-1.5"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> refreshing</span>}
-              {data && <span data-testid="text-sports-result-count">{data.total.toLocaleString()} matching events</span>}
+              {data && <span data-testid="text-sports-result-count">{data.total.toLocaleString()} matching games</span>}
               {filtersActive && <button type="button" onClick={reset} className="text-foreground underline underline-offset-4" data-testid="button-sports-reset">Reset</button>}
             </div>
           </div>
@@ -281,20 +280,20 @@ export default function SportsPage() {
           <div className="mt-4" aria-live="polite">
             {feed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading sports markets">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/70" />)}</div> :
               feed.isError && !data ? <ErrorPanel title="Couldn't load sports markets" onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
-                events.length ? <div className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
-                  {events.map((event) => <SportsEventCard key={event.ticker} event={event} />)}
+                games.length ? <div className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
+                  {games.map((game) => <SportsGameCard key={game.key} game={game} />)}
                 </div> :
                   <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-14 text-center">
-                    <p className="font-mono text-[10px] uppercase tracking-[.17em] text-primary">No matching events</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[.17em] text-primary">No matching games</p>
                     <h3 className="font-display mt-2 text-2xl font-bold tracking-tight">Nothing in this view yet</h3>
                     <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{filtersActive ? "Try a different sport or loosen your search." : data?.indexing ? "The sports index is still building; check back shortly." : "No open sports events are currently indexed."}</p>
                     {filtersActive && <button type="button" onClick={reset} className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" data-testid="button-sports-empty-reset">Clear filters</button>}
                   </div>}
           </div>
 
-          {data && (canGoPrev || canGoNext) && <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Sports event pagination">
+          {data && (canGoPrev || canGoNext) && <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Sports game pagination">
             <button type="button" onClick={() => goToPage(page - 1)} disabled={!canGoPrev || feed.isFetching} data-testid="button-sports-page-prev" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40"><ChevronLeft className="h-4 w-4" /> Previous</button>
-            <span className="font-mono text-[10px] text-muted-foreground tabular" data-testid="text-sports-page">Page {page + 1} of {pages} · {(page * PAGE_SIZE + 1).toLocaleString()}–{(page * PAGE_SIZE + events.length).toLocaleString()}</span>
+            <span className="font-mono text-[10px] text-muted-foreground tabular" data-testid="text-sports-page">Page {page + 1} of {pages} · {(page * PAGE_SIZE + 1).toLocaleString()}–{(page * PAGE_SIZE + games.length).toLocaleString()}</span>
             <button type="button" onClick={() => goToPage(page + 1)} disabled={!canGoNext || feed.isFetching || feed.isPlaceholderData} data-testid="button-sports-page-next" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40">Next <ChevronRight className="h-4 w-4" /></button>
           </nav>}
 

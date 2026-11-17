@@ -21,8 +21,11 @@ import type {
   FlowframeTools,
   HealthStatus,
   ListEventsParams,
+  ListSportsGamesParams,
   MarketOverview,
-  PredictionEvent
+  PredictionEvent,
+  SportsGame,
+  SportsGameFeed
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -355,6 +358,167 @@ export function useGetEvent<TData = Awaited<ReturnType<typeof getEvent>>, TError
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetEventQueryOptions(ticker,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListSportsGamesUrl = (params?: ListSportsGamesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sports/games?${stringifiedParams}` : `/api/sports/games`
+}
+
+/**
+ * @summary Browse sports events grouped by matchup
+ */
+export const listSportsGames = async (params?: ListSportsGamesParams, options?: Parameters<typeof customFetch>[1]): Promise<SportsGameFeed> => {
+
+  return customFetch<SportsGameFeed>(getListSportsGamesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSportsGamesQueryKey = (params?: ListSportsGamesParams,) => {
+    return [
+    `/api/sports/games`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSportsGamesQueryOptions = <TData = Awaited<ReturnType<typeof listSportsGames>>, TError = ErrorType<unknown>>(params?: ListSportsGamesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSportsGames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSportsGamesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSportsGames>>> = ({ signal }) => listSportsGames(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSportsGames>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSportsGamesQueryResult = NonNullable<Awaited<ReturnType<typeof listSportsGames>>>
+export type ListSportsGamesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Browse sports events grouped by matchup
+ */
+
+export function useListSportsGames<TData = Awaited<ReturnType<typeof listSportsGames>>, TError = ErrorType<unknown>>(
+ params?: ListSportsGamesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSportsGames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSportsGamesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSportsGameUrl = (key: string,) => {
+
+
+
+
+  return `/api/sports/games/${key}`
+}
+
+/**
+ * @summary All indexed events for one grouped sports matchup
+ */
+export const getSportsGame = async (key: string, options?: Parameters<typeof customFetch>[1]): Promise<SportsGame> => {
+
+  return customFetch<SportsGame>(getGetSportsGameUrl(key),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSportsGameQueryKey = (key: string,) => {
+    return [
+    `/api/sports/games/${key}`
+    ] as const;
+    }
+
+
+export const getGetSportsGameQueryOptions = <TData = Awaited<ReturnType<typeof getSportsGame>>, TError = ErrorType<unknown>>(key: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsGame>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSportsGameQueryKey(key);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSportsGame>>> = ({ signal }) => getSportsGame(key, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSportsGame>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSportsGameQueryResult = NonNullable<Awaited<ReturnType<typeof getSportsGame>>>
+export type GetSportsGameQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary All indexed events for one grouped sports matchup
+ */
+
+export function useGetSportsGame<TData = Awaited<ReturnType<typeof getSportsGame>>, TError = ErrorType<unknown>>(
+ key: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsGame>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSportsGameQueryOptions(key,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

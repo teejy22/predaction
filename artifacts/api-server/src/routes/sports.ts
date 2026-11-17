@@ -1,8 +1,21 @@
-import { Router, type IRouter } from "express";
-import { ListEventsQueryParams, ListEventsResponse, GetEventParams, GetEventResponse, GetOverviewResponse } from "@workspace/api-zod";
-import { getSnapshot, getEvent, KalshiError, newestFirst, categoryNames } from "../lib/kalshi";
+import { Router, type IRouter, type Request, type Response } from "express";
+import {
+  ListEventsQueryParams, ListEventsResponse, GetEventParams, GetEventResponse, GetOverviewResponse,
+  ListSportsGamesQueryParams, ListSportsGamesResponse, GetSportsGameParams, GetSportsGameResponse,
+} from "@workspace/api-zod";
+import { getSnapshot, getEvent, KalshiError, newestFirst, categoryNames, eventCreatedAt, type PredictionEvent } from "../lib/kalshi";
+import { groupSportsGames } from "../lib/sports-games";
 
 const router: IRouter = Router();
+
+function matchesText(event: PredictionEvent, text: string) {
+  return `${event.ticker} ${event.title} ${event.subtitle} ${event.categories.join(" ")} ${event.sport} ${event.league} ${event.markets.map(m => `${m.title} ${m.subtitle}`).join(" ")}`.toLowerCase().includes(text);
+}
+
+function sourceError(res: Response, req: Request, err: unknown, message: string) {
+  req.log.warn({ err }, message);
+  res.status(err instanceof KalshiError ? err.status : 502).json({ error: err instanceof Error ? err.message : "Live Kalshi data is temporarily unavailable." });
+}
 
 // Legacy API paths are retained alongside the category-neutral endpoints.
 router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
@@ -16,7 +29,7 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
       (!category || category === "all" || e.categories.some(c => c.toLowerCase() === category.toLowerCase())) &&
       (!sport || sport === "all" || e.sport.toLowerCase() === sport.toLowerCase()) &&
       (!league || league === "all" || e.league.toLowerCase() === league.toLowerCase()) &&
-      (!text || `${e.ticker} ${e.title} ${e.subtitle} ${e.categories.join(" ")} ${e.sport} ${e.league} ${e.markets.map(m => `${m.title} ${m.subtitle}`).join(" ")}`.toLowerCase().includes(text)),
+      (!text || matchesText(e, text)),
     );
     if (sort === "closing") events.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.ticker.localeCompare(b.ticker));
     else if (sort === "newest") events.sort((a, b) => newestFirst(a, b) || a.ticker.localeCompare(b.ticker));
@@ -29,8 +42,54 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
       nextOffset: Math.min(offset + limit, events.length),
     }));
   } catch (err) {
-    req.log.warn({ err }, "Kalshi feed request failed");
-    res.status(err instanceof KalshiError ? err.status : 502).json({ error: err instanceof Error ? err.message : "Live Kalshi data is temporarily unavailable." });
+    sourceError(res, req, err, "Kalshi feed request failed");
+  }
+});
+
+router.get("/sports/games", async (req, res): Promise<void> => {
+  const parsed = ListSportsGamesQueryParams.safeParse(req.query);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid sports game filters." }); return; }
+  try {
+    const data = await getSnapshot();
+    const { sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
+    const text = search?.trim().toLowerCase();
+    const events = data.events.filter(event =>
+      event.categories.some(category => category.toLowerCase() === "sports") &&
+      (!sport || sport === "all" || event.sport.toLowerCase() === sport.toLowerCase()) &&
+      (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
+      (!text || matchesText(event, text)),
+    );
+    const games = groupSportsGames(events);
+    if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
+    else if (sort === "newest") games.sort((a, b) =>
+      Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
+    );
+    else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
+    res.json(ListSportsGamesResponse.parse({
+      games: games.slice(offset, offset + limit), total: games.length,
+      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations)",
+      partial: data.partial, indexing: data.indexing, warnings: data.warnings,
+      indexedEvents: data.events.length, hasMore: offset + limit < games.length,
+      nextOffset: Math.min(offset + limit, games.length),
+    }));
+  } catch (err) {
+    sourceError(res, req, err, "Kalshi grouped sports request failed");
+  }
+});
+
+router.get("/sports/games/:key", async (req, res): Promise<void> => {
+  const parsed = GetSportsGameParams.safeParse(req.params);
+  if (!parsed.success || !/^[A-Za-z0-9_-]{12,64}$/.test(parsed.data.key)) {
+    res.status(400).json({ error: "Invalid sports game key." }); return;
+  }
+  try {
+    const data = await getSnapshot();
+    const games = groupSportsGames(data.events.filter(event => event.categories.some(category => category.toLowerCase() === "sports")));
+    const game = games.find(item => item.key === parsed.data.key);
+    if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
+    res.json(GetSportsGameResponse.parse(game));
+  } catch (err) {
+    sourceError(res, req, err, "Kalshi sports game request failed");
   }
 });
 
