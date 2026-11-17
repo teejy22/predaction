@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { PredictionEvent } from "./kalshi";
-import { groupSportsGames, marketVariant, matchupTitle } from "./sports-games";
+import { groupSportsGames, marketVariant, matchupTitle, selectMainMarketEvents } from "./sports-games";
 
 const event = (ticker: string, title: string, volume24h = 0, league = "NBA"): PredictionEvent => ({
   ticker,
@@ -31,6 +31,48 @@ const event = (ticker: string, title: string, volume24h = 0, league = "NBA"): Pr
     rules: "",
     url: `https://kalshi.com/markets/example/${ticker.toLowerCase()}`,
   }],
+});
+
+test("limits football and basketball feeds to one primary winner, spread, and total", () => {
+  const spreadBase = event("KXNBASPREAD-1", "New York vs Toronto: Spread", 7);
+  const spread = {
+    ...spreadBase,
+    markets: [
+      { ...spreadBase.markets[0]!, ticker: "ALT-SPREAD", title: "New York wins by over 2.5 points", volume: 20, volume24h: 10 },
+      { ...spreadBase.markets[0]!, ticker: "MAIN-SPREAD", title: "New York wins by over 3.5 points", volume: 100, volume24h: 50 },
+    ],
+    volume: 120,
+    volume24h: 60,
+  };
+  const preciseBase = event("KXNBATOTALPRECISE-1", "New York vs Toronto: Total Points", 1);
+  const preciseTotal = {
+    ...preciseBase,
+    markets: [{ ...preciseBase.markets[0]!, ticker: "PRECISE-TOTAL", volume: 1, volume24h: 1 }],
+    volume: 1,
+    volume24h: 1,
+  };
+  const events = [
+    event("KXNBAGAME-1", "New York vs Toronto", 10),
+    spread,
+    event("KXNBATOTAL-1", "New York vs Toronto: Point Total", 4),
+    preciseTotal,
+    event("KXNBA1HSPREAD-1", "New York vs Toronto: 1st Half Spread", 2),
+    event("KXNBAPROP-1", "New York vs Toronto: Threes", 1),
+    event("KXNBAFUTURE-1", "NBA Championship Winner", 100),
+    { ...event("KXNBASPREAD-BLANK", "Boston vs Miami: Spread", 6, "NBA"), sport: "" },
+    { ...event("KXNHLPROP-1", "Toronto vs Boston: Shots", 8, "NHL"), sport: "Hockey" },
+  ];
+  const selected = selectMainMarketEvents(events);
+  assert.deepEqual(selected.filter(item => item.sport === "Basketball").map(item => item.ticker), [
+    "KXNBAGAME-1", "KXNBASPREAD-1", "KXNBATOTAL-1",
+  ]);
+  assert.equal(selected.find(item => item.ticker === "KXNBASPREAD-BLANK")?.league, "NBA");
+  assert.equal(selected.some(item => item.ticker === "KXNBAFUTURE-1"), false);
+  assert.equal(selected.find(item => item.ticker === "KXNBASPREAD-1")?.markets[0]?.ticker, "MAIN-SPREAD");
+  const game = groupSportsGames(selected).find(item => item.title === "New York vs Toronto");
+  assert.equal(game?.eventCount, 3);
+  assert.equal(game?.marketCount, 3);
+  assert.deepEqual(game?.events.map(item => marketVariant(item)), ["Winner", "Spread", "Point Total"]);
 });
 
 test("groups related winner, spread, total and prop events by matchup", () => {

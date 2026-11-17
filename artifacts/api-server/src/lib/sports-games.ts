@@ -15,6 +15,63 @@ export function marketVariant(event: PredictionEvent) {
   return index >= 0 ? clean(title.slice(index + 1)) : "Winner";
 }
 
+const MAIN_LINE_SPORTS = new Set(["football", "basketball"]);
+const MAIN_LINE_LEAGUES = new Set(["NFL", "NCAAF", "NBA", "WNBA", "NCAAB"]);
+type MainKind = "winner" | "spread" | "total";
+
+function isMainLineSport(event: PredictionEvent) {
+  return MAIN_LINE_SPORTS.has(event.sport.toLowerCase()) || MAIN_LINE_LEAGUES.has(event.league.toUpperCase());
+}
+
+function mainKind(event: PredictionEvent): MainKind | null {
+  const variant = marketVariant(event).toLowerCase();
+  if (variant === "winner" || variant === "moneyline") {
+    return /\bvs\.?\b/i.test(matchupTitle(event.title)) ? "winner" : null;
+  }
+  if (variant === "spread") return "spread";
+  if (variant === "total" || variant === "total points" || variant === "point total") return "total";
+  return null;
+}
+
+export function isMainMarketEvent(event: PredictionEvent) {
+  return !isMainLineSport(event) || mainKind(event) !== null;
+}
+
+function primaryMarketEvent(event: PredictionEvent, kind: MainKind): PredictionEvent {
+  if (kind === "winner") return event;
+  const market = [...event.markets].sort((a, b) =>
+    b.volume24h - a.volume24h || b.volume - a.volume ||
+    Math.abs(a.probability - 50) - Math.abs(b.probability - 50) || a.ticker.localeCompare(b.ticker),
+  )[0];
+  return {
+    ...event,
+    markets: market ? [market] : [],
+    volume: market?.volume ?? 0,
+    volume24h: market?.volume24h ?? 0,
+  };
+}
+
+export function selectMainMarketEvents(events: PredictionEvent[]) {
+  const passthrough: PredictionEvent[] = [];
+  const selected = new Map<string, PredictionEvent>();
+  for (const event of events) {
+    if (!isMainLineSport(event)) {
+      passthrough.push(event);
+      continue;
+    }
+    const kind = mainKind(event);
+    if (!kind) continue;
+    const candidate = primaryMarketEvent(event, kind);
+    const key = `${identity(event)}\u001f${kind}`;
+    const current = selected.get(key);
+    if (!current || candidate.volume24h > current.volume24h ||
+      (candidate.volume24h === current.volume24h && candidate.volume > current.volume)) {
+      selected.set(key, candidate);
+    }
+  }
+  return [...passthrough, ...selected.values()];
+}
+
 function identity(event: PredictionEvent) {
   return [
     event.sport,
@@ -27,7 +84,7 @@ function variantRank(event: PredictionEvent) {
   const variant = marketVariant(event).toLowerCase();
   if (variant === "winner") return 0;
   if (variant === "spread") return 1;
-  if (variant === "total" || variant === "total points") return 2;
+  if (variant === "total" || variant === "total points" || variant === "point total") return 2;
   return 3;
 }
 

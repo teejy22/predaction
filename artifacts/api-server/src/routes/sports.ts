@@ -5,7 +5,7 @@ import {
 } from "@workspace/api-zod";
 import { getSnapshot, getEvent, KalshiError, newestFirst, categoryNames, eventCreatedAt, type PredictionEvent } from "../lib/kalshi";
 import { attachTeamLogos, getEspnTeams } from "../lib/espn";
-import { groupSportsGames } from "../lib/sports-games";
+import { groupSportsGames, selectMainMarketEvents } from "../lib/sports-games";
 
 const router: IRouter = Router();
 
@@ -26,18 +26,18 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
     const data = await getSnapshot();
     const { category, sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
     const text = search?.trim().toLowerCase();
-    const events = data.events.filter(e =>
+    const events = selectMainMarketEvents(data.events.filter(e =>
       (!category || category === "all" || e.categories.some(c => c.toLowerCase() === category.toLowerCase())) &&
       (!sport || sport === "all" || e.sport.toLowerCase() === sport.toLowerCase()) &&
       (!league || league === "all" || e.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(e, text)),
-    );
+    ));
     if (sort === "closing") events.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.ticker.localeCompare(b.ticker));
     else if (sort === "newest") events.sort((a, b) => newestFirst(a, b) || a.ticker.localeCompare(b.ticker));
     else events.sort((a, b) => b.volume24h - a.volume24h || a.ticker.localeCompare(b.ticker));
     res.json(ListEventsResponse.parse({
       events: events.slice(offset, offset + limit), total: events.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations)",
+      updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total)",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < events.length,
       nextOffset: Math.min(offset + limit, events.length),
@@ -54,12 +54,12 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const { sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
     const text = search?.trim().toLowerCase();
-    const events = data.events.filter(event =>
+    const events = selectMainMarketEvents(data.events.filter(event =>
       event.categories.some(category => category.toLowerCase() === "sports") &&
       (!sport || sport === "all" || event.sport.toLowerCase() === sport.toLowerCase()) &&
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
-    );
+    ));
     const games = groupSportsGames(events).map(game => attachTeamLogos(game, teams));
     if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
     else if (sort === "newest") games.sort((a, b) =>
@@ -68,7 +68,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
     res.json(ListSportsGamesResponse.parse({
       games: games.slice(offset, offset + limit), total: games.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations) · ESPN team logos",
+      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,
       nextOffset: Math.min(offset + limit, games.length),
@@ -85,7 +85,8 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
   }
   try {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
-    const games = groupSportsGames(data.events.filter(event => event.categories.some(category => category.toLowerCase() === "sports")))
+    const games = groupSportsGames(selectMainMarketEvents(data.events
+      .filter(event => event.categories.some(category => category.toLowerCase() === "sports"))))
       .map(game => attachTeamLogos(game, teams));
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }

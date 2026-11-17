@@ -15,6 +15,12 @@ Group related sports events on the server using source matchup title and subtitl
 
 **How to apply:** When extending sports browsing, apply filters first, group second, and paginate third. A grouped-game detail request should return the complete current matchup group even when the listing card came from a narrower search result.
 
+Football and basketball user-facing feeds intentionally show only full-game Winner/Moneyline, one primary Spread, and one primary Total. Exclude futures, alternate lines, halves/quarters, team totals, and props; leave other sports unchanged.
+
+**Why:** The user explicitly scoped football and basketball browsing to the main lines and does not want large alt-line/prop payloads.
+
+**How to apply:** Canonicalize football/basketball events server-side before grouping or returning sports feeds, choose the highest-volume primary spread/total market, and treat no-colon futures as Winner only when the source title is an actual team matchup.
+
 Kalshi league metadata can vary across events in the same game. Use exact source series-title phrases such as “Pro Football” → NFL, “College Football” → NCAAF, and “College Basketball” → NCAAB when tags only name the sport, and do not let a missing league split a matchup group.
 
 **Why:** Kalshi tags professional/college football and college-basketball series only with the broad sport; their authoritative series titles carry the league wording. Treating league as part of the game identity splits spreads and totals away from the main event and hides most college games from league filters.
