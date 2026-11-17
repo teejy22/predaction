@@ -92,6 +92,7 @@
   --popover-foreground: 250 25% 96%;
   --popover-border: 234 18% 20%;
   --primary: 262 59% 50%;
+  --primary-readable: 262 84% 72%;
   --primary-foreground: 250 25% 98%;
   --secondary: 234 18% 15%;
   --secondary-foreground: 250 25% 96%;
@@ -204,6 +205,7 @@
   --popover-foreground: 250 25% 96%;
   --popover-border: 234 18% 20%;
   --primary: 262 59% 50%;
+  --primary-readable: 262 84% 72%;
   --primary-foreground: 250 25% 98%;
   --secondary: 234 18% 15%;
   --secondary-foreground: 250 25% 96%;
@@ -378,6 +380,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 .rise{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 .live-dot{animation:pulse-dot 1.4s ease-in-out infinite}
+.text-primary{color:hsl(var(--primary-readable))}
+.hover\:text-primary:hover{color:hsl(var(--primary-readable))}
+.group:hover .group-hover\:text-primary{color:hsl(var(--primary-readable))}
 @keyframes fillbar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .fillbar{transform-origin:left;animation:fillbar .8s cubic-bezier(.2,.8,.2,1) both}
 @media (max-width: 640px){.price-texture{right:-42%;top:7%;opacity:.6}.hero-field{background:radial-gradient(ellipse 95% 95% at 0% 0%,hsl(262 59% 28% / .55),transparent 78%),hsl(var(--background))}}

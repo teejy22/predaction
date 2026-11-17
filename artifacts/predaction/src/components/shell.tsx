@@ -1,8 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bookmark, HelpCircle, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy } from "lucide-react";
+import { Bookmark, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy } from "lucide-react";
 import { useWatchlist } from "@/hooks/use-watchlist";
-import { HowItWorksDialog } from "@/components/how-it-works";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export function Logo({ className = "h-[22px] w-auto" }: { className?: string }) {
@@ -12,7 +11,6 @@ export function Logo({ className = "h-[22px] w-auto" }: { className?: string }) 
 export function Shell({ children }: { children: ReactNode }) {
   const [loc] = useLocation();
   const { items } = useWatchlist();
-  const [how, setHow] = useState(false);
   const [open, setOpen] = useState(false);
 
   const marketLinks = [
@@ -62,13 +60,6 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link href="/pulse" data-testid="link-nav-articles" aria-current={activeLink("/pulse") ? "page" : undefined} className={navClass(activeLink("/pulse"))}>Articles</Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => setHow(true)}
-              data-testid="button-how-it-works"
-              className="hidden items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground sm:flex"
-            >
-              <HelpCircle className="h-4 w-4" /> How it works
-            </button>
             <button className="rounded-md p-2 lg:hidden" onClick={() => setOpen((v) => !v)} data-testid="button-menu" aria-label={open ? "Close navigation menu" : "Open navigation menu"} aria-expanded={open} aria-controls="mobile-navigation">
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -81,9 +72,6 @@ export function Shell({ children }: { children: ReactNode }) {
             <p className="pb-1 pt-4 font-mono text-[9px] uppercase tracking-[.17em] text-muted-foreground">Tools</p>
             {toolLinks.map((n) => <Link key={n.href} href={n.href} aria-current={activeLink(n.href) ? "page" : undefined} onClick={() => setOpen(false)} data-testid={`link-mobile-${n.href.split("/").filter(Boolean).join("-")}`} className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink(n.href) ? "text-primary" : "text-foreground"}`}><n.icon className="h-4 w-4" />{n.label}</Link>)}
             <Link href="/pulse" aria-current={activeLink("/pulse") ? "page" : undefined} onClick={() => setOpen(false)} data-testid="link-mobile-articles" className={`flex items-center gap-2 py-2.5 text-sm font-semibold ${activeLink("/pulse") ? "text-primary" : "text-foreground"}`}><Radio className="h-4 w-4" />Articles</Link>
-            <button onClick={() => { setHow(true); setOpen(false); }} data-testid="button-how-it-works-mobile" className="block py-2 text-lg font-semibold text-muted-foreground">
-              How it works
-            </button>
         </nav>
         )}
       </header>
@@ -110,7 +98,6 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </footer>
-      <HowItWorksDialog open={how} onOpenChange={setHow} />
     </div>
   );
 }
