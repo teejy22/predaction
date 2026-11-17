@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronDown, Clock } from "lucide-react";
 import { getGetSportsGameQueryKey, useGetSportsGame, type PredictionEvent } from "@workspace/api-client-react";
 import { CategoryTag, Change, ErrorPanel, KalshiCTA, ProbBar, WatchButton } from "@/components/bits";
 import { eventLabel } from "@/components/sports-game-card";
+import { TeamLogos } from "@/components/team-logos";
 import { closeLabel, fmtCents, fmtContracts, fullDate } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
@@ -56,8 +57,13 @@ export default function SportsGamePage() {
         <div className="relative mx-auto max-w-6xl px-4 py-10 md:px-6">
           {back}
           <div className="rise mt-6"><CategoryTag category={g.category} sport={g.sport} league={g.league} /></div>
-          <h1 className="font-display rise mt-3 max-w-4xl text-4xl font-bold leading-[1.02] sm:text-5xl" data-testid="text-game-title">{g.title}</h1>
-          {g.subtitle && <p className="mt-3 text-base text-muted-foreground">{g.subtitle}</p>}
+          <div className="rise mt-4 flex items-center gap-4">
+            <TeamLogos teams={g.teams} size="lg" />
+            <div className="min-w-0">
+              <h1 className="font-display max-w-4xl text-4xl font-bold leading-[1.02] sm:text-5xl" data-testid="text-game-title">{g.title}</h1>
+              {g.subtitle && <p className="mt-3 text-base text-muted-foreground">{g.subtitle}</p>}
+            </div>
+          </div>
           <div className="mt-6"><KalshiCTA url={g.url} /></div>
           <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-5">
             {[

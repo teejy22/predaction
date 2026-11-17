@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { ArrowUpRight, Clock3, Layers } from "lucide-react";
 import type { PredictionEvent, PredictionMarket, SportsGame } from "@workspace/api-client-react";
+import { TeamLogos } from "@/components/team-logos";
 import { closeLabel, fmtContracts } from "@/lib/format";
 
 export function eventLabel(event: PredictionEvent): string {
@@ -50,9 +51,12 @@ export function SportsGameCard({ game }: { game: SportsGame }) {
           <Layers className="h-3 w-3" />{game.eventCount} ev · {game.marketCount} mkt
         </span>
       </div>
-      <Link href={href} data-testid={`link-sports-game-${game.key}`} aria-label={`Open all markets for ${game.title}`} className="mt-2 block after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-primary">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">{game.title}</h3>
-        {game.subtitle && <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{game.subtitle}</p>}
+      <Link href={href} data-testid={`link-sports-game-${game.key}`} aria-label={`Open all markets for ${game.title}`} className="mt-2 flex items-center gap-3 after:absolute after:inset-0 after:rounded-lg focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-primary">
+        <TeamLogos teams={game.teams} size="sm" />
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-5 group-hover:text-primary">{game.title}</h3>
+          {game.subtitle && <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">{game.subtitle}</p>}
+        </div>
       </Link>
 
       <div className="mt-3 flex-1 space-y-2.5">

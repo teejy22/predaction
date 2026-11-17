@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PredictionEvent } from './predictionEvent';
+import type { TeamLogo } from './teamLogo';
 
 export interface SportsGame {
   key: string;
@@ -21,5 +22,6 @@ export interface SportsGame {
   url: string;
   eventCount: number;
   marketCount: number;
+  teams: TeamLogo[];
   events: PredictionEvent[];
 }

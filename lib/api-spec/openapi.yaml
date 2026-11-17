@@ -251,9 +251,16 @@ components:
         indexedEvents: { type: integer }
         hasMore: { type: boolean }
         nextOffset: { type: integer }
+    TeamLogo:
+      type: object
+      required: [name, abbreviation, logo]
+      properties:
+        name: { type: string }
+        abbreviation: { type: string }
+        logo: { type: string, format: uri }
     SportsGame:
       type: object
-      required: [key, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, eventCount, marketCount, events]
+      required: [key, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, eventCount, marketCount, teams, events]
       properties:
         key: { type: string }
         title: { type: string }
@@ -268,6 +275,9 @@ components:
         url: { type: string }
         eventCount: { type: integer }
         marketCount: { type: integer }
+        teams:
+          type: array
+          items: { $ref: "#/components/schemas/TeamLogo" }
         events:
           type: array
           items: { $ref: "#/components/schemas/PredictionEvent" }

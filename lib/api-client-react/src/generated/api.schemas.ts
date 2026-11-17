@@ -157,6 +157,12 @@ export interface EventFeed {
   nextOffset: number;
 }
 
+export interface TeamLogo {
+  name: string;
+  abbreviation: string;
+  logo: string;
+}
+
 export interface SportsGame {
   key: string;
   title: string;
@@ -171,6 +177,7 @@ export interface SportsGame {
   url: string;
   eventCount: number;
   marketCount: number;
+  teams: TeamLogo[];
   events: PredictionEvent[];
 }
 

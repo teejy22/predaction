@@ -70,6 +70,7 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
       url: main.url,
       eventCount: grouped.length,
       marketCount: grouped.reduce((sum, event) => sum + event.markets.length, 0),
+      teams: [],
       events: ordered,
     };
   });

@@ -4,6 +4,7 @@ import {
   ListSportsGamesQueryParams, ListSportsGamesResponse, GetSportsGameParams, GetSportsGameResponse,
 } from "@workspace/api-zod";
 import { getSnapshot, getEvent, KalshiError, newestFirst, categoryNames, eventCreatedAt, type PredictionEvent } from "../lib/kalshi";
+import { attachTeamLogos, getEspnTeams } from "../lib/espn";
 import { groupSportsGames } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -50,7 +51,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
   const parsed = ListSportsGamesQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: "Invalid sports game filters." }); return; }
   try {
-    const data = await getSnapshot();
+    const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const { sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
     const text = search?.trim().toLowerCase();
     const events = data.events.filter(event =>
@@ -59,7 +60,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
     );
-    const games = groupSportsGames(events);
+    const games = groupSportsGames(events).map(game => attachTeamLogos(game, teams));
     if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
     else if (sort === "newest") games.sort((a, b) =>
       Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
@@ -67,7 +68,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
     res.json(ListSportsGamesResponse.parse({
       games: games.slice(offset, offset + limit), total: games.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations)",
+      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations) · ESPN team logos",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,
       nextOffset: Math.min(offset + limit, games.length),
@@ -83,8 +84,9 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid sports game key." }); return;
   }
   try {
-    const data = await getSnapshot();
-    const games = groupSportsGames(data.events.filter(event => event.categories.some(category => category.toLowerCase() === "sports")));
+    const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
+    const games = groupSportsGames(data.events.filter(event => event.categories.some(category => category.toLowerCase() === "sports")))
+      .map(game => attachTeamLogos(game, teams));
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
     res.json(GetSportsGameResponse.parse(game));

@@ -28,3 +28,4 @@ export * from './predictionMarket';
 export * from './sportCategory';
 export * from './sportsGame';
 export * from './sportsGameFeed';
+export * from './teamLogo';

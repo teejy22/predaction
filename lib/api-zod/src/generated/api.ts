@@ -674,6 +674,11 @@ export const ListSportsGamesResponse = zod.object({
   "url": zod.string(),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})),
   "events": zod.array(zod.object({
   "ticker": zod.string(),
   "seriesTicker": zod.string(),
@@ -737,6 +742,11 @@ export const GetSportsGameResponse = zod.object({
   "url": zod.string(),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
+  "teams": zod.array(zod.object({
+  "name": zod.string(),
+  "abbreviation": zod.string(),
+  "logo": zod.string().url()
+})),
   "events": zod.array(zod.object({
   "ticker": zod.string(),
   "seriesTicker": zod.string(),
