@@ -34,10 +34,16 @@ export function normalizeFlowframe(name: FeedName, value: unknown, checkedAt: st
     if (name === "polymarketMovers") {
       // The public contract explicitly permits null titles and condition IDs.
       if (!text(item.conditionId) || !text(item.marketTitle)) { omitted++; return []; }
+      // The provider's deltaPct sign does not reliably match the direction of the move,
+      // so the change is taken from the window's start and end prices when both are supplied.
+      const from = item.priceFrom, to = item.priceTo;
+      const change = typeof from === "number" && typeof to === "number" && Number.isFinite(from) && Number.isFinite(to)
+        ? Math.round((to - from) * 10_000) / 100
+        : number(item.deltaPct);
       return [{
         id: text(item.conditionId), title: text(item.marketTitle), category: text(item.category),
         url: item.polymarketUrl == null ? "" : safeUrl(item.polymarketUrl, "polymarket.com"),
-        probability: price(item.currentPrice, 100), change: number(item.deltaPct),
+        probability: price(item.currentPrice, 100), change,
       }];
     }
     if (name === "trades") {

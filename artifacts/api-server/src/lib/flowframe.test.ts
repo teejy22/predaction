@@ -264,3 +264,11 @@ test("on-demand tools share the global budget but retain hourly cache and indepe
   await client.tools();
   assert.equal(calls, 21);
 });
+
+test("Polymarket mover direction comes from the start and end prices, not the provider's signed delta", () => {
+  const feed = normalizeFlowframe("polymarketMovers", { data: [
+    { conditionId: "fell", marketTitle: "Fell?", currentPrice: 0.118, priceFrom: 0.964, priceTo: 0.118, deltaPct: 84.6, polymarketUrl: null },
+    { conditionId: "rose", marketTitle: "Rose?", currentPrice: 0.735, priceFrom: 0.66, priceTo: 0.735, deltaPct: -7.5, polymarketUrl: null },
+  ], meta }, checked);
+  assert.deepEqual(feed.items.map(item => item.change), [-84.6, 7.5]);
+});
