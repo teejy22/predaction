@@ -1,8 +1,9 @@
 import { useRef } from "react";
-import { ArrowDownRight, ArrowUpRight, ArrowUp, Clock3, RotateCw } from "lucide-react";
+import { ArrowUpRight, Clock3, RotateCw } from "lucide-react";
 import { Link } from "wouter";
 import { getListEventsQueryKey, useListEvents, type PredictionEvent, type PredictionMarket } from "@workspace/api-client-react";
 import { CategoryTag, Change } from "@/components/bits";
+import { FlowframeInsights } from "@/components/flowframe-insights";
 import { closeLabel, fmtContracts, updatedLabel } from "@/lib/format";
 
 type DiscoveryProps = {
@@ -25,11 +26,6 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
   });
   const events = feed.data?.events ?? [];
   const featured = events[0];
-  const activeMarkets = events.flatMap((event) => {
-    const market = [...event.markets].sort((a, b) => Math.abs(b.change) - Math.abs(a.change))[0];
-    return market ? [{ event, market }] : [];
-  });
-  const movers = [...activeMarkets].sort((a, b) => Math.abs(b.market.change) - Math.abs(a.market.change)).slice(0, 5);
   const topEvents = [...events].sort((a, b) => b.volume - a.volume).slice(0, 7);
   const sportsEvents = events.filter((event) => event.sport).slice(0, 4);
   const categoryNames = [...new Set(events.map((event) => event.category).filter(Boolean))]
@@ -47,7 +43,7 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
             See what moved.<br />Know <span className="font-editorial text-primary">why.</span> Follow <span className="font-editorial">what’s behind it.</span>
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Crowd prices across Kalshi’s open events—clear, current, and without a forecast of our own. Find the markets worth a closer look.
+            The main board follows Kalshi’s open events. Sourced FlowFrame intelligence adds Polymarket movers, tracked-wallet activity and publication updates—without a forecast of our own.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button onClick={() => moversRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" })} data-testid="button-hero-browse" className="rounded-md bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background">See market movers</button>
@@ -60,35 +56,8 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
         </div>
       </section>
 
-      <section className="grid gap-5 py-8 lg:grid-cols-[1.55fr_.85fr]" aria-label="Market activity">
-        <div ref={moversRef} className="min-w-0 scroll-mt-20">
-          <SectionHeading eyebrow="From sampled active markets" title="Biggest movers" note="Change from the previous API price · percentage points" />
-          {feed.isLoading ? <RowsSkeleton rows={4} /> : feed.isError && !feed.data ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : movers.length ? (
-            <div className="mt-3 overflow-hidden rounded-lg border border-border bg-card/70">
-              {movers.map(({ event, market }, i) => (
-                <EventMarketRow key={market.ticker} event={event} market={market} index={i} />
-              ))}
-            </div>
-          ) : <EmptyPanel label="No market changes in the current sample." />}
-        </div>
-        <aside className="flex min-w-0 flex-col rounded-lg border border-border bg-card/70 p-4 sm:p-5" aria-label="Live market pulse">
-          <SectionHeading eyebrow="Live market pulse" title="What’s on the board" />
-          {feed.data ? (
-            <>
-              <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-5">
-                <PulseMetric label="Open events sampled" value={feed.data.events.length.toLocaleString()} />
-                <PulseMetric label="Indexed events" value={feed.data.indexedEvents.toLocaleString()} />
-                <PulseMetric label="Contracts in sample" value={fmtContracts(events.reduce((sum, event) => sum + event.volume, 0))} />
-                <PulseMetric label="Categories in sample" value={new Set(events.map((event) => event.category).filter(Boolean)).size.toString()} />
-              </div>
-              <div className="mt-auto border-t border-border pt-4">
-                <p className="text-xs leading-5 text-muted-foreground">A bounded active-market sample, not a complete catalog or a global ranking.</p>
-                {feed.data.indexing && <p className="mt-2 text-xs text-primary">The open-event index is still building.</p>}
-                {feed.data.partial && <p className="mt-2 text-xs text-amber-200">Some source data could not be loaded in this cycle.</p>}
-              </div>
-            </>
-          ) : feed.isLoading ? <div className="mt-5 space-y-4"><div className="h-12 animate-pulse rounded bg-muted" /><div className="h-12 animate-pulse rounded bg-muted" /></div> : <p className="mt-5 text-sm text-muted-foreground">Pulse data is temporarily unavailable.</p>}
-        </aside>
+      <section className="py-8" aria-label="FlowFrame market insights">
+        <FlowframeInsights moversRef={moversRef} />
       </section>
 
       <section className="border-y border-border py-7" aria-label="Browse categories">
@@ -158,25 +127,6 @@ function FeaturedEvent({ event }: { event: PredictionEvent }) {
   );
 }
 
-function EventMarketRow({ event, market, index }: { event: PredictionEvent; market: PredictionMarket; index: number }) {
-  const positive = market.change >= 0;
-  const Arrow = positive ? ArrowUp : ArrowDownRight;
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 border-b border-border/80 px-3.5 py-3 transition-colors hover:bg-white/[.025] last:border-0 sm:grid-cols-[minmax(0,1fr)_90px_90px_92px] sm:px-4">
-      <div className="min-w-0">
-        <p className="mb-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{event.category || event.sport || "Open market"} <span className="px-1 opacity-50">/</span> {market.subtitle || market.title}</p>
-        <EventLink event={event} className="group block truncate text-xs font-semibold leading-5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm">{event.title}</EventLink>
-      </div>
-      <span className="font-mono text-xs tabular text-muted-foreground">{Math.round(market.probability)}%</span>
-      <span className="hidden font-mono text-[10px] text-muted-foreground sm:block" title="Contracts traded in the last 24 hours">{fmtContracts(market.volume24h)} / 24h</span>
-      <EventLink event={event} className={`inline-flex items-center justify-end gap-1 font-mono text-xs font-semibold tabular ${positive ? "text-emerald-300" : "text-rose-300"}`} aria-label={`${market.change > 0 ? "Up" : "Down"} ${Math.abs(market.change).toFixed(1)} percentage points`}>
-        <Arrow className="h-3 w-3" />{market.change > 0 ? "+" : ""}{market.change.toFixed(1)} pp
-      </EventLink>
-      <span className="sr-only">Sample mover {index + 1}</span>
-    </div>
-  );
-}
-
 function CategoryPanel({ name, events, onClick }: { name: string; events: PredictionEvent[]; onClick: () => void }) {
   return (
     <article className="rounded-lg border border-border bg-card/55 p-3.5 transition-colors hover:border-primary/40">
@@ -221,10 +171,6 @@ function TopMarketRow({ event, market }: { event: PredictionEvent; market?: Pred
 
 function SectionHeading({ eyebrow, title, note }: { eyebrow: string; title: string; note?: string }) {
   return <div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">{eyebrow}</p><h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">{title}</h2>{note && <p className="mt-1 text-[11px] text-muted-foreground">{note}</p>}</div>;
-}
-
-function PulseMetric({ label, value }: { label: string; value: string }) {
-  return <div><p className="font-mono text-xl font-semibold tabular sm:text-2xl">{value}</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">{label}</p></div>;
 }
 
 function FeaturedSkeleton() {

@@ -17,6 +17,7 @@ import type {
 
 import type {
   EventFeed,
+  FlowframeInsights,
   HealthStatus,
   ListEventsParams,
   MarketOverview,
@@ -49,6 +50,83 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetFlowframeInsightsUrl = () => {
+
+
+
+
+  return `/api/flowframe/insights`
+}
+
+/**
+ * @summary Cached Flowframe Kalshi and Polymarket intelligence and tracked-wallet trades
+ */
+export const getFlowframeInsights = async ( options?: Parameters<typeof customFetch>[1]): Promise<FlowframeInsights> => {
+
+  return customFetch<FlowframeInsights>(getGetFlowframeInsightsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFlowframeInsightsQueryKey = () => {
+    return [
+    `/api/flowframe/insights`
+    ] as const;
+    }
+
+
+export const getGetFlowframeInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getFlowframeInsights>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFlowframeInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFlowframeInsightsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFlowframeInsights>>> = ({ signal }) => getFlowframeInsights({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFlowframeInsights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFlowframeInsightsQueryResult = NonNullable<Awaited<ReturnType<typeof getFlowframeInsights>>>
+export type GetFlowframeInsightsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Cached Flowframe Kalshi and Polymarket intelligence and tracked-wallet trades
+ */
+
+export function useGetFlowframeInsights<TData = Awaited<ReturnType<typeof getFlowframeInsights>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFlowframeInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFlowframeInsightsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListEventsUrl = (params?: ListEventsParams,) => {
   const normalizedParams = new URLSearchParams();

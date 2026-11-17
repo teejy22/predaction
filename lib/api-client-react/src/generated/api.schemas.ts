@@ -5,6 +5,59 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type FlowframeItemSide = typeof FlowframeItemSide[keyof typeof FlowframeItemSide];
+
+
+export const FlowframeItemSide = {
+  BUY: 'BUY',
+  SELL: 'SELL',
+} as const;
+
+export interface FlowframeItem {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  eventTicker?: string;
+  probability?: number;
+  change?: number;
+  publishedAt?: string;
+  wallet?: string;
+  profileUrl?: string;
+  side?: FlowframeItemSide;
+  outcome?: string;
+  shares?: number;
+  usdcSize?: number;
+}
+
+export type FlowframeFeedStatus = typeof FlowframeFeedStatus[keyof typeof FlowframeFeedStatus];
+
+
+export const FlowframeFeedStatus = {
+  ready: 'ready',
+  stale: 'stale',
+  unavailable: 'unavailable',
+  unconfigured: 'unconfigured',
+} as const;
+
+export interface FlowframeFeed {
+  items: FlowframeItem[];
+  status: FlowframeFeedStatus;
+  fetchedAt: string;
+  checkedAt: string;
+  message: string;
+}
+
+export interface FlowframeInsights {
+  movers: FlowframeFeed;
+  polymarketMovers: FlowframeFeed;
+  trades: FlowframeFeed;
+  trending: FlowframeFeed;
+  pulse: FlowframeFeed;
+  refreshMinutes: number;
+  attribution: string;
+}
+
 export interface PredictionMarket {
   ticker: string;
   title: string;

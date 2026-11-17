@@ -11,6 +11,16 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /flowframe/insights:
+    get:
+      operationId: getFlowframeInsights
+      summary: Cached Flowframe Kalshi and Polymarket intelligence and tracked-wallet trades
+      responses:
+        "200":
+          description: Independently available Flowframe feeds with source timestamps and status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FlowframeInsights" }
   /events:
     get:
       operationId: listEvents
@@ -66,6 +76,46 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    FlowframeItem:
+      type: object
+      required: [id, title, url, category]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        url: { type: string }
+        category: { type: string }
+        eventTicker: { type: string }
+        probability: { type: number }
+        change: { type: number }
+        publishedAt: { type: string }
+        wallet: { type: string }
+        profileUrl: { type: string }
+        side: { type: string, enum: [BUY, SELL] }
+        outcome: { type: string }
+        shares: { type: number }
+        usdcSize: { type: number }
+    FlowframeFeed:
+      type: object
+      required: [items, status, fetchedAt, checkedAt, message]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/FlowframeItem" }
+        status: { type: string, enum: [ready, stale, unavailable, unconfigured] }
+        fetchedAt: { type: string }
+        checkedAt: { type: string }
+        message: { type: string }
+    FlowframeInsights:
+      type: object
+      required: [movers, polymarketMovers, trades, trending, pulse, refreshMinutes, attribution]
+      properties:
+        movers: { $ref: "#/components/schemas/FlowframeFeed" }
+        polymarketMovers: { $ref: "#/components/schemas/FlowframeFeed" }
+        trades: { $ref: "#/components/schemas/FlowframeFeed" }
+        trending: { $ref: "#/components/schemas/FlowframeFeed" }
+        pulse: { $ref: "#/components/schemas/FlowframeFeed" }
+        refreshMinutes: { type: integer }
+        attribution: { type: string }
     PredictionMarket:
       type: object
       required: [ticker, title, subtitle, probability, yesAsk, noAsk, volume, volume24h, change, status, closeTime, rules, url]

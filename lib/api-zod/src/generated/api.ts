@@ -9,6 +9,125 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Cached Flowframe Kalshi and Polymarket intelligence and tracked-wallet trades
+ */
+export const GetFlowframeInsightsResponse = zod.object({
+  "movers": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string()
+}),
+  "polymarketMovers": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string()
+}),
+  "trades": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string()
+}),
+  "trending": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string()
+}),
+  "pulse": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string()
+}),
+  "refreshMinutes": zod.number().int(),
+  "attribution": zod.string()
+})
+
+
+/**
  * @summary Browse indexed open Kalshi events across categories
  */
 export const listEventsQueryOffsetDefault = 0;

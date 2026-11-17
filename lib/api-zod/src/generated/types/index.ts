@@ -7,6 +7,11 @@
  */
 
 export * from './eventFeed';
+export * from './flowframeFeed';
+export * from './flowframeFeedStatus';
+export * from './flowframeInsights';
+export * from './flowframeItem';
+export * from './flowframeItemSide';
 export * from './healthStatus';
 export * from './listEventsParams';
 export * from './listEventsSort';

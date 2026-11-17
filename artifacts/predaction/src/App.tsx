@@ -7,6 +7,9 @@ import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
 import EventPage from '@/pages/event';
 import Watchlist from '@/pages/watchlist';
+import MoversPage from '@/pages/movers';
+import TradersPage from '@/pages/traders';
+import PulsePage from '@/pages/pulse';
 import { Shell } from '@/components/shell';
 import {
   Route,
@@ -27,6 +30,9 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/event/:ticker" component={EventPage} />
         <Route path="/watchlist" component={Watchlist} />
+        <Route path="/movers" component={MoversPage} />
+        <Route path="/traders" component={TradersPage} />
+        <Route path="/pulse" component={PulsePage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
