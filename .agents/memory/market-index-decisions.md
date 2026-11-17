@@ -15,6 +15,12 @@ Group related sports events on the server using source matchup title and subtitl
 
 **How to apply:** When extending sports browsing, apply filters first, group second, and paginate third. A grouped-game detail request should return the complete current matchup group even when the listing card came from a narrower search result.
 
+Kalshi league metadata can vary across events in the same game. Use exact source series-title phrases such as “Pro Football” → NFL and “College Football” → NCAAF when tags only say “Football,” and do not let a missing league split a matchup group.
+
+**Why:** Kalshi tags NFL and college spread/total series only as Football; their authoritative series titles carry the league wording. Treating league as part of the game identity splits spreads and totals away from the main event and hides most college games from league filters.
+
+**How to apply:** Derive league only from source series metadata/titles, never ticker strings. Group by matchup title/subtitle and populate the group’s league from any related event that has reliable league metadata.
+
 Keep third-party intelligence visibly separate from the direct Kalshi event index; do not silently replace unavailable provider rankings with a ranking from a sampled event page.
 
 **Why:** The sources have different coverage, ranking definitions, and update windows. A visually identical fallback would suggest the same ranking had refreshed when it had not.

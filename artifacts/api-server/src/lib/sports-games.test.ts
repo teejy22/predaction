@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import type { PredictionEvent } from "./kalshi";
 import { groupSportsGames, marketVariant, matchupTitle } from "./sports-games";
 
-const event = (ticker: string, title: string, volume24h = 0): PredictionEvent => ({
+const event = (ticker: string, title: string, volume24h = 0, league = "NBA"): PredictionEvent => ({
   ticker,
   seriesTicker: ticker.split("-")[0] ?? ticker,
   title,
@@ -11,7 +11,7 @@ const event = (ticker: string, title: string, volume24h = 0): PredictionEvent =>
   category: "Sports",
   categories: ["Sports"],
   sport: "Basketball",
-  league: "NBA",
+  league,
   volume: volume24h * 2,
   volume24h,
   closeTime: "2026-11-20T00:30:00Z",
@@ -51,6 +51,15 @@ test("groups related winner, spread, total and prop events by matchup", () => {
   assert.equal(game.volume24h, 24);
   assert.deepEqual(game.events.slice(0, 3).map(item => marketVariant(item)), ["Winner", "Spread", "Total Points"]);
   assert.equal(game.events[0]?.ticker, "KXNBAGAME-1");
+});
+
+test("keeps a matchup together when one source event lacks league metadata", () => {
+  const winner = event("KXNBAGAME-1", "New York vs Toronto", 10, "NBA");
+  const spread = event("KXNBASPREAD-1", "New York vs Toronto: Spread", 7, "");
+  const games = groupSportsGames([spread, winner]);
+  assert.equal(games.length, 1);
+  assert.equal(games[0]?.league, "NBA");
+  assert.equal(games[0]?.eventCount, 2);
 });
 
 test("uses source matchup copy and keeps differently dated repeat matchups separate", () => {

@@ -29,6 +29,10 @@ test("normalization preserves source copy, contract units, close time and reliab
   const sport = normalize(raw("SPORT", "Sports"), { ticker: "SERIES", title: "NFL game winner", category: "Sports", tags: ["Football"] });
   assert.equal(sport.sport, "Football");
   assert.equal(sport.league, "NFL");
+  const proSpread = normalize(raw("SPREAD", "Sports"), { ticker: "SPREADSERIES", title: "Pro Football Spread", category: "Sports", tags: ["Football"] });
+  assert.equal(proSpread.league, "NFL");
+  const collegeSpread = normalize(raw("CFBSPREAD", "Sports"), { ticker: "CFBSPREADSERIES", title: "College Football Spread", category: "Sports", tags: ["Football"] });
+  assert.equal(collegeSpread.league, "NCAAF");
   const unknown = normalize(raw("SPORT", "Sports"));
   assert.equal(unknown.sport, "");
   assert.equal(unknown.league, "");

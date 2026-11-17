@@ -18,7 +18,6 @@ export function marketVariant(event: PredictionEvent) {
 function identity(event: PredictionEvent) {
   return [
     event.sport,
-    event.league,
     matchupTitle(event.title),
     event.subtitle || event.closeTime.slice(0, 10),
   ].map(value => clean(value).toLowerCase()).join("\u001f");
@@ -63,8 +62,8 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
       subtitle: main.subtitle,
       category: main.category,
       categories: [...new Set(grouped.flatMap(event => event.categories))].sort(),
-      sport: main.sport,
-      league: main.league,
+      sport: grouped.find(event => event.sport)?.sport ?? main.sport,
+      league: grouped.find(event => event.league)?.league ?? "",
       volume: grouped.reduce((sum, event) => sum + event.volume, 0),
       volume24h: grouped.reduce((sum, event) => sum + event.volume24h, 0),
       closeTime: closeTimes[0] ?? "",

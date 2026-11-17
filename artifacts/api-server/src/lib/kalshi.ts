@@ -94,12 +94,18 @@ const leagueSports: Record<string, string> = {
   NHL: "Hockey", NCAAF: "Football", NCAAB: "Basketball", EPL: "Soccer",
   UCL: "Soccer", UFC: "MMA", ATP: "Tennis", WTA: "Tennis", PGA: "Golf", F1: "Motorsport",
 };
+const leagueTitleAliases: Record<string, string> = {
+  "pro football": "NFL",
+  "college football": "NCAAF",
+};
 export function normalize(event: RawEvent, info?: Series, openOnly = true): PredictionEvent {
   const url = `https://kalshi.com/markets/${encodeURIComponent(event.series_ticker.toLowerCase())}/${encodeURIComponent(event.event_ticker.toLowerCase())}`;
   const category = event.category || info?.category || "Uncategorized";
   const categories = [...new Set([category, ...(info?.categories ?? [])])];
   const tags = category === "Sports" ? info?.tags ?? [] : [];
-  const league = tags.find(t => leagueSports[t]) ||
+  const seriesTitle = (info?.title ?? "").toLowerCase();
+  const titleAlias = Object.entries(leagueTitleAliases).find(([phrase]) => new RegExp(`\\b${phrase}\\b`).test(seriesTitle))?.[1] ?? "";
+  const league = tags.find(t => leagueSports[t]) || titleAlias ||
     (category === "Sports" ? Object.keys(leagueSports).find(name => new RegExp(`\\b${name}\\b`).test(info?.title ?? "")) : "") || "";
   const sport = tags.find(t => sportTags.includes(t)) || leagueSports[league] || "";
   const markets = (event.markets ?? [])
