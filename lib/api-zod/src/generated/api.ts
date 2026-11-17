@@ -672,7 +672,7 @@ export const ListSportsGamesQueryParams = zod.object({
   "sport": zod.coerce.string().optional(),
   "league": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional(),
-  "sort": zod.enum(['volume', 'closing', 'newest']).optional(),
+  "sort": zod.enum(['volume', 'closing', 'newest', 'upcoming']).optional(),
   "offset": zod.coerce.number().int().min(listSportsGamesQueryOffsetMin).default(listSportsGamesQueryOffsetDefault),
   "limit": zod.coerce.number().int().min(1).max(listSportsGamesQueryLimitMax).default(listSportsGamesQueryLimitDefault)
 })
@@ -690,6 +690,8 @@ export const ListSportsGamesResponse = zod.object({
   "volume24h": zod.number(),
   "closeTime": zod.string(),
   "url": zod.string(),
+  "gameDate": zod.string().optional().describe('Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one'),
+  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) when Kalshi publishes one'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({
@@ -767,6 +769,8 @@ export const GetSportsGameResponse = zod.object({
   "volume24h": zod.number(),
   "closeTime": zod.string(),
   "url": zod.string(),
+  "gameDate": zod.string().optional().describe('Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one'),
+  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) when Kalshi publishes one'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({

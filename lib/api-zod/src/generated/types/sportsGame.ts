@@ -20,6 +20,10 @@ export interface SportsGame {
   volume24h: number;
   closeTime: string;
   url: string;
+  /** Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one */
+  gameDate?: string;
+  /** Scheduled start (ISO 8601) when Kalshi publishes one */
+  startTime?: string;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];

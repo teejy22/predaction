@@ -69,7 +69,7 @@ paths:
         - { name: sport, in: query, schema: { type: string } }
         - { name: league, in: query, schema: { type: string } }
         - { name: search, in: query, schema: { type: string } }
-        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest] } }
+        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest, upcoming] } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
       responses:
@@ -280,6 +280,8 @@ components:
         volume24h: { type: number }
         closeTime: { type: string }
         url: { type: string }
+        gameDate: { type: string, description: "Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one" }
+        startTime: { type: string, description: "Scheduled start (ISO 8601) when Kalshi publishes one" }
         eventCount: { type: integer }
         marketCount: { type: integer }
         teams:

@@ -1,5 +1,5 @@
-import { useRef, type ReactNode } from "react";
-import { ArrowRight, ArrowUpRight, Clock3, RotateCw } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Clock3, RotateCw } from "lucide-react";
 import { Link } from "wouter";
 import { getGetOverviewQueryKey, getListEventsQueryKey, useGetOverview, useListEvents, type PredictionEvent, type PredictionMarket } from "@workspace/api-client-react";
 import { CategoryTag, Change, ProbBar } from "@/components/bits";
@@ -38,8 +38,26 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
       return bCount - aCount || a.localeCompare(b);
     }).slice(0, 7);
   const events = feed.data?.events ?? [];
-  const featured = events[0];
-  const sampledTop = [...events].sort((a, b) => b.volume - a.volume).slice(1, 4);
+  // The featured set is the most traded events, at most two per category so it stays varied.
+  const featuredSet = pickFeatured(events);
+  const [slide, setSlide] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
+  const hovering = useRef(false);
+  const slides = featuredSet.length;
+  const current = slides ? slide % slides : 0;
+  const featured = featuredSet[current];
+  const step = (direction: 1 | -1) => {
+    setAutoplay(false);
+    setSlide((value) => (value % slides + direction + slides) % slides);
+  };
+  useEffect(() => {
+    if (!autoplay || slides < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => {
+      if (!hovering.current && !document.hidden) setSlide((value) => (value + 1) % slides);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [autoplay, slides]);
+  const sampledTop = [...events].sort((a, b) => b.volume - a.volume).filter((event) => !featuredSet.includes(event)).slice(0, 3);
   const sports = events.filter((event) => event.sport).slice(0, 3);
   const categories = [...new Set(events.map((event) => event.category).filter((name) => name && (name !== "Sports" || sports.length === 0)))].slice(0, 5);
   const rankedEvents = [...events].sort((a, b) => b.volume - a.volume);
@@ -53,16 +71,28 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
     <PromoBars />
 
     <section aria-label="Featured market discovery" className="grid gap-3 lg:grid-cols-[minmax(0,1.75fr)_minmax(260px,.8fr)]">
-      <div className="flex min-h-[250px] flex-col justify-between rounded-lg border border-border bg-card/75 p-5 sm:p-6">
+      <div
+        className="flex min-h-[250px] flex-col justify-between rounded-lg border border-border bg-card/75 p-5 sm:p-6"
+        onMouseEnter={() => { hovering.current = true; }}
+        onMouseLeave={() => { hovering.current = false; }}
+        onFocusCapture={() => setAutoplay(false)}
+      >
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[.18em] text-primary"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Open markets · Kalshi</p>
             {feed.data?.updatedAt && <span className="font-mono text-[9px] text-muted-foreground">Sample updated {updatedLabel(feed.data.updatedAt)}</span>}
           </div>
-          <h1 className="font-display mt-3 text-xl font-bold leading-tight tracking-[-.035em]">Featured market</h1>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <h1 className="font-display text-xl font-bold leading-tight tracking-[-.035em]">Featured markets</h1>
+            {slides > 1 && <div className="flex items-center gap-2" role="group" aria-label="Featured markets">
+              <button type="button" onClick={() => step(-1)} aria-label="Previous featured market" data-testid="button-featured-prev" className="rounded-full border border-border bg-background/50 p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ChevronLeft className="h-4 w-4" /></button>
+              <span className="min-w-[3.25rem] text-center font-mono text-[10px] text-muted-foreground tabular" aria-live="polite" data-testid="text-featured-position">{current + 1} of {slides}</span>
+              <button type="button" onClick={() => step(1)} aria-label="Next featured market" data-testid="button-featured-next" className="rounded-full border border-border bg-background/50 p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ChevronRight className="h-4 w-4" /></button>
+            </div>}
+          </div>
         </div>
         <div className="mt-5">
-          {feed.isLoading ? <FeaturedSkeleton /> : feed.isError && !featured ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : featured ? <FeaturedEvent event={featured} /> : <EmptyPanel label="No open event is available in the current sample." />}
+          {feed.isLoading ? <FeaturedSkeleton /> : feed.isError && !featured ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : featured ? <FeaturedEvent key={featured.ticker} event={featured} /> : <EmptyPanel label="No open event is available in the current sample." />}
         </div>
       </div>
       <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1" aria-label="More sampled markets">
@@ -132,11 +162,25 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
   </div>;
 }
 
+function pickFeatured(events: PredictionEvent[]) {
+  const perCategory = new Map<string, number>();
+  const picked: PredictionEvent[] = [];
+  // Feed order is kept: it is the most-traded ranking, and its first events carry official images.
+  for (const event of events) {
+    const used = perCategory.get(event.category) ?? 0;
+    if (used >= 2) continue;
+    perCategory.set(event.category, used + 1);
+    picked.push(event);
+    if (picked.length === 7) break;
+  }
+  return picked;
+}
+
 function FeaturedEvent({ event }: { event: PredictionEvent }) {
   const lead = marketOf(event);
   const outcomes = [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
-  return <article className="rounded-md border border-border/80 bg-background/45 p-4 sm:p-5">
-    <div className="flex flex-wrap items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Featured · current sample</span></div>
+  return <article className="flex min-h-[388px] animate-in flex-col rounded-md border border-border/80 bg-background/45 p-4 fade-in duration-300 sm:p-5">
+    <div className="flex flex-wrap items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Most traded</span></div>
     <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
       <div className="flex items-start gap-3">
         <MarketVisual event={event} size="lg" />
@@ -149,7 +193,7 @@ function FeaturedEvent({ event }: { event: PredictionEvent }) {
     {outcomes.length > 0 ? <div className="mt-4 divide-y divide-border/70 border-y border-border/70">
       {outcomes.map((market) => <OutcomeLine key={market.ticker} event={event} market={market} />)}
     </div> : <p className="mt-4 border-y border-border/70 py-3 text-xs text-muted-foreground">No open outcomes available for this event.</p>}
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
       <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground"><Clock3 className="h-3 w-3" /> Event · {closeLabel(event.closeTime)}</span>
       <span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(lead?.volume ?? event.volume)} contracts · {lead ? "most-traded outcome" : "event"}</span>
       <EventLink event={event} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">Event details <ArrowUpRight className="h-3 w-3" /></EventLink>

@@ -13,4 +13,5 @@ export const ListSportsGamesSort = {
   volume: 'volume',
   closing: 'closing',
   newest: 'newest',
+  upcoming: 'upcoming',
 } as const;

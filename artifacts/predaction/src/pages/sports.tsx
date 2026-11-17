@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowDownWideNarrow, ChevronLeft, ChevronRight, Info, Ro
 import { getGetOverviewQueryKey, getListSportsGamesQueryKey, useGetOverview, useListSportsGames, type ListSportsGamesParams } from "@workspace/api-client-react";
 import { ErrorPanel } from "@/components/bits";
 import { SportsGameCard } from "@/components/sports-game-card";
+import { UpcomingGames } from "@/components/upcoming-games";
 import { updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
@@ -247,6 +248,7 @@ export default function SportsPage() {
               </select>
             </label>
           </div>
+          {!search && page === 0 && <UpcomingGames sport={sport} league={league} />}
           <div className="flex flex-col gap-3 sm:flex-row">
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">Search sports events</span>

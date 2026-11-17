@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { PredictionEvent } from "./kalshi";
-import { groupSportsGames, marketVariant, matchupTitle, selectMainMarketEvents, summarizeSportsGame } from "./sports-games";
+import { gameSchedule, groupSportsGames, marketVariant, matchupTitle, selectMainMarketEvents, summarizeSportsGame } from "./sports-games";
 
 const event = (ticker: string, title: string, volume24h = 0, league = "NBA"): PredictionEvent => ({
   ticker,
@@ -140,4 +140,14 @@ test("summarizes list games without changing grouped source counts", () => {
   assert.equal(summarized.events[0]?.markets[0]?.rules, "");
   assert.equal(summarized.events.some(item => item.ticker === "KXNBA1HSPREAD-1"), false);
   assert.equal(summarized.events.some(item => item.teams), false);
+});
+
+test("reads the scheduled game day and Eastern start time from Kalshi tickers", () => {
+  assert.deepEqual(gameSchedule("KXNCAAMBGAME-26NOV17FLAND"), { gameDate: "2026-11-17" });
+  assert.deepEqual(gameSchedule("KXNBBGAME-26NOV171730BOTUNIF"), { gameDate: "2026-11-17", startTime: "2026-11-17T22:30:00.000Z" });
+  // Daylight time: 7:05 PM Eastern in July is 23:05 UTC.
+  assert.deepEqual(gameSchedule("KXMLBGAME-26JUL041905NYYBOS"), { gameDate: "2026-07-04", startTime: "2026-07-04T23:05:00.000Z" });
+  assert.equal(gameSchedule("KXNBA-27"), undefined);
+  const [game] = groupSportsGames([event("KXNBAGAME-26NOV17NYKTOR", "New York vs Toronto")]);
+  assert.equal(game?.gameDate, "2026-11-17");
 });

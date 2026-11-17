@@ -4,3 +4,4 @@
 - [ESPN team logos](espn-team-logos.md) — Cache ESPN team directories and match logos by source-name aliases; never guess from tickers or break games when ESPN lacks a team.
 - [Kalshi market visuals](kalshi-market-visuals.md) — Official images/colors use a separate metadata endpoint; enrich only visible events and validate asset URLs.
 - [Polymarket wallet endpoints](polymarket-wallet-endpoints.md) — Public profile and v2 positions endpoints resolve wallet addresses to usernames and current holdings.
+- [Sports game schedule](sports-game-schedule.md) — closeTime is ~2 days after a game; the game day/start time come only from the ticker, in US Eastern.

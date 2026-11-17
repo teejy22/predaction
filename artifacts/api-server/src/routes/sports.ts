@@ -8,7 +8,7 @@ import {
   newestFirst, categoryNames, eventCreatedAt, type PredictionEvent,
 } from "../lib/kalshi";
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
-import { groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
+import { easternDate, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
 
@@ -67,8 +67,13 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
     ));
-    const games = groupSportsGames(events);
-    if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
+    let games = groupSportsGames(events);
+    if (sort === "upcoming") {
+      // Only matchups with a published game day, soonest first, busiest first within a day.
+      const today = easternDate();
+      games = games.filter(game => game.gameDate && game.gameDate >= today)
+        .sort((a, b) => a.gameDate!.localeCompare(b.gameDate!) || b.volume24h - a.volume24h || a.title.localeCompare(b.title));
+    } else if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
     else if (sort === "newest") games.sort((a, b) =>
       Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
     );

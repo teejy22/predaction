@@ -96,6 +96,43 @@ function representative(events: PredictionEvent[]) {
   )[0]!;
 }
 
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const EASTERN = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/New_York", hourCycle: "h23",
+  year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+});
+
+function easternParts(at: number) {
+  const parts = Object.fromEntries(EASTERN.formatToParts(at).map(part => [part.type, part.value]));
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute) };
+}
+
+export function easternDate(at = Date.now()) {
+  return easternParts(at).date;
+}
+
+// Kalshi game tickers carry the scheduled day, and sometimes the start time, in US Eastern time.
+export function gameSchedule(ticker: string): { gameDate: string; startTime?: string } | undefined {
+  const match = /-(\d{2})(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(\d{2})(\d{4})?(?=[A-Z]|$)/.exec(ticker);
+  if (!match) return undefined;
+  const [, yy, mon, dd, hhmm] = match;
+  const month = MONTHS.indexOf(mon!) + 1;
+  const day = Number(dd);
+  if (day < 1 || day > 31) return undefined;
+  const gameDate = `20${yy}-${String(month).padStart(2, "0")}-${dd}`;
+  if (!hhmm) return { gameDate };
+  const wall = Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(2));
+  if (Number(hhmm.slice(0, 2)) > 23 || Number(hhmm.slice(2)) > 59) return { gameDate };
+  // Find the instant whose Eastern wall clock matches; two passes settle the UTC offset.
+  let at = Date.parse(`${gameDate}T00:00:00Z`) + wall * 60_000;
+  for (let pass = 0; pass < 2; pass++) {
+    const seen = easternParts(at);
+    const dayShift = Math.round((Date.parse(`${seen.date}T00:00:00Z`) - Date.parse(`${gameDate}T00:00:00Z`)) / 60_000);
+    at -= (dayShift + seen.minutes - wall) * 60_000;
+  }
+  return { gameDate, startTime: new Date(at).toISOString() };
+}
+
 export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
   const buckets = new Map<string, PredictionEvent[]>();
   for (const event of events) {
@@ -113,6 +150,8 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
     );
     const main = representative(grouped);
     const closeTimes = grouped.map(event => event.closeTime).filter(Boolean).sort();
+    const schedules = ordered.flatMap(event => gameSchedule(event.ticker) ?? []);
+    const schedule = schedules.find(item => item.startTime) ?? schedules[0];
     return {
       key: createHash("sha256").update(id).digest("base64url").slice(0, 24),
       title: matchupTitle(main.title),
@@ -127,6 +166,7 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
       url: main.url,
       eventCount: grouped.length,
       marketCount: grouped.reduce((sum, event) => sum + event.markets.length, 0),
+      ...schedule,
       teams: [],
       events: ordered,
     };
