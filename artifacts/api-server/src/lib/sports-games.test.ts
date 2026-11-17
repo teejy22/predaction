@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { PredictionEvent } from "./kalshi";
-import { groupSportsGames, marketVariant, matchupTitle, selectMainMarketEvents } from "./sports-games";
+import { groupSportsGames, marketVariant, matchupTitle, selectMainMarketEvents, summarizeSportsGame } from "./sports-games";
 
 const event = (ticker: string, title: string, volume24h = 0, league = "NBA"): PredictionEvent => ({
   ticker,
@@ -109,4 +109,35 @@ test("uses source matchup copy and keeps differently dated repeat matchups separ
   const first = event("GAME-1", "A vs B");
   const second = { ...event("GAME-2", "A vs B"), subtitle: "A vs B (Nov 18)" };
   assert.equal(groupSportsGames([first, second]).length, 2);
+});
+
+test("summarizes list games without changing grouped source counts", () => {
+  const winner = event("KXNBAGAME-1", "New York vs Toronto", 10);
+  const spread = event("KXNBASPREAD-1", "New York vs Toronto: Spread", 7);
+  const total = event("KXNBATOTAL-1", "New York vs Toronto: Total Points", 4);
+  const prop = event("KXNBA1HSPREAD-1", "New York vs Toronto: 1st Half Spread", 2);
+  const game = groupSportsGames([prop, winner, spread, total])[0]!;
+  const expanded = {
+    ...game,
+    events: game.events.map((item) => ({
+      ...item,
+      teams: [{ name: "New York", abbreviation: "NYK", logo: "https://example.com/nyk.png" }],
+      markets: Array.from({ length: 5 }, (_, index) => ({
+        ...item.markets[0]!,
+        ticker: `${item.ticker}-${index}`,
+        probability: index * 10,
+        rules: `Detailed settlement rules ${index}. `.repeat(20),
+      })),
+    })),
+  };
+  const summarized = summarizeSportsGame(expanded);
+  assert.equal(summarized.eventCount, game.eventCount);
+  assert.equal(summarized.marketCount, game.marketCount);
+  assert.deepEqual(summarized.events.map(item => marketVariant(item)), ["Winner", "Spread", "Total Points"]);
+  assert.equal(summarized.events.length, 3);
+  assert.equal(summarized.events[0]?.markets.length, 3);
+  assert.equal(summarized.events[0]?.markets[0]?.ticker, "KXNBAGAME-1-4");
+  assert.equal(summarized.events[0]?.markets[0]?.rules, "");
+  assert.equal(summarized.events.some(item => item.ticker === "KXNBA1HSPREAD-1"), false);
+  assert.equal(summarized.events.some(item => item.teams), false);
 });

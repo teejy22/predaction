@@ -6,6 +6,9 @@ import { normalizeToolFeed, type ToolFeedName } from "./flowframe-tool-feeds";
 type FeedName = "movers" | "polymarketMovers" | "trades" | "trending" | "pulse" | ToolFeedName;
 // Existing feeds: 15 calls/hour. Three on-demand tools: 3 calls/hour.
 const TTL = 20 * 60_000;
+const TRANSIENT_RETRY = 60_000;
+const ACCESS_RETRY = 10 * 60_000;
+const PROVIDER_TIMEOUT = 20_000;
 const HOUR = 60 * 60_000;
 const PATHS: Record<FeedName, string> = {
   movers: "/movers/kalshi?direction=both&limit=25",
@@ -116,7 +119,7 @@ export function createFlowframeClient(options: Options = {}) {
     try {
       const response = await fetchImpl(`https://flowframe.xyz/v1${PATHS[name]}`, {
         headers: { Accept: "application/json", Authorization: `Bearer ${key}` },
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT),
       });
       if (!response.ok) {
         let message = "Flowframe is temporarily unavailable.";
@@ -130,7 +133,9 @@ export function createFlowframeClient(options: Options = {}) {
           message = "Flowframe's rate limit was reached; retrying after the provider cooldown.";
         }
         // Never log upstream bodies, URLs with credentials, or request headers.
-        return failed(name, message, "unavailable", Math.max(now() + ttl, blockedUntil));
+        const retryAt = response.status === 429 ? now() + ttl :
+          response.status === 401 || response.status === 403 ? now() + ACCESS_RETRY : now() + TRANSIENT_RETRY;
+        return failed(name, message, "unavailable", Math.max(retryAt, blockedUntil));
       }
       const raw: unknown = await response.json();
       let feed: FlowframeFeed;
@@ -150,7 +155,7 @@ export function createFlowframeClient(options: Options = {}) {
       cache.set(name, { feed, nextCheck: now() + ttl });
       return feed;
     } catch {
-      return failed(name, "Flowframe could not be reached or returned an unexpected response.", "unavailable", now() + ttl);
+      return failed(name, "Flowframe could not be reached or returned an unexpected response.", "unavailable", now() + TRANSIENT_RETRY);
     }
   }
 

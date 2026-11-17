@@ -8,7 +8,7 @@ import {
   newestFirst, categoryNames, eventCreatedAt, type PredictionEvent,
 } from "../lib/kalshi";
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
-import { groupSportsGames, selectMainMarketEvents } from "../lib/sports-games";
+import { groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
 
@@ -74,7 +74,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     );
     else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
     res.json(ListSportsGamesResponse.parse({
-      games: games.slice(offset, offset + limit), total: games.length,
+      games: games.slice(offset, offset + limit).map(summarizeSportsGame), total: games.length,
       updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,

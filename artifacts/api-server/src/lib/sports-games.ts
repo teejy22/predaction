@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PredictionEvent } from "./kalshi";
-import type { SportsGame } from "@workspace/api-zod";
+import type { PredictionMarket, SportsGame } from "@workspace/api-zod";
 
 const clean = (value: string) => value.replace(/\s+/g, " ").trim();
 
@@ -131,4 +131,41 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
       events: ordered,
     };
   });
+}
+
+const LIST_EVENT_KINDS: MainKind[] = ["winner", "spread", "total"];
+
+function listEvent(event: SportsGame["events"][number]): SportsGame["events"][number] {
+  const markets: PredictionMarket[] = [...event.markets]
+    .sort((a, b) => b.probability - a.probability || b.volume - a.volume || a.ticker.localeCompare(b.ticker))
+    .slice(0, 3)
+    .map(market => ({ ...market, rules: "" }));
+  return {
+    ticker: event.ticker,
+    seriesTicker: event.seriesTicker,
+    title: event.title,
+    subtitle: event.subtitle,
+    category: event.category,
+    categories: event.categories,
+    sport: event.sport,
+    league: event.league,
+    volume: event.volume,
+    volume24h: event.volume24h,
+    closeTime: event.closeTime,
+    url: event.url,
+    markets,
+  };
+}
+
+// List cards render at most three event groups and three outcomes per group.
+// Full nested events remain available from the game-detail endpoint.
+export function summarizeSportsGame(game: SportsGame): SportsGame {
+  const selected = LIST_EVENT_KINDS.flatMap(kind => {
+    const event = game.events.find(item => mainKind(item) === kind && item.markets.length);
+    return event ? [event] : [];
+  });
+  const fallback = selected.length ? [] : [...game.events]
+    .sort((a, b) => b.volume - a.volume || a.title.localeCompare(b.title))
+    .slice(0, 1);
+  return { ...game, events: [...selected, ...fallback].map(listEvent) };
 }

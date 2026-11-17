@@ -51,7 +51,7 @@ test("rejects malformed response, invalid price and unsafe links", () => {
   assert.throws(() => normalizeFlowframe("movers", { data: [{ ...mover, kalshiUrl: "javascript:alert(1)" }], meta }, checked));
 });
 
-test("deduplicates visitors, caches twenty minutes, and retains stale results on failure", async () => {
+test("deduplicates visitors, caches successes, and retries transient failures quickly", async () => {
   let time = Date.parse(checked);
   let calls = 0;
   let down = false;
@@ -75,6 +75,11 @@ test("deduplicates visitors, caches twenty minutes, and retains stale results on
   assert.equal(stale.movers.fetchedAt, checked);
   await client.insights();
   assert.equal(calls, 10);
+  time += 60_001;
+  down = false;
+  const recovered = await client.insights();
+  assert.equal(calls, 15);
+  assert.equal(recovered.movers.status, "ready");
 });
 
 test("missing configuration makes no provider calls", async () => {
