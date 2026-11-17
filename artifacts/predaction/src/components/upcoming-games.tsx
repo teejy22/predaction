@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link } from "wouter";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getListSportsGamesQueryKey, useListSportsGames, type ListSportsGamesParams, type SportsGame } from "@workspace/api-client-react";
 import { TeamLogos } from "@/components/team-logos";
 
@@ -88,6 +88,63 @@ function UpcomingCard({ game }: { game: SportsGame }) {
           <span className="shrink-0 font-mono text-xs font-semibold tabular">{Math.round(lead.probability)}%</span>
         </div>
       )}
+    </Link>
+  );
+}
+
+// Home-page rail: the same upcoming games, drifting upward in a loop. Hover or keyboard focus pauses it.
+export function UpcomingTicker() {
+  const params: ListSportsGamesParams = { sort: "upcoming", offset: 0, limit: 12 };
+  const feed = useListSportsGames(params, {
+    query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
+  });
+  const games = feed.data?.games ?? [];
+  const loop = games.length > 4;
+
+  return (
+    <section className="flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card/65" aria-label="Upcoming sports events" data-testid="panel-upcoming-ticker">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <p className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[.18em] text-primary"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Upcoming games</p>
+        <Link href="/sports" data-testid="link-upcoming-all-sports" className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground transition-colors hover:text-primary">All sports <ArrowUpRight className="h-3 w-3" /></Link>
+      </div>
+      {feed.isLoading ? (
+        <div className="space-y-2 p-3" aria-busy="true">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-md bg-muted/60" />)}</div>
+      ) : games.length === 0 ? (
+        <p className="px-4 py-6 text-xs leading-5 text-muted-foreground">{feed.isError ? "Upcoming games didn't load." : feed.data?.indexing ? "Upcoming games appear here as the sports index loads." : "No upcoming games are scheduled right now."}</p>
+      ) : (
+        <div className="ticker-viewport relative flex-1 overflow-hidden">
+          <div className={`absolute inset-x-0 top-0 ${loop ? "ticker-track" : ""}`} style={loop ? { animationDuration: `${games.length * 4}s` } : undefined}>
+            {games.map((game) => <TickerRow key={game.key} game={game} />)}
+            {loop && games.map((game) => <TickerRow key={`repeat-${game.key}`} game={game} repeat />)}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TickerRow({ game, repeat = false }: { game: SportsGame; repeat?: boolean }) {
+  const lead = favorite(game);
+  const start = game.startTime ? new Date(game.startTime) : undefined;
+  const started = !!start && start.getTime() <= Date.now();
+  const when = `${game.gameDate ? dayLabel(game.gameDate) : ""}${start ? ` · ${started ? "started " : ""}${TIME.format(start)}` : ""}`;
+  return (
+    <Link
+      href={`/sports/game/${encodeURIComponent(game.key)}`}
+      aria-hidden={repeat || undefined}
+      tabIndex={repeat ? -1 : undefined}
+      data-testid={repeat ? undefined : `row-upcoming-${game.key}`}
+      className="group flex h-[68px] items-center gap-3 border-b border-border/60 px-4 transition-colors hover:bg-primary/[.06] focus-visible:bg-primary/[.06] focus-visible:outline-none"
+    >
+      {game.teams.length ? <TeamLogos teams={game.teams} size="sm" /> : <span className="flex h-9 w-[60px] shrink-0 items-center justify-center rounded-md border border-border/70 px-1 text-center font-mono text-[8px] font-semibold uppercase leading-3 tracking-wider text-primary">{game.league || game.sport || "Sports"}</span>}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold group-hover:text-primary">{game.title}</p>
+        <p className="mt-1 truncate font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{[game.teams.length ? game.league || game.sport : "", when].filter(Boolean).join(" · ")}</p>
+      </div>
+      {lead && <div className="shrink-0 text-right">
+        <p className="font-mono text-sm font-semibold tabular">{Math.round(lead.probability)}%</p>
+        <p className="mt-0.5 max-w-[84px] truncate text-[9px] text-muted-foreground">{lead.name}</p>
+      </div>}
     </Link>
   );
 }

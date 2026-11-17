@@ -393,3 +393,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 .fillbar{transform-origin:left;animation:fillbar .8s cubic-bezier(.2,.8,.2,1) both}
 @media (max-width: 640px){.price-texture{right:-42%;top:7%;opacity:.6}.hero-field{background:radial-gradient(ellipse 95% 95% at 0% 0%,hsl(262 59% 28% / .55),transparent 78%),hsl(var(--background))}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Upward-drifting list: the track holds two copies, so -50% lands exactly on the repeat. */
+@keyframes ticker-up { to { transform: translateY(-50%); } }
+.ticker-track { animation: ticker-up 48s linear infinite; }
+.ticker-viewport:hover .ticker-track,
+.ticker-viewport:focus-within .ticker-track { animation-play-state: paused; }
+.ticker-viewport { mask-image: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 28px), transparent); }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-viewport { overflow-y: auto; }
+  .ticker-track { animation: none; }
+  .ticker-track > [aria-hidden="true"] { display: none; }
+}

@@ -6,6 +6,7 @@ import { CategoryTag, Change, ProbBar } from "@/components/bits";
 import { FlowframeInsights } from "@/components/flowframe-insights";
 import { MarketVisual } from "@/components/market-visual";
 import { PromoBars } from "@/components/promo-bars";
+import { UpcomingTicker } from "@/components/upcoming-games";
 import { SportsEventCard } from "@/components/sports-event-card";
 import { closeLabel, fmtContracts, updatedLabel } from "@/lib/format";
 
@@ -57,7 +58,6 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
     }, 8000);
     return () => window.clearInterval(timer);
   }, [autoplay, slides]);
-  const sampledTop = [...events].sort((a, b) => b.volume - a.volume).filter((event) => !featuredSet.includes(event)).slice(0, 3);
   const sports = events.filter((event) => event.sport).slice(0, 3);
   const categories = [...new Set(events.map((event) => event.category).filter((name) => name && (name !== "Sports" || sports.length === 0)))].slice(0, 5);
   const rankedEvents = [...events].sort((a, b) => b.volume - a.volume);
@@ -95,10 +95,8 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
           {feed.isLoading ? <FeaturedSkeleton /> : feed.isError && !featured ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : featured ? <FeaturedEvent key={featured.ticker} event={featured} /> : <EmptyPanel label="No open event is available in the current sample." />}
         </div>
       </div>
-      <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1" aria-label="More sampled markets">
-        {feed.isLoading ? [0, 1].map((i) => <div key={i} className="min-h-28 animate-pulse rounded-lg border border-border bg-card/65" />) :
-          feed.isError && !feed.data ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
-            sampledTop.slice(0, 2).map((event, i) => <CompactFeature key={event.ticker} event={event} index={i + 1} />)}
+      <aside className="flex flex-col gap-3" aria-label="Upcoming sports events">
+        <UpcomingTicker />
         <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/[.07] px-4 py-3">
           <div><p className="font-mono text-[9px] uppercase tracking-[.15em] text-primary">Follow the tape</p><p className="mt-1 text-xs text-muted-foreground">Sourced movement across venues</p></div>
           <button type="button" onClick={scrollToMovers} aria-label="Jump to market movers" className="rounded-md p-2 text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ArrowRight className="h-4 w-4" /></button>
@@ -217,31 +215,6 @@ function OutcomeLine({ event, market }: { event: PredictionEvent; market: Predic
       <Change value={market.change} />
     </div>
   </div>;
-}
-
-function CompactFeature({ event, index }: { event: PredictionEvent; index: number }) {
-  const lead = marketOf(event);
-  return <article className="flex min-h-[148px] flex-col justify-between rounded-lg border border-border bg-card/65 p-4 transition-colors hover:border-primary/35">
-    <div className="flex items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] text-muted-foreground">Sample {String(index).padStart(2, "0")}</span></div>
-    <div className="mt-3 flex items-center gap-3">
-      <MarketVisual event={event} market={lead} size="md" />
-      <EventLink event={event} className="group min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-        <p className="line-clamp-2 text-xs font-semibold leading-4 group-hover:text-primary">{event.title}</p>
-        {event.subtitle && <p className="mt-1 truncate text-[10px] text-muted-foreground">{event.subtitle}</p>}
-      </EventLink>
-    </div>
-    <div className="mt-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[9px] text-muted-foreground">{lead ? (lead.subtitle || lead.title) : "Event"}</span>
-        <span className="shrink-0 font-mono text-sm font-semibold tabular">{lead ? `${Math.round(lead.probability)}%` : "—"}</span>
-      </div>
-      <ProbBar className="mt-1.5 h-1.5" value={lead?.probability ?? 0} color={lead?.color} />
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(lead?.volume ?? event.volume)} contracts</span>
-        {lead ? <Change value={lead.change} /> : null}
-      </div>
-    </div>
-  </article>;
 }
 
 function MarketEventCard({ event }: { event: PredictionEvent }) {
