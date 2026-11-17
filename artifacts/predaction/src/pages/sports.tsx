@@ -214,7 +214,7 @@ export default function SportsPage() {
               {sport && activeSport?.leagues.length === 0 && <span className="text-[9px] text-muted-foreground">No leagues for {sport}</span>}
             </div>
             <button type="button" onClick={() => chooseLeague("")} data-testid="button-leagues-all" aria-pressed={!league} className={`mt-2 flex w-full items-center justify-between rounded px-2.5 py-2 text-left text-xs ${!league ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}>All available leagues</button>
-            <div className="mt-1 max-h-72 space-y-1 overflow-y-auto">
+            <div className="panel-scroll mt-1 max-h-72 space-y-1 overflow-y-auto pr-1">
               {availableLeagues.map((name) => {
                 const owner = sports.find((item) => item.leagues.includes(name))?.name;
                 return <button key={`${owner}-${name}`} type="button" onClick={() => {
