@@ -3,3 +3,4 @@
 - [FlowFrame contracts](flowframe-contracts.md) — Live cohort responses may omit counts while retaining dollar exposures; missing counts are not zero.
 - [ESPN team logos](espn-team-logos.md) — Cache ESPN team directories and match logos by source-name aliases; never guess from tickers or break games when ESPN lacks a team.
 - [Kalshi market visuals](kalshi-market-visuals.md) — Official images/colors use a separate metadata endpoint; enrich only visible events and validate asset URLs.
+- [Polymarket wallet endpoints](polymarket-wallet-endpoints.md) — Public profile and v2 positions endpoints resolve wallet addresses to usernames and current holdings.
