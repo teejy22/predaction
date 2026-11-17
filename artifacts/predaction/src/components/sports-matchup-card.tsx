@@ -7,7 +7,7 @@ import { fmtContracts } from "@/lib/format";
 const norm = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 // A logo is shown only when the outcome's name clearly refers to that team.
-function logoFor(market: PredictionMarket, teams: TeamLogo[]) {
+export function logoFor(market: PredictionMarket, teams: TeamLogo[]) {
   const name = norm(market.subtitle || market.title);
   if (!name) return undefined;
   return teams.find((team) => {
