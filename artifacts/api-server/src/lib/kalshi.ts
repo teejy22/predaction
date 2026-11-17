@@ -97,6 +97,7 @@ const leagueSports: Record<string, string> = {
 const leagueTitleAliases: Record<string, string> = {
   "pro football": "NFL",
   "college football": "NCAAF",
+  "college basketball": "NCAAB",
 };
 export function normalize(event: RawEvent, info?: Series, openOnly = true): PredictionEvent {
   const url = `https://kalshi.com/markets/${encodeURIComponent(event.series_ticker.toLowerCase())}/${encodeURIComponent(event.event_ticker.toLowerCase())}`;
