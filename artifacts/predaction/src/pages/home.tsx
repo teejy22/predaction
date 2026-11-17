@@ -8,6 +8,7 @@ import {
 import { EventsTable, EventCardSkeleton } from "@/components/event-card";
 import { ErrorPanel } from "@/components/bits";
 import { StepsGrid } from "@/components/how-it-works";
+import { HomeDiscovery } from "@/components/home-discovery";
 import { fmtContracts, updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
@@ -132,31 +133,23 @@ export default function Home() {
 
   return (
     <div>
-      <section className="hero-field relative overflow-hidden border-b border-border">
-        <div aria-hidden="true" className="price-texture select-none">
-          <span>63%　18¢　−4.2　71%</span><span>29%　44¢　+2.8　08%</span><span>52%　91¢　−0.6　37%</span><span>12%　67¢　+9.1　85%</span>
+      <div className="hero-field border-b border-border">
+        <HomeDiscovery onBrowse={(c) => {
+          if (c !== undefined) {
+            setCategory(c);
+            setSport("");
+            setLeague("");
+          }
+          boardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }} />
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-2 px-4 pb-4 font-mono text-[9px] uppercase tracking-wider text-muted-foreground md:px-6">
+          <span data-testid="text-indexed-events">{overview.data ? `${overview.data.totalEvents.toLocaleString()} indexed events` : "Indexed event board"}</span>
+          <span>{overview.data ? `${overview.data.totalMarkets.toLocaleString()} markets` : "Kalshi public data"}</span>
+          <span>{overview.data ? `${fmtContracts(overview.data.volume24h)} contracts · 24h` : "Read-only discovery"}</span>
+          {overview.data?.updatedAt && <span data-testid="text-updated-at">Index updated {updatedLabel(overview.data.updatedAt)}</span>}
+          {overview.isError && <button className="text-primary underline" onClick={() => overview.refetch()} data-testid="button-retry-overview">Retry stats</button>}
         </div>
-        <div className="relative mx-auto max-w-7xl px-4 pb-9 pt-10 sm:pb-11 md:px-6 md:pt-14">
-          <div className="rise max-w-2xl">
-            <p className="inline-flex flex-wrap items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-primary">
-              <span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Open Kalshi events
-              {d?.updatedAt && <span className="text-muted-foreground" data-testid="text-updated-at">· index updated {updatedLabel(d.updatedAt)}</span>}
-            </p>
-            <h1 className="mt-4 max-w-[680px] text-[2.4rem] font-extrabold leading-[1.04] tracking-[-.045em] sm:text-5xl md:text-[3.3rem]">
-              What the crowd expects, <span className="text-primary">across every category.</span>
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Elections, rate decisions, weather, box office, championships. Browse open Kalshi events, compare crowd prices, read the rules, and keep the outcomes you follow close.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              <span data-testid="text-indexed-events">{overview.data ? `${overview.data.totalEvents.toLocaleString()} indexed events` : "Indexed event board"}</span>
-              <span>{overview.data ? `${overview.data.totalMarkets.toLocaleString()} markets` : "Kalshi public data"}</span>
-              <span>{overview.data ? `${fmtContracts(overview.data.volume24h)} contracts · 24h` : "Read-only discovery"}</span>
-              {overview.isError && <button className="text-primary underline" onClick={() => overview.refetch()} data-testid="button-retry-overview">Retry stats</button>}
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <section className="sticky top-14 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 md:px-6">

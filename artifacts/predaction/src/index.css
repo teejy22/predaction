@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -107,8 +108,8 @@
   --chart-3: 37 88% 63%;
   --chart-4: 202 72% 62%;
   --chart-5: 0 68% 62%;
-  --app-font-sans: 'Open Sans', system-ui, sans-serif;
-  --app-font-serif: 'Open Sans', system-ui, sans-serif;
+  --app-font-sans: 'DM Sans', system-ui, sans-serif;
+  --app-font-serif: 'Instrument Serif', Georgia, serif;
   --app-font-mono: 'JetBrains Mono', monospace;
   --radius: 0.55rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0); /*replace with H S L */
@@ -362,7 +363,8 @@
   }
 }
 
-.font-display{font-family:'Open Sans',system-ui,sans-serif;letter-spacing:-0.03em}
+.font-display{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-0.04em}
+.font-editorial{font-family:var(--app-font-serif);font-style:italic;font-weight:400}
 .tabular{font-variant-numeric:tabular-nums}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.06;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
