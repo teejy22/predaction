@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface SportsMarket {
+export interface PredictionMarket {
   ticker: string;
   title: string;
   subtitle: string;
@@ -21,26 +21,33 @@ export interface SportsMarket {
   url: string;
 }
 
-export interface SportsEvent {
+export interface PredictionEvent {
   ticker: string;
   seriesTicker: string;
   title: string;
   subtitle: string;
+  category: string;
+  categories: string[];
   sport: string;
   league: string;
   volume: number;
   volume24h: number;
   closeTime: string;
   url: string;
-  markets: SportsMarket[];
+  markets: PredictionMarket[];
 }
 
-export interface SportsFeed {
-  events: SportsEvent[];
+export interface EventFeed {
+  events: PredictionEvent[];
   total: number;
   updatedAt: string;
   source: string;
   partial: boolean;
+  warnings: string[];
+  indexing: boolean;
+  indexedEvents: number;
+  hasMore: boolean;
+  nextOffset: number;
 }
 
 export interface SportCategory {
@@ -49,7 +56,16 @@ export interface SportCategory {
   leagues: string[];
 }
 
-export interface SportsOverview {
+export type MarketOverviewCategoriesItem = {
+  name: string;
+  count: number;
+};
+
+export interface MarketOverview {
+  categories: MarketOverviewCategoriesItem[];
+  partial: boolean;
+  indexing: boolean;
+  warnings: string[];
   sports: SportCategory[];
   totalEvents: number;
   totalMarkets: number;
@@ -62,17 +78,27 @@ export interface HealthStatus {
   status: string;
 }
 
-export type ListSportsEventsParams = {
+export type ListEventsParams = {
+category?: string;
+/**
+ * @minimum 0
+ */
+offset?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
 sport?: string;
 league?: string;
 search?: string;
-sort?: ListSportsEventsSort;
+sort?: ListEventsSort;
 };
 
-export type ListSportsEventsSort = typeof ListSportsEventsSort[keyof typeof ListSportsEventsSort];
+export type ListEventsSort = typeof ListEventsSort[keyof typeof ListEventsSort];
 
 
-export const ListSportsEventsSort = {
+export const ListEventsSort = {
   volume: 'volume',
   closing: 'closing',
   newest: 'newest',

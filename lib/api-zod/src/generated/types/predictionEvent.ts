@@ -5,19 +5,20 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PredictionMarket } from './predictionMarket';
 
-export interface SportsMarket {
+export interface PredictionEvent {
   ticker: string;
+  seriesTicker: string;
   title: string;
   subtitle: string;
-  probability: number;
-  yesAsk: number;
-  noAsk: number;
+  category: string;
+  categories: string[];
+  sport: string;
+  league: string;
   volume: number;
   volume24h: number;
-  change: number;
-  status: string;
   closeTime: string;
-  rules: string;
   url: string;
+  markets: PredictionMarket[];
 }

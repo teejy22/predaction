@@ -4,18 +4,8 @@ import { Bookmark, HelpCircle, ExternalLink, Menu, X } from "lucide-react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { HowItWorksDialog } from "@/components/how-it-works";
 
-export function Logo() {
-  return (
-    <span className="flex items-center gap-2">
-        <span className="relative grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
-         <span className="text-lg font-extrabold leading-none tracking-[-.08em]">P</span>
-         <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-foreground" />
-      </span>
-       <span className="text-[1.2rem] font-extrabold tracking-[-.055em]">
-         Pred<span className="text-primary">action</span>
-      </span>
-    </span>
-  );
+export function Logo({ className = "h-[22px] w-auto" }: { className?: string }) {
+  return <img src={`${import.meta.env.BASE_URL}prediction-pro-logo.svg`} alt="Prediction Pro" width={599} height={94} className={className} />;
 }
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -25,7 +15,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   const nav = [
-    { href: "/", label: "Board" },
+    { href: "/", label: "Markets" },
     { href: "/watchlist", label: "Watchlist", count: items.length },
   ];
 
@@ -72,11 +62,11 @@ export function Shell({ children }: { children: ReactNode }) {
         {open && (
         <div className="border-t border-border bg-card px-4 py-3 md:hidden">
             {nav.map((n) => (
-              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className="block py-2 text-lg font-semibold">
+              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} data-testid={`link-mobile-${n.label.toLowerCase()}`} className="block py-2 text-lg font-semibold">
                 {n.label} {n.count ? <span className="text-primary">({n.count})</span> : null}
               </Link>
             ))}
-            <button onClick={() => { setHow(true); setOpen(false); }} className="py-2 text-lg font-semibold text-muted-foreground">
+            <button onClick={() => { setHow(true); setOpen(false); }} data-testid="button-how-it-works-mobile" className="block py-2 text-lg font-semibold text-muted-foreground">
               How it works
             </button>
           </div>
@@ -88,16 +78,14 @@ export function Shell({ children }: { children: ReactNode }) {
       <footer className="mt-16 border-t border-border bg-card/70">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[1.4fr_1fr] md:px-6">
           <div>
-            <span className="font-display text-4xl font-black uppercase">
-              Pred<span className="text-primary">action</span>
-            </span>
+            <Logo className="h-7 w-auto" />
             <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-              An independent discovery board for sports prediction markets. Predaction is not affiliated with, endorsed by, or operated by Kalshi. We read Kalshi's public market data; we do not take orders, hold funds, or give financial advice.
+              A fast, clear discovery board for open Kalshi events across politics, economics, climate, culture, sports and more. Prediction Pro is not affiliated with, endorsed by, or operated by Kalshi. We read Kalshi's public market data; we do not take orders, hold funds, or give financial advice.
             </p>
           </div>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p className="font-mono text-[10px] uppercase tracking-widest text-primary">Data source</p>
-            <p>Public Kalshi API. Prices shown in cents, volume in contracts. Refreshes every 60 seconds.</p>
+            <p>Public Kalshi API, regular open events only (multivariate combos excluded, no historical archive). Prices in cents, volume in contracts. Index rebuilt every 5 minutes; this page checks every 60 seconds.</p>
             <a href="https://kalshi.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:text-primary hover:underline" data-testid="link-kalshi-footer">
               kalshi.com <ExternalLink className="h-3 w-3" />
             </a>

@@ -5,9 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MarketOverviewCategoriesItem } from './marketOverviewCategoriesItem';
 import type { SportCategory } from './sportCategory';
 
-export interface SportsOverview {
+export interface MarketOverview {
+  categories: MarketOverviewCategoriesItem[];
+  partial: boolean;
+  indexing: boolean;
+  warnings: string[];
   sports: SportCategory[];
   totalEvents: number;
   totalMarkets: number;

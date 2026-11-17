@@ -18,27 +18,29 @@ export function ProbBar({ value, className = "" }: { value: number; className?: 
 }
 
 export function Change({ value }: { value: number }) {
-  if (!value) return <span className="font-mono text-xs text-muted-foreground tabular">0.0%</span>;
+  if (!value) return <span className="font-mono text-xs text-muted-foreground tabular">0.0 pp</span>;
   const up = value > 0;
   return (
     <span className={`font-mono text-xs font-semibold tabular ${up ? "text-[hsl(155_55%_57%)]" : "text-destructive"}`}>
-      {up ? "+" : ""}{value.toFixed(1)}%
+      {up ? "+" : ""}{value.toFixed(1)} pp
     </span>
   );
 }
 
-export function SportTag({ sport, league }: { sport: string; league?: string }) {
+export function CategoryTag({ category, sport, league }: { category?: string; sport?: string; league?: string }) {
+  const main = category || sport || "Uncategorized";
+  const extra = [sport && sport !== main ? sport : "", league && league !== sport ? league : ""].filter(Boolean);
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider">
-      <span className="rounded-sm bg-foreground px-1.5 py-0.5 text-background">{league || sport}</span>
-      {league && league !== sport && <span className="text-muted-foreground">{sport}</span>}
+    <span className="inline-flex flex-wrap items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider">
+      <span className="rounded-sm bg-primary/20 px-1.5 py-0.5 text-[hsl(262_80%_80%)]">{main}</span>
+      {extra.map((x) => <span key={x} className="text-muted-foreground">{x}</span>)}
     </span>
   );
 }
 
 export function WatchButton({
   event, variant = "icon",
-}: { event: { ticker: string; title: string; sport: string; league: string }; variant?: "icon" | "full" }) {
+}: { event: { ticker: string; title: string; category?: string; sport: string; league: string }; variant?: "icon" | "full" }) {
   const { has, toggle } = useWatchlist();
   const { toast } = useToast();
   const [pop, setPop] = useState(0);
@@ -47,6 +49,7 @@ export function WatchButton({
     e.preventDefault();
     e.stopPropagation();
     const added = toggle(event);
+    if (added === null) return;
     setPop((p) => p + 1);
     toast({ title: added ? "Added to watchlist" : "Removed from watchlist", description: event.title });
   };
@@ -91,9 +94,9 @@ export function KalshiCTA({ url, label = "Trade on Kalshi", testId = "button-tra
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent className="border-border bg-card">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-3xl font-black uppercase">You're leaving Predaction</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold tracking-tight">You're leaving Prediction Pro</AlertDialogTitle>
             <AlertDialogDescription>
-              This opens the event on Kalshi in a new tab. Predaction is an independent site, not affiliated with Kalshi, and doesn't handle accounts, money or orders. Trading involves risk of loss; check Kalshi's terms and eligibility in your region.
+              This opens the event on Kalshi in a new tab. Prediction Pro is an independent site, not affiliated with Kalshi, and doesn't handle accounts, money or orders. Trading involves risk of loss; check Kalshi's terms and eligibility in your region.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <p className="truncate rounded bg-muted px-3 py-2 font-mono text-xs">{url}</p>
@@ -113,11 +116,11 @@ export function KalshiCTA({ url, label = "Trade on Kalshi", testId = "button-tra
   );
 }
 
-export function ErrorPanel({ title = "The feed dropped the ball", onRetry, retrying }: { title?: string; onRetry: () => void; retrying?: boolean }) {
+export function ErrorPanel({ title = "Couldn't load market data", onRetry, retrying }: { title?: string; onRetry: () => void; retrying?: boolean }) {
   return (
     <div className="rounded-lg border border-dashed border-destructive/50 bg-card/60 p-10 text-center">
       <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
-      <h3 className="mt-3 font-display text-3xl font-black uppercase">{title}</h3>
+      <h3 className="mt-3 text-2xl font-bold tracking-tight">{title}</h3>
       <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">We couldn't reach the market data. This is usually brief — try again in a moment.</p>
       <button
         onClick={onRetry}

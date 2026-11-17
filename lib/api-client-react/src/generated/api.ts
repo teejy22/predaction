@@ -16,11 +16,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  EventFeed,
   HealthStatus,
-  ListSportsEventsParams,
-  SportsEvent,
-  SportsFeed,
-  SportsOverview
+  ListEventsParams,
+  MarketOverview,
+  PredictionEvent
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -50,7 +50,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getListSportsEventsUrl = (params?: ListSportsEventsParams,) => {
+export const getListEventsUrl = (params?: ListEventsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -62,15 +62,15 @@ export const getListSportsEventsUrl = (params?: ListSportsEventsParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/sports/events?${stringifiedParams}` : `/api/sports/events`
+  return stringifiedParams.length > 0 ? `/api/events?${stringifiedParams}` : `/api/events`
 }
 
 /**
- * @summary Browse live sports events from Kalshi
+ * @summary Browse indexed open Kalshi events across categories
  */
-export const listSportsEvents = async (params?: ListSportsEventsParams, options?: Parameters<typeof customFetch>[1]): Promise<SportsFeed> => {
+export const listEvents = async (params?: ListEventsParams, options?: Parameters<typeof customFetch>[1]): Promise<EventFeed> => {
 
-  return customFetch<SportsFeed>(getListSportsEventsUrl(params),
+  return customFetch<EventFeed>(getListEventsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -83,45 +83,45 @@ export const listSportsEvents = async (params?: ListSportsEventsParams, options?
 
 
 
-export const getListSportsEventsQueryKey = (params?: ListSportsEventsParams,) => {
+export const getListEventsQueryKey = (params?: ListEventsParams,) => {
     return [
-    `/api/sports/events`, ...(params ? [params] : [])
+    `/api/events`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListSportsEventsQueryOptions = <TData = Awaited<ReturnType<typeof listSportsEvents>>, TError = ErrorType<unknown>>(params?: ListSportsEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSportsEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListEventsQueryOptions = <TData = Awaited<ReturnType<typeof listEvents>>, TError = ErrorType<unknown>>(params?: ListEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListSportsEventsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListEventsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSportsEvents>>> = ({ signal }) => listSportsEvents(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvents>>> = ({ signal }) => listEvents(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSportsEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type ListSportsEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listSportsEvents>>>
-export type ListSportsEventsQueryError = ErrorType<unknown>
+export type ListEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listEvents>>>
+export type ListEventsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Browse live sports events from Kalshi
+ * @summary Browse indexed open Kalshi events across categories
  */
 
-export function useListSportsEvents<TData = Awaited<ReturnType<typeof listSportsEvents>>, TError = ErrorType<unknown>>(
- params?: ListSportsEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSportsEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useListEvents<TData = Awaited<ReturnType<typeof listEvents>>, TError = ErrorType<unknown>>(
+ params?: ListEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListSportsEventsQueryOptions(params,options)
+  const queryOptions = getListEventsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -134,20 +134,20 @@ export function useListSportsEvents<TData = Awaited<ReturnType<typeof listSports
 
 
 
-export const getGetSportsEventUrl = (ticker: string,) => {
+export const getGetEventUrl = (ticker: string,) => {
 
 
 
 
-  return `/api/sports/events/${ticker}`
+  return `/api/events/${ticker}`
 }
 
 /**
  * @summary Event details and resolution rules
  */
-export const getSportsEvent = async (ticker: string, options?: Parameters<typeof customFetch>[1]): Promise<SportsEvent> => {
+export const getEvent = async (ticker: string, options?: Parameters<typeof customFetch>[1]): Promise<PredictionEvent> => {
 
-  return customFetch<SportsEvent>(getGetSportsEventUrl(ticker),
+  return customFetch<PredictionEvent>(getGetEventUrl(ticker),
   {
     ...options,
     method: 'GET'
@@ -160,45 +160,45 @@ export const getSportsEvent = async (ticker: string, options?: Parameters<typeof
 
 
 
-export const getGetSportsEventQueryKey = (ticker: string,) => {
+export const getGetEventQueryKey = (ticker: string,) => {
     return [
-    `/api/sports/events/${ticker}`
+    `/api/events/${ticker}`
     ] as const;
     }
 
 
-export const getGetSportsEventQueryOptions = <TData = Awaited<ReturnType<typeof getSportsEvent>>, TError = ErrorType<unknown>>(ticker: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetEventQueryOptions = <TData = Awaited<ReturnType<typeof getEvent>>, TError = ErrorType<unknown>>(ticker: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetSportsEventQueryKey(ticker);
+  const queryKey =  queryOptions?.queryKey ?? getGetEventQueryKey(ticker);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSportsEvent>>> = ({ signal }) => getSportsEvent(ticker, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvent>>> = ({ signal }) => getEvent(ticker, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: ticker !== null && ticker !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSportsEvent>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: ticker !== null && ticker !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetSportsEventQueryResult = NonNullable<Awaited<ReturnType<typeof getSportsEvent>>>
-export type GetSportsEventQueryError = ErrorType<unknown>
+export type GetEventQueryResult = NonNullable<Awaited<ReturnType<typeof getEvent>>>
+export type GetEventQueryError = ErrorType<unknown>
 
 
 /**
  * @summary Event details and resolution rules
  */
 
-export function useGetSportsEvent<TData = Awaited<ReturnType<typeof getSportsEvent>>, TError = ErrorType<unknown>>(
- ticker: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetEvent<TData = Awaited<ReturnType<typeof getEvent>>, TError = ErrorType<unknown>>(
+ ticker: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetSportsEventQueryOptions(ticker,options)
+  const queryOptions = getGetEventQueryOptions(ticker,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -211,20 +211,20 @@ export function useGetSportsEvent<TData = Awaited<ReturnType<typeof getSportsEve
 
 
 
-export const getGetSportsOverviewUrl = () => {
+export const getGetOverviewUrl = () => {
 
 
 
 
-  return `/api/sports/overview`
+  return `/api/overview`
 }
 
 /**
- * @summary Sport counts and feed statistics
+ * @summary Indexed category counts and feed statistics
  */
-export const getSportsOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<SportsOverview> => {
+export const getOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<MarketOverview> => {
 
-  return customFetch<SportsOverview>(getGetSportsOverviewUrl(),
+  return customFetch<MarketOverview>(getGetOverviewUrl(),
   {
     ...options,
     method: 'GET'
@@ -237,45 +237,45 @@ export const getSportsOverview = async ( options?: Parameters<typeof customFetch
 
 
 
-export const getGetSportsOverviewQueryKey = () => {
+export const getGetOverviewQueryKey = () => {
     return [
-    `/api/sports/overview`
+    `/api/overview`
     ] as const;
     }
 
 
-export const getGetSportsOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getSportsOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetSportsOverviewQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetOverviewQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSportsOverview>>> = ({ signal }) => getSportsOverview({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOverview>>> = ({ signal }) => getOverview({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSportsOverview>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOverview>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetSportsOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getSportsOverview>>>
-export type GetSportsOverviewQueryError = ErrorType<unknown>
+export type GetOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getOverview>>>
+export type GetOverviewQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Sport counts and feed statistics
+ * @summary Indexed category counts and feed statistics
  */
 
-export function useGetSportsOverview<TData = Awaited<ReturnType<typeof getSportsOverview>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSportsOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetOverview<TData = Awaited<ReturnType<typeof getOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetSportsOverviewQueryOptions(options)
+  const queryOptions = getGetOverviewQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

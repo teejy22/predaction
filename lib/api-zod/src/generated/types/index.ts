@@ -6,11 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './eventFeed';
 export * from './healthStatus';
-export * from './listSportsEventsParams';
-export * from './listSportsEventsSort';
+export * from './listEventsParams';
+export * from './listEventsSort';
+export * from './marketOverview';
+export * from './marketOverviewCategoriesItem';
+export * from './predictionEvent';
+export * from './predictionMarket';
 export * from './sportCategory';
-export * from './sportsEvent';
-export * from './sportsFeed';
-export * from './sportsMarket';
-export * from './sportsOverview';

@@ -9,21 +9,34 @@ import * as zod from 'zod';
 
 
 /**
- * @summary Browse live sports events from Kalshi
+ * @summary Browse indexed open Kalshi events across categories
  */
-export const ListSportsEventsQueryParams = zod.object({
+export const listEventsQueryOffsetDefault = 0;
+export const listEventsQueryOffsetMin = 0;
+
+export const listEventsQueryLimitDefault = 50;
+export const listEventsQueryLimitMax = 100;
+
+
+
+export const ListEventsQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "offset": zod.coerce.number().int().min(listEventsQueryOffsetMin).default(listEventsQueryOffsetDefault),
+  "limit": zod.coerce.number().int().min(1).max(listEventsQueryLimitMax).default(listEventsQueryLimitDefault),
   "sport": zod.coerce.string().optional(),
   "league": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional(),
   "sort": zod.enum(['volume', 'closing', 'newest']).optional()
 })
 
-export const ListSportsEventsResponse = zod.object({
+export const ListEventsResponse = zod.object({
   "events": zod.array(zod.object({
   "ticker": zod.string(),
   "seriesTicker": zod.string(),
   "title": zod.string(),
   "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
   "volume": zod.number(),
@@ -49,22 +62,29 @@ export const ListSportsEventsResponse = zod.object({
   "total": zod.number().int(),
   "updatedAt": zod.string(),
   "source": zod.string(),
-  "partial": zod.boolean()
+  "partial": zod.boolean(),
+  "warnings": zod.array(zod.string()),
+  "indexing": zod.boolean(),
+  "indexedEvents": zod.number().int(),
+  "hasMore": zod.boolean(),
+  "nextOffset": zod.number().int()
 })
 
 
 /**
  * @summary Event details and resolution rules
  */
-export const GetSportsEventParams = zod.object({
+export const GetEventParams = zod.object({
   "ticker": zod.coerce.string()
 })
 
-export const GetSportsEventResponse = zod.object({
+export const GetEventResponse = zod.object({
   "ticker": zod.string(),
   "seriesTicker": zod.string(),
   "title": zod.string(),
   "subtitle": zod.string(),
+  "category": zod.string(),
+  "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
   "volume": zod.number(),
@@ -90,9 +110,16 @@ export const GetSportsEventResponse = zod.object({
 
 
 /**
- * @summary Sport counts and feed statistics
+ * @summary Indexed category counts and feed statistics
  */
-export const GetSportsOverviewResponse = zod.object({
+export const GetOverviewResponse = zod.object({
+  "categories": zod.array(zod.object({
+  "name": zod.string(),
+  "count": zod.number().int()
+})),
+  "partial": zod.boolean(),
+  "indexing": zod.boolean(),
+  "warnings": zod.array(zod.string()),
   "sports": zod.array(zod.object({
   "name": zod.string(),
   "count": zod.number().int(),

@@ -11,11 +11,14 @@ tags:
   - name: health
     description: Health operations
 paths:
-  /sports/events:
+  /events:
     get:
-      operationId: listSportsEvents
-      summary: Browse live sports events from Kalshi
+      operationId: listEvents
+      summary: Browse indexed open Kalshi events across categories
       parameters:
+        - { name: category, in: query, schema: { type: string } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
         - { name: sport, in: query, schema: { type: string } }
         - { name: league, in: query, schema: { type: string } }
         - { name: search, in: query, schema: { type: string } }
@@ -25,10 +28,10 @@ paths:
           description: Sports market feed
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SportsFeed" }
-  /sports/events/{ticker}:
+               schema: { $ref: "#/components/schemas/EventFeed" }
+  /events/{ticker}:
     get:
-      operationId: getSportsEvent
+      operationId: getEvent
       summary: Event details and resolution rules
       parameters:
         - { name: ticker, in: path, required: true, schema: { type: string } }
@@ -37,17 +40,17 @@ paths:
           description: Event
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SportsEvent" }
-  /sports/overview:
+               schema: { $ref: "#/components/schemas/PredictionEvent" }
+  /overview:
     get:
-      operationId: getSportsOverview
-      summary: Sport counts and feed statistics
+      operationId: getOverview
+      summary: Indexed category counts and feed statistics
       responses:
         "200":
           description: Overview
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SportsOverview" }
+               schema: { $ref: "#/components/schemas/MarketOverview" }
   /healthz:
     get:
       operationId: healthCheck
@@ -63,7 +66,7 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
-    SportsMarket:
+    PredictionMarket:
       type: object
       required: [ticker, title, subtitle, probability, yesAsk, noAsk, volume, volume24h, change, status, closeTime, rules, url]
       properties:
@@ -80,14 +83,16 @@ components:
         closeTime: { type: string }
         rules: { type: string }
         url: { type: string }
-    SportsEvent:
+    PredictionEvent:
       type: object
-      required: [ticker, seriesTicker, title, subtitle, sport, league, volume, volume24h, closeTime, url, markets]
+      required: [ticker, seriesTicker, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, markets]
       properties:
         ticker: { type: string }
         seriesTicker: { type: string }
         title: { type: string }
         subtitle: { type: string }
+        category: { type: string }
+        categories: { type: array, items: { type: string } }
         sport: { type: string }
         league: { type: string }
         volume: { type: number }
@@ -96,18 +101,23 @@ components:
         url: { type: string }
         markets:
           type: array
-          items: { $ref: "#/components/schemas/SportsMarket" }
-    SportsFeed:
+          items: { $ref: "#/components/schemas/PredictionMarket" }
+    EventFeed:
       type: object
-      required: [events, total, updatedAt, source, partial]
+      required: [events, total, updatedAt, source, partial, warnings, indexing, indexedEvents, hasMore, nextOffset]
       properties:
         events:
           type: array
-          items: { $ref: "#/components/schemas/SportsEvent" }
+          items: { $ref: "#/components/schemas/PredictionEvent" }
         total: { type: integer }
         updatedAt: { type: string }
         source: { type: string }
         partial: { type: boolean }
+        warnings: { type: array, items: { type: string } }
+        indexing: { type: boolean }
+        indexedEvents: { type: integer }
+        hasMore: { type: boolean }
+        nextOffset: { type: integer }
     SportCategory:
       type: object
       required: [name, count, leagues]
@@ -115,10 +125,21 @@ components:
         name: { type: string }
         count: { type: integer }
         leagues: { type: array, items: { type: string } }
-    SportsOverview:
+    MarketOverview:
       type: object
-      required: [sports, totalEvents, totalMarkets, totalVolume, volume24h, updatedAt]
+      required: [categories, sports, totalEvents, totalMarkets, totalVolume, volume24h, updatedAt, partial, indexing, warnings]
       properties:
+        categories:
+          type: array
+          items:
+            type: object
+            required: [name, count]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+        partial: { type: boolean }
+        indexing: { type: boolean }
+        warnings: { type: array, items: { type: string } }
         sports:
           type: array
           items: { $ref: "#/components/schemas/SportCategory" }

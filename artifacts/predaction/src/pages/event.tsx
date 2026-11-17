@@ -1,22 +1,28 @@
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { ArrowLeft, Clock, ChevronDown, Share2 } from "lucide-react";
-import { useGetSportsEvent, getGetSportsEventQueryKey, type SportsMarket } from "@workspace/api-client-react";
-import { ProbBar, SportTag, WatchButton, KalshiCTA, ErrorPanel, Change } from "@/components/bits";
+import { useGetEvent, getGetEventQueryKey, type PredictionMarket } from "@workspace/api-client-react";
+import { ProbBar, CategoryTag, WatchButton, KalshiCTA, ErrorPanel, Change } from "@/components/bits";
 import { closeLabel, fmtCents, fmtContracts, fullDate } from "@/lib/format";
 import { useToast } from "@/hooks/use-toast";
+import { usePageMeta } from "@/lib/meta";
 
 export default function EventPage() {
   const params = useParams<{ ticker: string }>();
   const ticker = decodeURIComponent(params.ticker ?? "");
   const { toast } = useToast();
-  const q = useGetSportsEvent(ticker, {
-    query: { queryKey: getGetSportsEventQueryKey(ticker), enabled: !!ticker, refetchInterval: 60000, retry: 1 },
+  const q = useGetEvent(ticker, {
+    query: { queryKey: getGetEventQueryKey(ticker), enabled: !!ticker, refetchInterval: 60000, retry: 1 },
   });
+
+  const lastLoaded = q.dataUpdatedAt;
+  const retryRefresh = () => q.refetch();
+  const refreshFailed = q.isRefetchError;
+  usePageMeta(q.data ? `${q.data.title} | Prediction Pro` : "Event | Prediction Pro", q.data?.subtitle || "Crowd prices, close time and resolution rules for this Kalshi event.");
 
   const back = (
     <Link href="/" data-testid="link-back" className="group inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Board
+      <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Markets
     </Link>
   );
 
@@ -31,7 +37,7 @@ export default function EventPage() {
     );
   }
 
-  if (q.isError || !q.data) {
+  if ((q.isError && !q.data) || !q.data) {
     const status = (q.error as { status?: number } | null)?.status;
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
@@ -39,9 +45,9 @@ export default function EventPage() {
         <div className="mt-8">
           {status === 404 ? (
             <div className="rounded-lg border border-dashed border-border bg-card/60 p-12 text-center">
-              <h2 className="text-3xl font-bold tracking-tight">Event not on the board</h2>
+              <h2 className="text-3xl font-bold tracking-tight">Event not found in the open feed</h2>
               <p className="mt-2 text-sm text-muted-foreground">It may have closed or settled. Ticker: <span className="font-mono">{ticker}</span></p>
-              <Link href="/" className="mt-5 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Back to board</Link>
+              <Link href="/" className="mt-5 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Back to markets</Link>
             </div>
           ) : (
             <ErrorPanel onRetry={() => q.refetch()} retrying={q.isFetching} />
@@ -69,12 +75,12 @@ export default function EventPage() {
         <div className="price-texture pointer-events-none select-none"><span>+142　29%　−180</span><span>+310　51%　−105</span><span>−26　37%　+118</span></div>
         <div className="relative mx-auto max-w-5xl px-4 py-10 md:px-6">
           {back}
-          <div className="rise mt-6"><SportTag sport={e.sport} league={e.league} /></div>
+          <div className="rise mt-6"><CategoryTag category={e.category} sport={e.sport} league={e.league} /></div>
           <h1 className="rise mt-3 max-w-4xl text-4xl font-extrabold leading-[1.02] tracking-[-.05em] sm:text-5xl md:text-6xl" data-testid="text-event-title">{e.title}</h1>
           {e.subtitle && <p className="mt-3 text-base text-muted-foreground">{e.subtitle}</p>}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <KalshiCTA url={e.url} />
-            <WatchButton variant="full" event={{ ticker: e.ticker, title: e.title, sport: e.sport, league: e.league }} />
+            <WatchButton variant="full" event={{ ticker: e.ticker, title: e.title, category: e.category, sport: e.sport, league: e.league }} />
             <button onClick={share} data-testid="button-share" className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold uppercase text-muted-foreground transition-colors hover:text-foreground">
               <Share2 className="h-4 w-4" /> Share
             </button>
@@ -84,7 +90,7 @@ export default function EventPage() {
               { l: "Favorite", v: leader ? `${fmtCents(leader.probability)}` : "--", s: leader ? leader.subtitle || leader.title : "" },
               { l: "Volume", v: fmtContracts(e.volume), s: "contracts" },
               { l: "24h volume", v: fmtContracts(e.volume24h), s: "contracts" },
-              { l: "Closes", v: closeLabel(e.closeTime).replace(/^Closes in /, ""), s: fullDate(e.closeTime) },
+              { l: "Market close", v: closeLabel(e.closeTime), s: `Closes ${fullDate(e.closeTime)}` },
             ].map((x) => (
               <div key={x.l} className="bg-card p-4">
                 <dt className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{x.l}</dt>
@@ -97,9 +103,15 @@ export default function EventPage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-10 md:px-6">
+        {refreshFailed && (
+          <div className="mb-5 flex flex-wrap items-center gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-foreground" data-testid="notice-refresh-failed">
+            Latest refresh failed. Showing data last loaded {new Date(lastLoaded).toLocaleTimeString()}.
+            <button onClick={retryRefresh} className="font-semibold text-primary underline underline-offset-4" data-testid="button-retry-refresh">Retry</button>
+          </div>
+        )}
         <div className="flex items-baseline justify-between border-b border-border pb-3">
           <h2 className="text-2xl font-bold tracking-tight">Markets</h2>
-          <span className="font-mono text-xs text-muted-foreground">{markets.length} · price = implied chance</span>
+          <span className="font-mono text-xs text-muted-foreground">{markets.length} · price = implied chance · volume in contracts</span>
         </div>
         {markets.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">No markets listed for this event.</p>
@@ -109,14 +121,14 @@ export default function EventPage() {
           </div>
         )}
         <p className="mt-8 text-xs text-muted-foreground">
-          Data from the public Kalshi API, refreshed every 60 seconds. Predaction is independent and not affiliated with Kalshi. Nothing here is financial advice.
+          Data from the public Kalshi API, refreshed every 60 seconds{q.dataUpdatedAt ? ` (last loaded ${new Date(q.dataUpdatedAt).toLocaleTimeString()})` : ""}. Prediction Pro is independent and not affiliated with Kalshi. Nothing here is financial advice.
         </p>
       </section>
     </div>
   );
 }
 
-function MarketRow({ m, rank }: { m: SportsMarket; rank: number }) {
+function MarketRow({ m, rank }: { m: PredictionMarket; rank: number }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rise overflow-hidden rounded-lg border border-border bg-card" style={{ animationDelay: `${rank * 40}ms` }} data-testid={`row-market-${m.ticker}`}>
@@ -141,7 +153,7 @@ function MarketRow({ m, rank }: { m: SportsMarket; rank: number }) {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-dashed border-border px-4 py-2 font-mono text-[11px] text-muted-foreground">
         <span>{fmtContracts(m.volume)} vol</span>
         <span>{fmtContracts(m.volume24h)} 24h</span>
-        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{fullDate(m.closeTime)}</span>
+        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />Closes {fullDate(m.closeTime)}</span>
         <span className="uppercase">{m.status}</span>
         <button onClick={() => setOpen((v) => !v)} data-testid={`button-rules-${m.ticker}`} className="ml-auto flex items-center gap-1 font-semibold text-foreground transition-colors hover:text-primary">
           Rules <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />

@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 export const STEPS = [
   { n: "01", t: "Price is probability", d: "Each market trades between 1 and 99 cents. A Yes contract at 63¢ means the crowd puts it around 63% likely. If it happens, Yes pays out $1." },
   { n: "02", t: "Volume is conviction", d: "Volume counts contracts traded, not dollars. Deep volume usually means a sharper, harder-to-move price." },
-  { n: "03", t: "Rules decide everything", d: "Every market has written resolution rules. Overtime, postponements, official sources — read them before you trust a number." },
-  { n: "04", t: "Trade on Kalshi, not here", d: "Predaction is read-only and independent. When you want to act, we hand you off to the event on Kalshi." },
+  { n: "03", t: "Rules decide everything", d: "Every market has written resolution rules. Official sources, deadlines, edge cases — read them before you trust a number." },
+  { n: "04", t: "Trade on Kalshi, not here", d: "Prediction Pro is read-only and independent. When you want to act, we hand you off to the event on Kalshi." },
 ];
 
 export function StepsGrid({ dark = false }: { dark?: boolean }) {

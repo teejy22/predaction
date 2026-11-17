@@ -22,7 +22,7 @@ export function closeLabel(iso: string): string {
 export function fullDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "TBD";
-  return format(d, "EEE MMM d, h:mm a");
+  return format(d, "EEE MMM d, yyyy, h:mm a");
 }
 
 export function updatedLabel(iso?: string): string {

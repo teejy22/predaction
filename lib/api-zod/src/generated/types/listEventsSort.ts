@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListSportsEventsSort = typeof ListSportsEventsSort[keyof typeof ListSportsEventsSort];
+export type ListEventsSort = typeof ListEventsSort[keyof typeof ListEventsSort];
 
 
-export const ListSportsEventsSort = {
+export const ListEventsSort = {
   volume: 'volume',
   closing: 'closing',
   newest: 'newest',
