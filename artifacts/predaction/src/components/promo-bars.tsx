@@ -33,7 +33,7 @@ export function PromoBars() {
       >
         <span className="min-w-0">
           <span className="flex items-center gap-3">
-            <img src={`${import.meta.env.BASE_URL}polymarket-logo.png`} alt="Polymarket" width="220" height="52" className="h-7 w-auto shrink-0" />
+            <img src={`${import.meta.env.BASE_URL}polymarket-logo.png`} alt="Polymarket" width="190" height="42" className="h-7 w-auto shrink-0" />
             <span className="font-mono text-[8px] font-semibold uppercase tracking-[.14em] text-[#878A9C]"><span className="text-sm font-bold tracking-normal text-[#E7EAF1]">$25</span> bonus</span>
           </span>
           <span className="mt-1.5 block truncate text-[10px] font-medium text-[#B7C5CC]">
