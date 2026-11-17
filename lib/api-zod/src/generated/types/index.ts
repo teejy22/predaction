@@ -26,6 +26,7 @@ export * from './marketOverviewCategoriesItem';
 export * from './predictionEvent';
 export * from './predictionMarket';
 export * from './sportCategory';
+export * from './sportCategoryLeagueCountsItem';
 export * from './sportsGame';
 export * from './sportsGameFeed';
 export * from './teamLogo';

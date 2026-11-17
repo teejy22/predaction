@@ -313,6 +313,14 @@ components:
         name: { type: string }
         count: { type: integer }
         leagues: { type: array, items: { type: string } }
+        leagueCounts:
+          type: array
+          items:
+            type: object
+            required: [name, count]
+            properties:
+              name: { type: string }
+              count: { type: integer }
     MarketOverview:
       type: object
       required: [categories, sports, totalEvents, totalMarkets, totalVolume, volume24h, updatedAt, partial, indexing, warnings]

@@ -203,10 +203,16 @@ export interface SportsGameFeed {
   nextOffset: number;
 }
 
+export type SportCategoryLeagueCountsItem = {
+  name: string;
+  count: number;
+};
+
 export interface SportCategory {
   name: string;
   count: number;
   leagues: string[];
+  leagueCounts?: SportCategoryLeagueCountsItem[];
 }
 
 export type MarketOverviewCategoriesItem = {

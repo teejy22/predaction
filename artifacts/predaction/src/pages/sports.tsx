@@ -4,14 +4,16 @@ import { AlertTriangle, ArrowDownWideNarrow, ChevronLeft, ChevronRight, Info, Ro
 import { getGetOverviewQueryKey, getListSportsGamesQueryKey, useGetOverview, useListSportsGames, type ListSportsGamesParams } from "@workspace/api-client-react";
 import { ErrorPanel } from "@/components/bits";
 import { SportsGameCard } from "@/components/sports-game-card";
-import { UpcomingGames } from "@/components/upcoming-games";
+import { SportsMatchupCard } from "@/components/sports-matchup-card";
+import { leagueName, SportsSidebar } from "@/components/sports-sidebar";
+import { dayHeading, UpcomingGames } from "@/components/upcoming-games";
 import { updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
-type Sort = "volume" | "closing" | "newest";
+type Sort = "date" | "volume" | "closing" | "newest";
 type Filters = { sport: string; league: string; q: string; sort: Sort; page: number };
-const PAGE_SIZE = 24;
 const SORTS: { value: Sort; label: string }[] = [
+  { value: "date", label: "By date" },
   { value: "volume", label: "Volume" },
   { value: "closing", label: "Closing soon" },
   { value: "newest", label: "Newest" },
@@ -24,7 +26,7 @@ function readFilters(): Filters {
     sport: params.get("sport") ?? "",
     league: params.get("league") ?? "",
     q: params.get("q") ?? "",
-    sort: rawSort === "closing" || rawSort === "newest" ? rawSort : "volume",
+    sort: rawSort === "volume" || rawSort === "closing" || rawSort === "newest" ? rawSort : "date",
     page: Math.max(0, (Number.parseInt(params.get("page") || "1", 10) || 1) - 1),
   };
 }
@@ -34,7 +36,7 @@ function filtersUrl(filters: Filters) {
   if (filters.sport) params.set("sport", filters.sport);
   if (filters.league) params.set("league", filters.league);
   if (filters.q) params.set("q", filters.q);
-  if (filters.sort !== "volume") params.set("sort", filters.sort);
+  if (filters.sort !== "date") params.set("sort", filters.sort);
   if (filters.page > 0) params.set("page", String(filters.page + 1));
   const query = params.toString();
   return `${window.location.pathname}${query ? `?${query}` : ""}`;
@@ -122,8 +124,11 @@ export default function SportsPage() {
   );
 
   // Uncommitted search edits hold results on page one; no stale offset request is issued.
+  // The schedule view uses compact cards, so a page holds more games.
+  const byDate = sort === "date";
+  const PAGE_SIZE = byDate ? 30 : 24;
   const params: ListSportsGamesParams = {
-    sort,
+    sort: byDate ? "upcoming" : sort,
     offset: page * PAGE_SIZE,
     limit: PAGE_SIZE,
   };
@@ -157,6 +162,19 @@ export default function SportsPage() {
     setLeague(league === next ? "" : next);
     setPage(0);
   };
+  const pickLeague = (owner: string, next: string) => {
+    if (league === next && sport === owner) setLeague("");
+    else { setSport(owner); setLeague(next); }
+    setPage(0);
+  };
+  // Consecutive games share a day because the schedule view is ordered by game day.
+  const days: { date: string; games: typeof games }[] = [];
+  if (byDate) for (const game of games) {
+    const date = game.gameDate ?? "";
+    const last = days[days.length - 1];
+    if (last && last.date === date) last.games.push(game);
+    else days.push({ date, games: [game] });
+  }
   const setSortFirst = (next: Sort) => {
     setSort(next);
     setPage(0);
@@ -166,7 +184,7 @@ export default function SportsPage() {
     setLeague("");
     setQ("");
     setSearch("");
-    setSort("volume");
+    setSort("date");
     setPage(0);
   };
   const goToPage = (next: number) => {
@@ -186,7 +204,7 @@ export default function SportsPage() {
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Kalshi · sports markets</p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-[-.045em] sm:text-4xl">Sports</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Every open matchup, grouped. Winner and spread up front; open a game for totals, halves and props.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Every open matchup, laid out by game day. Open a game for spreads, totals and props, or sort by volume to include futures.</p>
           </div>
           <div className="text-left sm:text-right">
             <p className="font-mono text-xl font-semibold tabular">{indexedSports !== undefined ? indexedSports.toLocaleString() : "—"}</p>
@@ -197,41 +215,12 @@ export default function SportsPage() {
       </header>
 
       <section className="mt-6 grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
-        <aside className="hidden space-y-4 lg:block" aria-label="Browse sports and leagues">
-          <div className="rounded-lg border border-border bg-card/60 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Sports</h2>
-              <button type="button" onClick={() => chooseSport("")} data-testid="button-sports-all" className={`text-[10px] font-semibold ${!sport ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} aria-pressed={!sport}>All sports</button>
-            </div>
-            {overview.isLoading ? <div className="mt-3 space-y-2" aria-label="Loading sports"><div className="h-8 animate-pulse rounded bg-muted" /><div className="h-8 animate-pulse rounded bg-muted" /><div className="h-8 animate-pulse rounded bg-muted" /></div> :
-              overview.isError && !overview.data ? <div className="mt-3 text-xs text-muted-foreground"><p>Sports index unavailable.</p><button onClick={() => overview.refetch()} className="mt-2 text-primary underline">Retry</button></div> :
-                sports.length ? <div className="mt-2 space-y-1">
-                  {sports.map((item) => <button key={item.name} type="button" onClick={() => chooseSport(item.name)} aria-pressed={sport === item.name} data-testid={`button-sport-${item.name.toLowerCase().replace(/\s+/g, "-")}`} className={`flex w-full items-center justify-between rounded px-2.5 py-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${sport === item.name ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}>
-                    <span>{item.name}</span><span className="font-mono text-[10px] tabular">{item.count.toLocaleString()}</span>
-                  </button>)}
-                </div> : <p className="mt-3 text-xs text-muted-foreground">No sport groups are indexed yet. All sports events remain available in the results.</p>}
-          </div>
-
-          <div className="rounded-lg border border-border bg-card/60 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Leagues</h2>
-              {sport && activeSport?.leagues.length === 0 && <span className="text-[9px] text-muted-foreground">No leagues for {sport}</span>}
-            </div>
-            <button type="button" onClick={() => chooseLeague("")} data-testid="button-leagues-all" aria-pressed={!league} className={`mt-2 flex w-full items-center justify-between rounded px-2.5 py-2 text-left text-xs ${!league ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}>All available leagues</button>
-            <div className="panel-scroll mt-1 max-h-72 space-y-1 overflow-y-auto pr-1">
-              {availableLeagues.map((name) => {
-                const owner = sports.find((item) => item.leagues.includes(name))?.name;
-                return <button key={`${owner}-${name}`} type="button" onClick={() => {
-                  if (!sport && owner) setSport(owner);
-                  chooseLeague(name);
-                }} aria-pressed={league === name} data-testid={`button-league-${name.toLowerCase().replace(/\s+/g, "-")}`} className={`flex w-full items-center justify-between rounded px-2.5 py-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${league === name ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}>
-                  <span>{name === "NCAAF" ? "College Football" : name}</span>{!sport && owner && <span className="text-[9px] text-muted-foreground">{owner}</span>}
-                </button>;
-              })}
-              {!availableLeagues.length && <p className="px-2.5 py-2 text-[10px] leading-4 text-muted-foreground">{sport ? "This sport has no league metadata. Choose the sport to browse its events." : "No league metadata is available yet."}</p>}
-            </div>
-          </div>
-        </aside>
+        <SportsSidebar
+          sports={sports} sport={sport} league={league}
+          loading={overview.isLoading} failed={overview.isError && !overview.data}
+          onRetry={() => { void overview.refetch(); }}
+          onSport={chooseSport} onLeague={pickLeague}
+        />
 
         <div ref={pageRef} className="min-w-0 scroll-mt-20">
           <div className="mb-4 grid grid-cols-2 gap-3 lg:hidden">
@@ -244,11 +233,11 @@ export default function SportsPage() {
             <label className="min-w-0 text-xs text-muted-foreground">League
               <select value={league} onChange={(event) => chooseLeague(event.target.value)} data-testid="select-sports-league" className="mt-1.5 h-10 w-full rounded-md border border-border bg-card px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <option value="">{availableLeagues.length ? "All leagues" : "No league groups"}</option>
-                {availableLeagues.map((name) => <option key={name} value={name}>{name === "NCAAF" ? "College Football" : name}</option>)}
+                {availableLeagues.map((name) => <option key={name} value={name}>{leagueName(name)}</option>)}
               </select>
             </label>
           </div>
-          {!search && page === 0 && <UpcomingGames sport={sport} league={league} />}
+          {!byDate && !search && page === 0 && <UpcomingGames sport={sport} league={league} />}
           <div className="flex flex-col gap-3 sm:flex-row">
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">Search sports events</span>
@@ -266,7 +255,7 @@ export default function SportsPage() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
             <h2 className="font-display text-xl font-bold tracking-[-.035em]">
-              {league || sport || "All sports"}{search && <span className="font-sans text-sm font-normal text-muted-foreground"> · “{search}”</span>}
+              {(league && leagueName(league)) || sport || "All sports"}{search && <span className="font-sans text-sm font-normal text-muted-foreground"> · “{search}”</span>}
             </h2>
             <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
               {indexing && <span className="inline-flex items-center gap-1.5" data-testid="status-sports-indexing"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> updating index · counts may grow</span>}
@@ -284,13 +273,22 @@ export default function SportsPage() {
           <div className="mt-4" aria-live="polite">
             {feed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading sports markets">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/70" />)}</div> :
               feed.isError && !data ? <ErrorPanel title="Couldn't load sports markets" onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
+                games.length && byDate ? <div className={`space-y-6 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
+                  {days.map((day) => <section key={day.date} aria-label={day.date ? dayHeading(day.date) : "Scheduled games"} data-testid={`section-day-${day.date}`}>
+                    <h3 className="mb-2.5 text-sm font-bold tracking-tight">{day.date ? dayHeading(day.date) : "Scheduled"}</h3>
+                    <div className="grid items-start gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                      {day.games.map((game) => <SportsMatchupCard key={game.key} game={game} />)}
+                    </div>
+                  </section>)}
+                </div> :
                 games.length ? <div className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
                   {games.map((game) => <SportsGameCard key={game.key} game={game} />)}
                 </div> :
                   <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-14 text-center">
                     <p className="font-mono text-[10px] uppercase tracking-[.17em] text-primary">No matching games</p>
                     <h3 className="font-display mt-2 text-2xl font-bold tracking-tight">Nothing in this view yet</h3>
-                    <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{filtersActive ? "Try a different sport or loosen your search." : data?.indexing ? "The sports index is still building; check back shortly." : "No open sports events are currently indexed."}</p>
+                    <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{byDate && !data?.indexing ? "No games with a scheduled day match this view. Futures and season-long markets are listed under Volume." : filtersActive ? "Try a different sport or loosen your search." : data?.indexing ? "The sports index is still building; check back shortly." : "No open sports events are currently indexed."}</p>
+                    {byDate && <button type="button" onClick={() => setSortFirst("volume")} className="mr-2 mt-5 rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary" data-testid="button-sports-empty-volume">Sort by volume</button>}
                     {filtersActive && <button type="button" onClick={reset} className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" data-testid="button-sports-empty-reset">Clear filters</button>}
                   </div>}
           </div>

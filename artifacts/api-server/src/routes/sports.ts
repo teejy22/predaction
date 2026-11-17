@@ -132,7 +132,11 @@ router.get(["/overview", "/sports/overview"], async (req, res): Promise<void> =>
       categories: categories.map(name => ({ name, count: events.filter(e => e.categories.includes(name)).length })),
       sports: names.map(name => {
         const matching = events.filter(e => e.sport === name);
-        return { name, count: matching.length, leagues: [...new Set(matching.map(e => e.league).filter(Boolean))].sort() };
+        const leagues = [...new Set(matching.map(e => e.league).filter(Boolean))].sort();
+        return {
+          name, count: matching.length, leagues,
+          leagueCounts: leagues.map(league => ({ name: league, count: matching.filter(e => e.league === league).length })),
+        };
       }),
       totalEvents: events.length, totalMarkets: events.reduce((n, e) => n + e.markets.length, 0),
       totalVolume: events.reduce((n, e) => n + e.volume, 0), volume24h: events.reduce((n, e) => n + e.volume24h, 0),

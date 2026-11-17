@@ -9,7 +9,19 @@ const TIME = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-di
 const SHORT_DATE = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 
 // Game days are published in US Eastern time, so "today" is judged there too.
-function dayLabel(gameDate: string) {
+const WEEKDAY_DATE = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+
+export function formatStartTime(iso: string) {
+  return TIME.format(new Date(iso));
+}
+
+// Section heading for a game day: Today, Tomorrow, then "Thu, Nov 19".
+export function dayHeading(gameDate: string) {
+  const label = dayLabel(gameDate);
+  return label === "Today" || label === "Tomorrow" ? label : WEEKDAY_DATE.format(new Date(`${gameDate}T12:00:00Z`));
+}
+
+export function dayLabel(gameDate: string) {
   const now = Date.now();
   if (gameDate === DAY.format(now)) return "Today";
   if (gameDate === DAY.format(now + 86_400_000)) return "Tomorrow";

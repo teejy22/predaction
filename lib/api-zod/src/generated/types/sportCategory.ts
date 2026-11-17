@@ -5,9 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SportCategoryLeagueCountsItem } from './sportCategoryLeagueCountsItem';
 
 export interface SportCategory {
   name: string;
   count: number;
   leagues: string[];
+  leagueCounts?: SportCategoryLeagueCountsItem[];
 }

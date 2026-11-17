@@ -833,7 +833,11 @@ export const GetOverviewResponse = zod.object({
   "sports": zod.array(zod.object({
   "name": zod.string(),
   "count": zod.number().int(),
-  "leagues": zod.array(zod.string())
+  "leagues": zod.array(zod.string()),
+  "leagueCounts": zod.array(zod.object({
+  "name": zod.string(),
+  "count": zod.number().int()
+})).optional()
 })),
   "totalEvents": zod.number().int(),
   "totalMarkets": zod.number().int(),
