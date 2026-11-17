@@ -9,6 +9,207 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Cached Smart Money Skew and Football Sharps tools
+ */
+export const GetFlowframeToolsResponse = zod.object({
+  "smartMoney": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
+}),
+  "footballLeaderboard": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
+}),
+  "footballTrades": zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string(),
+  "category": zod.string(),
+  "eventTicker": zod.string().optional(),
+  "probability": zod.number().optional(),
+  "change": zod.number().optional(),
+  "publishedAt": zod.string().optional(),
+  "wallet": zod.string().optional(),
+  "profileUrl": zod.string().optional(),
+  "side": zod.enum(['BUY', 'SELL']).optional(),
+  "outcome": zod.string().optional(),
+  "shares": zod.number().optional(),
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
+})),
+  "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
+  "fetchedAt": zod.string(),
+  "checkedAt": zod.string(),
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
+}),
+  "refreshMinutes": zod.number().int(),
+  "attribution": zod.string()
+})
+
+
+/**
  * @summary Cached Flowframe Kalshi and Polymarket intelligence and tracked-wallet trades
  */
 export const GetFlowframeInsightsResponse = zod.object({
@@ -27,12 +228,54 @@ export const GetFlowframeInsightsResponse = zod.object({
   "side": zod.enum(['BUY', 'SELL']).optional(),
   "outcome": zod.string().optional(),
   "shares": zod.number().optional(),
-  "usdcSize": zod.number().optional()
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
 })),
   "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
   "fetchedAt": zod.string(),
   "checkedAt": zod.string(),
-  "message": zod.string()
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
 }),
   "polymarketMovers": zod.object({
   "items": zod.array(zod.object({
@@ -49,12 +292,54 @@ export const GetFlowframeInsightsResponse = zod.object({
   "side": zod.enum(['BUY', 'SELL']).optional(),
   "outcome": zod.string().optional(),
   "shares": zod.number().optional(),
-  "usdcSize": zod.number().optional()
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
 })),
   "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
   "fetchedAt": zod.string(),
   "checkedAt": zod.string(),
-  "message": zod.string()
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
 }),
   "trades": zod.object({
   "items": zod.array(zod.object({
@@ -71,12 +356,54 @@ export const GetFlowframeInsightsResponse = zod.object({
   "side": zod.enum(['BUY', 'SELL']).optional(),
   "outcome": zod.string().optional(),
   "shares": zod.number().optional(),
-  "usdcSize": zod.number().optional()
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
 })),
   "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
   "fetchedAt": zod.string(),
   "checkedAt": zod.string(),
-  "message": zod.string()
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
 }),
   "trending": zod.object({
   "items": zod.array(zod.object({
@@ -93,12 +420,54 @@ export const GetFlowframeInsightsResponse = zod.object({
   "side": zod.enum(['BUY', 'SELL']).optional(),
   "outcome": zod.string().optional(),
   "shares": zod.number().optional(),
-  "usdcSize": zod.number().optional()
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
 })),
   "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
   "fetchedAt": zod.string(),
   "checkedAt": zod.string(),
-  "message": zod.string()
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
 }),
   "pulse": zod.object({
   "items": zod.array(zod.object({
@@ -115,12 +484,54 @@ export const GetFlowframeInsightsResponse = zod.object({
   "side": zod.enum(['BUY', 'SELL']).optional(),
   "outcome": zod.string().optional(),
   "shares": zod.number().optional(),
-  "usdcSize": zod.number().optional()
+  "usdcSize": zod.number().optional(),
+  "fairValue": zod.number().optional().describe('FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast.'),
+  "edge": zod.number().optional().describe('Fair YES value minus market YES price, signed percentage points; not historical price movement.'),
+  "skewScore": zod.number().optional(),
+  "tiers": zod.object({
+  "sharp": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "profitable": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional(),
+  "recreational": zod.object({
+  "yesDollars": zod.number(),
+  "noDollars": zod.number(),
+  "yesCount": zod.number().int().optional(),
+  "noCount": zod.number().int().optional(),
+  "skew": zod.number()
+}).optional()
+}).optional(),
+  "rank": zod.number().int().optional(),
+  "score": zod.number().optional(),
+  "realizedPnl": zod.number().optional(),
+  "roi": zod.number().optional().describe('ROI expressed as a percentage.'),
+  "winRate": zod.number().optional().describe('Win rate expressed as a percentage.'),
+  "realizedCount": zod.number().int().optional(),
+  "nflCount": zod.number().int().optional(),
+  "cfbCount": zod.number().int().optional(),
+  "medianStake": zod.number().optional(),
+  "league": zod.enum(['nfl', 'cfb']).optional(),
+  "unusual": zod.boolean().optional(),
+  "usualMultiple": zod.number().optional()
 })),
   "status": zod.enum(['ready', 'stale', 'unavailable', 'unconfigured']),
   "fetchedAt": zod.string(),
   "checkedAt": zod.string(),
-  "message": zod.string()
+  "message": zod.string(),
+  "backfillDone": zod.boolean().optional(),
+  "sourceUpdatedAt": zod.string().optional(),
+  "clamped": zod.boolean().optional(),
+  "effectiveLimit": zod.number().int().optional()
 }),
   "refreshMinutes": zod.number().int(),
   "attribution": zod.string()

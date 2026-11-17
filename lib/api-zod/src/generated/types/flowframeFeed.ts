@@ -14,4 +14,8 @@ export interface FlowframeFeed {
   fetchedAt: string;
   checkedAt: string;
   message: string;
+  backfillDone?: boolean;
+  sourceUpdatedAt?: string;
+  clamped?: boolean;
+  effectiveLimit?: number;
 }

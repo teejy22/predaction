@@ -5,7 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { FlowframeItemLeague } from './flowframeItemLeague';
 import type { FlowframeItemSide } from './flowframeItemSide';
+import type { FlowframeTiers } from './flowframeTiers';
 
 export interface FlowframeItem {
   id: string;
@@ -22,4 +24,24 @@ export interface FlowframeItem {
   outcome?: string;
   shares?: number;
   usdcSize?: number;
+  /** FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast. */
+  fairValue?: number;
+  /** Fair YES value minus market YES price, signed percentage points; not historical price movement. */
+  edge?: number;
+  skewScore?: number;
+  tiers?: FlowframeTiers;
+  rank?: number;
+  score?: number;
+  realizedPnl?: number;
+  /** ROI expressed as a percentage. */
+  roi?: number;
+  /** Win rate expressed as a percentage. */
+  winRate?: number;
+  realizedCount?: number;
+  nflCount?: number;
+  cfbCount?: number;
+  medianStake?: number;
+  league?: FlowframeItemLeague;
+  unusual?: boolean;
+  usualMultiple?: number;
 }

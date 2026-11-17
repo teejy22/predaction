@@ -1,9 +1,10 @@
-import type { FlowframeFeed, FlowframeInsights, FlowframeItem } from "@workspace/api-zod";
+import type { FlowframeFeed, FlowframeInsights, FlowframeItem, FlowframeTools } from "@workspace/api-zod";
 import { logger } from "./logger";
+import { object, text, number, price, timestamp, safeUrl, type JsonObject } from "./flowframe-values";
+import { normalizeToolFeed, type ToolFeedName } from "./flowframe-tool-feeds";
 
-type FeedName = "movers" | "polymarketMovers" | "trades" | "trending" | "pulse";
-type JsonObject = Record<string, unknown>;
-// Five feeds, three refreshes per hour = 15 provider calls per server process.
+type FeedName = "movers" | "polymarketMovers" | "trades" | "trending" | "pulse" | ToolFeedName;
+// Existing feeds: 15 calls/hour. Three on-demand tools: 3 calls/hour.
 const TTL = 20 * 60_000;
 const HOUR = 60 * 60_000;
 const PATHS: Record<FeedName, string> = {
@@ -12,36 +13,15 @@ const PATHS: Record<FeedName, string> = {
   pulse: "/pulse?limit=8",
   polymarketMovers: "/movers/polymarket?window=24h&direction=both&limit=25",
   trades: "/trades/recent?minSize=1000&limit=50",
+  smartMoney: "/smart-money/skew?limit=50",
+  footballLeaderboard: "/football-sharps/leaderboard?window=season&league=all&includeFutures=false&includeMm=false&limit=50",
+  footballTrades: "/football-sharps/feed?minUsd=100",
 };
 
-function object(value: unknown): JsonObject {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid provider data");
-  return value as JsonObject;
-}
-function text(value: unknown): string { return typeof value === "string" ? value : ""; }
-function number(value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("Invalid provider number");
-  return value;
-}
-function price(value: unknown, scale = 1): number {
-  const result = number(value) * scale;
-  if (result < 0 || result > 100) throw new Error("Invalid provider price");
-  return Math.round(result * 100) / 100;
-}
-function timestamp(value: unknown): string {
-  const s = text(value);
-  if (!s || !Number.isFinite(Date.parse(s))) throw new Error("Invalid provider timestamp");
-  return s;
-}
-function safeUrl(value: unknown, host: string): string {
-  const url = new URL(text(value));
-  if (url.protocol !== "https:" || (url.hostname !== host && url.hostname !== `www.${host}`) || url.username || url.password) {
-    throw new Error("Invalid provider link");
-  }
-  return url.toString();
-}
-
 export function normalizeFlowframe(name: FeedName, value: unknown, checkedAt: string): FlowframeFeed {
+  if (name === "smartMoney" || name === "footballLeaderboard" || name === "footballTrades") {
+    return normalizeToolFeed(name, value, checkedAt);
+  }
   const raw = object(value);
   const meta = object(raw.meta);
   if (!Array.isArray(raw.data)) throw new Error("Invalid provider items");
@@ -122,14 +102,15 @@ export function createFlowframeClient(options: Options = {}) {
   }
 
   async function load(name: FeedName): Promise<FlowframeFeed> {
+    const ttl = name === "smartMoney" || name === "footballLeaderboard" || name === "footballTrades" ? HOUR : TTL;
     const cached = cache.get(name);
     if (cached && now() < cached.nextCheck) return cached.feed;
     const key = getKey();
-    if (!key) return failed(name, "Flowframe is not configured on the server.", "unconfigured", now() + TTL);
+    if (!key) return failed(name, "Flowframe is not configured on the server.", "unconfigured", now() + ttl);
     while (calls.length && calls[0]! <= now() - HOUR) calls.shift();
     if (blockedUntil > now() || calls.length >= 18) {
       return failed(name, "Flowframe request budget is paused; cached data will retry automatically.", "unavailable",
-        Math.max(now() + TTL, blockedUntil, calls.length >= 18 ? calls[0]! + HOUR : 0));
+        Math.max(now() + ttl, blockedUntil, calls.length >= 18 ? calls[0]! + HOUR : 0));
     }
     calls.push(now());
     try {
@@ -149,7 +130,7 @@ export function createFlowframeClient(options: Options = {}) {
           message = "Flowframe's rate limit was reached; retrying after the provider cooldown.";
         }
         // Never log upstream bodies, URLs with credentials, or request headers.
-        return failed(name, message, "unavailable", Math.max(now() + TTL, blockedUntil));
+        return failed(name, message, "unavailable", Math.max(now() + ttl, blockedUntil));
       }
       const raw: unknown = await response.json();
       let feed: FlowframeFeed;
@@ -166,10 +147,10 @@ export function createFlowframeClient(options: Options = {}) {
         }, "Flowframe response did not match the expected schema");
         throw new Error("Unexpected Flowframe schema");
       }
-      cache.set(name, { feed, nextCheck: now() + TTL });
+      cache.set(name, { feed, nextCheck: now() + ttl });
       return feed;
     } catch {
-      return failed(name, "Flowframe could not be reached or returned an unexpected response.", "unavailable", now() + TTL);
+      return failed(name, "Flowframe could not be reached or returned an unexpected response.", "unavailable", now() + ttl);
     }
   }
 
@@ -182,6 +163,12 @@ export function createFlowframeClient(options: Options = {}) {
   }
 
   return {
+    async tools(): Promise<FlowframeTools> {
+      const [smartMoney, footballLeaderboard, footballTrades] = await Promise.all([
+        get("smartMoney"), get("footballLeaderboard"), get("footballTrades"),
+      ]);
+      return { smartMoney, footballLeaderboard, footballTrades, refreshMinutes: 60, attribution: "Powered by FlowFrame" };
+    },
     async insights(): Promise<FlowframeInsights> {
       const [movers, trending, pulse, polymarketMovers, trades] = await Promise.all([
         get("movers"), get("trending"), get("pulse"), get("polymarketMovers"), get("trades"),

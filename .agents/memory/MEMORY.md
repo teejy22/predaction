@@ -1,2 +1,3 @@
 - [Product scope](product-scope.md) — User selected Prediction Pro branding and all available Kalshi categories, replacing the original sports-only scope.
 - [Market indexing decisions](market-index-decisions.md) — Broad discovery is shared and cached; progressive coverage and regular-event scope must stay explicit.
+- [FlowFrame contracts](flowframe-contracts.md) — Live cohort responses may omit counts while retaining dollar exposures; missing counts are not zero.

@@ -8,6 +8,24 @@ const mover = {
   ticker: "TEST-YES", eventTicker: "TEST", title: "Test event?", category: "Politics",
   currentPrice: 67, priceChange: 26, kalshiUrl: "https://kalshi.com/events/TEST",
 };
+const wallet = `0x${"a".repeat(40)}`;
+function toolData(url: string) {
+  return { data: url.includes("/smart-money/") ? [{
+    conditionId: "smart-condition", marketTitle: "Smart money market?", marketPrice: 0.7,
+    impliedFairValue: 0.61, edgePct: -9, compositeSkewScore: -23, polymarketUrl: null,
+    tiers: {
+      sharp: { yesDollars: 200, noDollars: 800, yesCount: 2, noCount: 8, skew: -0.6 },
+      profitable: { yesDollars: 400, noDollars: 900, skew: -0.4 },
+    },
+  }] : url.includes("/leaderboard") ? [{
+    rank: 7, wallet, score: 81, realizedPnl: -240, roi: -0.12, winRate: 0.6, realizedCount: 10,
+    nflCount: 6, cfbCount: 4, medianStake: 200, lastRealizedAt: null,
+  }] : [{
+    wallet, walletRank: 7, walletScore: 81, side: "SELL", outcome: "No", title: "Football test?",
+    slug: "football-test", eventSlug: "football-event", league: "nfl", price: 0.13, usdSize: 900,
+    timestamp: Date.parse(checked), unusual: true, usualMultiple: 4.5,
+  }], meta: { ...meta, backfillDone: false, refreshedAt: Date.parse(checked), clamped: true, effectiveLimit: 5 } };
+}
 function data(url: string) {
   return { data: url.includes("/movers/polymarket") ? [
     { conditionId: "condition-1", marketTitle: "Polymarket test?", currentPrice: 0.62, deltaPct: -17, polymarketUrl: "https://polymarket.com/event/test" },
@@ -142,4 +160,102 @@ test("one provider feed can fail without hiding other successful feeds", async (
   assert.equal(result.polymarketMovers.status, "ready");
   assert.equal(result.movers.status, "ready");
   assert.match(result.trades.message, /configured account/);
+});
+
+test("smart-money estimates, signed edge and cohort exposures retain distinct units", () => {
+  const feed = normalizeFlowframe("smartMoney", toolData("/smart-money/"), checked);
+  const row = feed.items[0]!;
+  assert.equal(row.probability, 70);
+  assert.equal(row.fairValue, 61);
+  assert.equal(row.edge, -9);
+  assert.equal(row.change, undefined);
+  assert.equal(row.skewScore, -23);
+  assert.equal(row.tiers?.sharp?.noDollars, 800);
+  assert.equal(row.tiers?.sharp?.noCount, 8);
+  assert.equal(row.tiers?.profitable?.yesCount, undefined);
+  assert.equal(row.tiers?.profitable?.noDollars, 900);
+  assert.equal(row.url, "");
+  assert.equal(feed.clamped, true);
+  assert.equal(feed.effectiveLimit, 5);
+});
+
+test("football ranks and realized results preserve losses and partial source metadata", () => {
+  const feed = normalizeFlowframe("footballLeaderboard", toolData("/leaderboard"), checked);
+  const row = feed.items[0]!;
+  assert.equal(row.rank, 7);
+  assert.equal(row.realizedPnl, -240);
+  assert.equal(row.roi, -12);
+  assert.equal(row.winRate, 60);
+  assert.equal(row.realizedCount, 10);
+  assert.equal(row.publishedAt, undefined);
+  assert.equal(row.url, `https://polymarket.com/profile/${wallet}?r=flowframe`);
+  assert.equal(feed.backfillDone, false);
+  assert.equal(feed.sourceUpdatedAt, new Date(checked).toISOString());
+});
+
+test("football trades use Unix milliseconds, execution price and source unusual flags", () => {
+  const row = normalizeFlowframe("footballTrades", toolData("/feed"), checked).items[0]!;
+  assert.equal(row.publishedAt, new Date(checked).toISOString());
+  assert.equal(row.side, "SELL");
+  assert.equal(row.probability, 13);
+  assert.equal(row.usdcSize, 900);
+  assert.equal(row.shares, undefined);
+  assert.equal(row.unusual, true);
+  assert.equal(row.usualMultiple, 4.5);
+  assert.equal(row.rank, 7);
+  assert.equal(row.league, "nfl");
+  assert.equal(row.url, "https://polymarket.com/market/football-test?r=flowframe");
+  const raw = toolData("/feed");
+  Object.assign(raw.data[0]!, { unusual: false, usualMultiple: null, slug: "" });
+  const noLink = normalizeFlowframe("footballTrades", raw, checked).items[0]!;
+  assert.equal(noLink.unusual, false);
+  assert.equal(noLink.usualMultiple, undefined);
+  assert.equal(noLink.url, "");
+});
+
+test("tool links, ranks and counts reject invalid source values", () => {
+  for (const invalid of [{ slug: "../login" }, { wallet: "not-a-wallet" }, { walletRank: -1 }, { usdSize: -100 }]) {
+    const raw = toolData("/feed");
+    Object.assign(raw.data[0]!, invalid);
+    assert.throws(() => normalizeFlowframe("footballTrades", raw, checked));
+  }
+  const raw = toolData("/smart-money/");
+  Object.assign(raw.data[0]!, { polymarketUrl: "https://polymarket.com.attacker.test/fake" });
+  assert.throws(() => normalizeFlowframe("smartMoney", raw, checked));
+});
+
+test("on-demand tools share the global budget but retain hourly cache and independent access errors", async () => {
+  let time = Date.parse(checked);
+  let calls = 0;
+  let deny = false;
+  const client = createFlowframeClient({
+    now: () => time, getKey: () => "test-credential",
+    fetchImpl: (async (input: Parameters<typeof fetch>[0]) => {
+      calls++;
+      const url = String(input);
+      if (deny && url.includes("/smart-money/")) return new Response("", { status: 403 });
+      return Response.json(url.includes("/smart-money/") || url.includes("/football-sharps/") ? toolData(url) : data(url));
+    }) as typeof fetch,
+  });
+  await client.insights();
+  assert.equal(calls, 5); // Tools aren't fetched by homepage visits.
+  const concurrent = await Promise.all(Array.from({ length: 8 }, () => client.tools()));
+  assert.equal(calls, 8);
+  assert.equal(concurrent[0]?.smartMoney.status, "ready");
+  assert.equal(concurrent[0]?.refreshMinutes, 60);
+  for (let i = 0; i < 2; i++) {
+    time += 1_200_001;
+    await Promise.all([client.insights(), client.tools()]);
+  }
+  assert.equal(calls, 18); // Fifteen discovery calls + three tools in the first hour.
+  time += 1_200_001;
+  deny = true;
+  const result = await client.tools();
+  assert.equal(calls, 21);
+  assert.equal(result.smartMoney.status, "stale");
+  assert.match(result.smartMoney.message, /configured account/);
+  assert.equal(result.footballLeaderboard.status, "ready");
+  assert.equal(result.footballTrades.status, "ready");
+  await client.tools();
+  assert.equal(calls, 21);
 });

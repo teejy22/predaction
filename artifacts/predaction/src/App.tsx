@@ -10,6 +10,9 @@ import Watchlist from '@/pages/watchlist';
 import MoversPage from '@/pages/movers';
 import TradersPage from '@/pages/traders';
 import PulsePage from '@/pages/pulse';
+import SmartMoneyPage from '@/pages/smart-money';
+import FootballSharpsPage from '@/pages/football-sharps';
+import SportsPage from '@/pages/sports';
 import { Shell } from '@/components/shell';
 import {
   Route,
@@ -28,11 +31,14 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/sports" component={SportsPage} />
         <Route path="/event/:ticker" component={EventPage} />
         <Route path="/watchlist" component={Watchlist} />
         <Route path="/movers" component={MoversPage} />
         <Route path="/traders" component={TradersPage} />
         <Route path="/pulse" component={PulsePage} />
+        <Route path="/tools/smart-money" component={SmartMoneyPage} />
+        <Route path="/tools/football-sharps" component={FootballSharpsPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

@@ -11,6 +11,16 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /flowframe/tools:
+    get:
+      operationId: getFlowframeTools
+      summary: Cached Smart Money Skew and Football Sharps tools
+      responses:
+        "200":
+          description: Independently available tool feeds, cached for one hour
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FlowframeTools" }
   /flowframe/insights:
     get:
       operationId: getFlowframeInsights
@@ -94,6 +104,37 @@ components:
         outcome: { type: string }
         shares: { type: number }
         usdcSize: { type: number }
+        fairValue: { type: number, description: "FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast." }
+        edge: { type: number, description: "Fair YES value minus market YES price, signed percentage points; not historical price movement." }
+        skewScore: { type: number }
+        tiers: { $ref: "#/components/schemas/FlowframeTiers" }
+        rank: { type: integer }
+        score: { type: number }
+        realizedPnl: { type: number }
+        roi: { type: number, description: "ROI expressed as a percentage." }
+        winRate: { type: number, description: "Win rate expressed as a percentage." }
+        realizedCount: { type: integer }
+        nflCount: { type: integer }
+        cfbCount: { type: integer }
+        medianStake: { type: number }
+        league: { type: string, enum: [nfl, cfb] }
+        unusual: { type: boolean }
+        usualMultiple: { type: number }
+    FlowframeTier:
+      type: object
+      required: [yesDollars, noDollars, skew]
+      properties:
+        yesDollars: { type: number }
+        noDollars: { type: number }
+        yesCount: { type: integer }
+        noCount: { type: integer }
+        skew: { type: number }
+    FlowframeTiers:
+      type: object
+      properties:
+        sharp: { $ref: "#/components/schemas/FlowframeTier" }
+        profitable: { $ref: "#/components/schemas/FlowframeTier" }
+        recreational: { $ref: "#/components/schemas/FlowframeTier" }
     FlowframeFeed:
       type: object
       required: [items, status, fetchedAt, checkedAt, message]
@@ -105,6 +146,19 @@ components:
         fetchedAt: { type: string }
         checkedAt: { type: string }
         message: { type: string }
+        backfillDone: { type: boolean }
+        sourceUpdatedAt: { type: string }
+        clamped: { type: boolean }
+        effectiveLimit: { type: integer }
+    FlowframeTools:
+      type: object
+      required: [smartMoney, footballLeaderboard, footballTrades, refreshMinutes, attribution]
+      properties:
+        smartMoney: { $ref: "#/components/schemas/FlowframeFeed" }
+        footballLeaderboard: { $ref: "#/components/schemas/FlowframeFeed" }
+        footballTrades: { $ref: "#/components/schemas/FlowframeFeed" }
+        refreshMinutes: { type: integer }
+        attribution: { type: string }
     FlowframeInsights:
       type: object
       required: [movers, polymarketMovers, trades, trending, pulse, refreshMinutes, attribution]

@@ -13,6 +13,28 @@ export const FlowframeItemSide = {
   SELL: 'SELL',
 } as const;
 
+export type FlowframeItemLeague = typeof FlowframeItemLeague[keyof typeof FlowframeItemLeague];
+
+
+export const FlowframeItemLeague = {
+  nfl: 'nfl',
+  cfb: 'cfb',
+} as const;
+
+export interface FlowframeTier {
+  yesDollars: number;
+  noDollars: number;
+  yesCount?: number;
+  noCount?: number;
+  skew: number;
+}
+
+export interface FlowframeTiers {
+  sharp?: FlowframeTier;
+  profitable?: FlowframeTier;
+  recreational?: FlowframeTier;
+}
+
 export interface FlowframeItem {
   id: string;
   title: string;
@@ -28,6 +50,26 @@ export interface FlowframeItem {
   outcome?: string;
   shares?: number;
   usdcSize?: number;
+  /** FlowFrame estimated fair YES probability, 0–100; not a Prediction Pro forecast. */
+  fairValue?: number;
+  /** Fair YES value minus market YES price, signed percentage points; not historical price movement. */
+  edge?: number;
+  skewScore?: number;
+  tiers?: FlowframeTiers;
+  rank?: number;
+  score?: number;
+  realizedPnl?: number;
+  /** ROI expressed as a percentage. */
+  roi?: number;
+  /** Win rate expressed as a percentage. */
+  winRate?: number;
+  realizedCount?: number;
+  nflCount?: number;
+  cfbCount?: number;
+  medianStake?: number;
+  league?: FlowframeItemLeague;
+  unusual?: boolean;
+  usualMultiple?: number;
 }
 
 export type FlowframeFeedStatus = typeof FlowframeFeedStatus[keyof typeof FlowframeFeedStatus];
@@ -46,6 +88,18 @@ export interface FlowframeFeed {
   fetchedAt: string;
   checkedAt: string;
   message: string;
+  backfillDone?: boolean;
+  sourceUpdatedAt?: string;
+  clamped?: boolean;
+  effectiveLimit?: number;
+}
+
+export interface FlowframeTools {
+  smartMoney: FlowframeFeed;
+  footballLeaderboard: FlowframeFeed;
+  footballTrades: FlowframeFeed;
+  refreshMinutes: number;
+  attribution: string;
 }
 
 export interface FlowframeInsights {

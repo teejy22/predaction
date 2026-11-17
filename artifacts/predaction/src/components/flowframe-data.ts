@@ -1,9 +1,20 @@
 import { getGetFlowframeInsightsQueryKey, useGetFlowframeInsights } from "@workspace/api-client-react";
+import { getGetFlowframeToolsQueryKey, useGetFlowframeTools } from "@workspace/api-client-react";
 
 export function useFlowframeData() {
   return useGetFlowframeInsights({
     query: {
       queryKey: getGetFlowframeInsightsQueryKey(),
+      refetchInterval: 60000,
+      retry: false,
+    },
+  });
+}
+
+export function useFlowframeToolsData() {
+  return useGetFlowframeTools({
+    query: {
+      queryKey: getGetFlowframeToolsQueryKey(),
       refetchInterval: 60000,
       retry: false,
     },
