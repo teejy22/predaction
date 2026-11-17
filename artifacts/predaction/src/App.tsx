@@ -14,6 +14,7 @@ import SmartMoneyPage from '@/pages/smart-money';
 import FootballSharpsPage from '@/pages/football-sharps';
 import SportsPage from '@/pages/sports';
 import SportsGamePage from '@/pages/sports-game';
+import ModelPage from '@/pages/model';
 import { Shell } from '@/components/shell';
 import {
   Route,
@@ -33,6 +34,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/sports" component={SportsPage} />
+        <Route path="/model" component={ModelPage} />
         <Route path="/sports/game/:key" component={SportsGamePage} />
         <Route path="/event/:ticker" component={EventPage} />
         <Route path="/watchlist" component={Watchlist} />
