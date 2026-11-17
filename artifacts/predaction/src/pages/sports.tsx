@@ -172,7 +172,10 @@ export default function SportsPage() {
     setPage(next);
     pageRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   };
-  const warnings = Array.from(new Set([...(data?.warnings ?? []), ...(overview.data?.warnings ?? [])]));
+  const indexing = !!(data?.indexing || overview.data?.indexing);
+  const partial = !!(data?.partial || overview.data?.partial);
+  const warnings = Array.from(new Set([...(data?.warnings ?? []), ...(overview.data?.warnings ?? [])]))
+    .filter((warning) => !warning.startsWith("Indexing open events across categories"));
   const indexedSports = overview.data?.categories.find((item) => item.name === "Sports")?.count ?? (!sport && !league && !search ? data?.total : undefined);
 
   return (
@@ -264,6 +267,8 @@ export default function SportsPage() {
               {league || sport || "All sports"}{search && <span className="font-sans text-sm font-normal text-muted-foreground"> · “{search}”</span>}
             </h2>
             <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+              {indexing && <span className="inline-flex items-center gap-1.5" data-testid="status-sports-indexing"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> updating index · counts may grow</span>}
+              {!indexing && partial && <span className="text-[hsl(37_88%_63%)]" data-testid="status-sports-partial">partial index · indexed results only</span>}
               {feed.isFetching && !feed.isLoading && <span className="inline-flex items-center gap-1.5"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> refreshing</span>}
               {data && <span data-testid="text-sports-result-count">{data.total.toLocaleString()} matching games</span>}
               {filtersActive && <button type="button" onClick={reset} className="text-foreground underline underline-offset-4" data-testid="button-sports-reset">Reset</button>}
@@ -272,8 +277,7 @@ export default function SportsPage() {
 
           <div className="mt-3 space-y-2">
             {feed.isRefetchError && data && <Notice tone="warn">Latest refresh failed. Showing the last loaded results. <button type="button" onClick={() => feed.refetch()} className="ml-1 font-semibold text-primary underline">Retry</button></Notice>}
-            {(data?.indexing || overview.data?.indexing) && <Notice><span className="live-dot mr-2 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />Index is still building; indexed counts and results may grow.</Notice>}
-            {(data?.partial || overview.data?.partial) && <Notice tone="warn">Partial index: some source data could not be loaded. Counts reflect indexed events, not an exact global market count.</Notice>}
+            {!indexing && partial && <Notice tone="warn">Partial index: some source data could not be loaded. Counts reflect indexed events, not an exact global market count.</Notice>}
             {warnings.map((warning) => <Notice key={warning} tone="warn">{warning}</Notice>)}
           </div>
 
