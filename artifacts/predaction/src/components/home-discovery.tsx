@@ -51,8 +51,7 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
             <p className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[.18em] text-primary"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Open markets · Kalshi</p>
             {feed.data?.updatedAt && <span className="font-mono text-[9px] text-muted-foreground">Sample updated {updatedLabel(feed.data.updatedAt)}</span>}
           </div>
-          <h1 className="font-display mt-3 text-2xl font-bold leading-tight tracking-[-.045em] sm:text-3xl">Find the market. Read the outcome.</h1>
-          <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground sm:text-sm">A practical desk for current event prices and sourced wallet activity. Kalshi event volume is shown in contracts.</p>
+          <h1 className="font-display mt-3 text-xl font-bold leading-tight tracking-[-.035em]">Featured market</h1>
         </div>
         <div className="mt-5">
           {feed.isLoading ? <FeaturedSkeleton /> : feed.isError && !featured ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : featured ? <FeaturedEvent event={featured} /> : <EmptyPanel label="No open event is available in the current sample." />}
