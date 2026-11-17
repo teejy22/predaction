@@ -1,0 +1,1 @@
+- [Product scope](product-scope.md) — User selected Prediction Pro branding and all available Kalshi categories, replacing the original sports-only scope.
