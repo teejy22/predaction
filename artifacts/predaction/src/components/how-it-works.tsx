@@ -9,11 +9,11 @@ export const STEPS = [
 
 export function StepsGrid({ dark = false }: { dark?: boolean }) {
   return (
-    <div className="grid gap-px overflow-hidden rounded-lg border-2 border-foreground bg-foreground sm:grid-cols-2">
+    <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
       {STEPS.map((s) => (
-        <div key={s.n} className={`group p-5 transition-colors ${dark ? "bg-foreground text-background" : "bg-card hover:bg-accent/40"}`}>
+        <div key={s.n} className={`group p-5 transition-colors ${dark ? "bg-secondary text-secondary-foreground" : "bg-card hover:bg-primary/[.06]"}`}>
           <span className="font-mono text-xs font-bold text-primary">{s.n}</span>
-          <h3 className="mt-1 font-display text-2xl font-extrabold uppercase">{s.t}</h3>
+          <h3 className="mt-1 text-lg font-bold tracking-tight">{s.t}</h3>
           <p className={`mt-2 text-sm ${dark ? "text-background/70" : "text-muted-foreground"}`}>{s.d}</p>
         </div>
       ))}
@@ -24,8 +24,8 @@ export function StepsGrid({ dark = false }: { dark?: boolean }) {
 export function HowItWorksDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-2 border-foreground bg-background">
-        <DialogTitle className="font-display text-4xl font-black uppercase">
+      <DialogContent className="max-w-2xl border-border bg-card">
+        <DialogTitle className="text-3xl font-bold tracking-tight">
           Read the crowd <span className="text-primary">in 30 seconds</span>
         </DialogTitle>
         <DialogDescription>Prediction markets turn opinions into prices. Here's how to read them.</DialogDescription>

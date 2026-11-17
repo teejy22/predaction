@@ -38,10 +38,10 @@ export default function EventPage() {
         {back}
         <div className="mt-8">
           {status === 404 ? (
-            <div className="stripes rounded-lg border-2 border-dashed border-foreground/40 p-12 text-center">
-              <h2 className="font-display text-4xl font-black uppercase">Event not on the board</h2>
+            <div className="rounded-lg border border-dashed border-border bg-card/60 p-12 text-center">
+              <h2 className="text-3xl font-bold tracking-tight">Event not on the board</h2>
               <p className="mt-2 text-sm text-muted-foreground">It may have closed or settled. Ticker: <span className="font-mono">{ticker}</span></p>
-              <Link href="/" className="mt-5 inline-block rounded-md border-2 border-foreground bg-accent px-4 py-2 text-sm font-bold uppercase">Back to board</Link>
+              <Link href="/" className="mt-5 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Back to board</Link>
             </div>
           ) : (
             <ErrorPanel onRetry={() => q.refetch()} retrying={q.isFetching} />
@@ -65,13 +65,13 @@ export default function EventPage() {
 
   return (
     <div>
-      <section className="relative border-b-2 border-foreground">
-        <div className="stripes absolute inset-0 opacity-50" />
+      <section className="hero-field relative overflow-hidden border-b border-border">
+        <div className="price-texture pointer-events-none select-none"><span>+142　29%　−180</span><span>+310　51%　−105</span><span>−26　37%　+118</span></div>
         <div className="relative mx-auto max-w-5xl px-4 py-10 md:px-6">
           {back}
           <div className="rise mt-6"><SportTag sport={e.sport} league={e.league} /></div>
-          <h1 className="rise mt-3 font-display text-5xl font-black uppercase leading-[0.88] md:text-7xl" data-testid="text-event-title">{e.title}</h1>
-          {e.subtitle && <p className="mt-3 text-lg text-muted-foreground">{e.subtitle}</p>}
+          <h1 className="rise mt-3 max-w-4xl text-4xl font-extrabold leading-[1.02] tracking-[-.05em] sm:text-5xl md:text-6xl" data-testid="text-event-title">{e.title}</h1>
+          {e.subtitle && <p className="mt-3 text-base text-muted-foreground">{e.subtitle}</p>}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <KalshiCTA url={e.url} />
             <WatchButton variant="full" event={{ ticker: e.ticker, title: e.title, sport: e.sport, league: e.league }} />
@@ -79,7 +79,7 @@ export default function EventPage() {
               <Share2 className="h-4 w-4" /> Share
             </button>
           </div>
-          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border-2 border-foreground bg-foreground md:grid-cols-4">
+          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-4">
             {[
               { l: "Favorite", v: leader ? `${fmtCents(leader.probability)}` : "--", s: leader ? leader.subtitle || leader.title : "" },
               { l: "Volume", v: fmtContracts(e.volume), s: "contracts" },
@@ -88,7 +88,7 @@ export default function EventPage() {
             ].map((x) => (
               <div key={x.l} className="bg-card p-4">
                 <dt className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{x.l}</dt>
-                <dd className="mt-1 font-display text-3xl font-black tabular">{x.v}</dd>
+                <dd className="mt-1 text-2xl font-bold tracking-tight tabular">{x.v}</dd>
                 <dd className="truncate text-xs text-muted-foreground">{x.s}</dd>
               </div>
             ))}
@@ -97,8 +97,8 @@ export default function EventPage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-        <div className="flex items-baseline justify-between border-b-2 border-foreground pb-2">
-          <h2 className="font-display text-3xl font-black uppercase">Markets</h2>
+        <div className="flex items-baseline justify-between border-b border-border pb-3">
+          <h2 className="text-2xl font-bold tracking-tight">Markets</h2>
           <span className="font-mono text-xs text-muted-foreground">{markets.length} · price = implied chance</span>
         </div>
         {markets.length === 0 ? (
@@ -119,12 +119,12 @@ export default function EventPage() {
 function MarketRow({ m, rank }: { m: SportsMarket; rank: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rise overflow-hidden rounded-lg border-2 border-foreground bg-card" style={{ animationDelay: `${rank * 40}ms` }} data-testid={`row-market-${m.ticker}`}>
+    <div className="rise overflow-hidden rounded-lg border border-border bg-card" style={{ animationDelay: `${rank * 40}ms` }} data-testid={`row-market-${m.ticker}`}>
       <div className="grid items-center gap-4 p-4 md:grid-cols-[1fr_auto]">
         <div>
           <div className="flex items-center gap-2">
-            {rank === 0 && <span className="rounded-sm bg-accent px-1.5 font-mono text-[10px] font-bold uppercase">Fav</span>}
-            <h3 className="font-display text-2xl font-extrabold uppercase leading-none">{m.subtitle || m.title}</h3>
+            {rank === 0 && <span className="rounded-sm bg-primary/15 px-1.5 font-mono text-[10px] font-bold uppercase text-primary">Favorite</span>}
+            <h3 className="text-xl font-bold leading-tight tracking-tight">{m.subtitle || m.title}</h3>
           </div>
           {m.subtitle && m.title !== m.subtitle && <p className="mt-1 text-xs text-muted-foreground">{m.title}</p>}
           <div className="mt-3 flex items-center gap-3">
@@ -133,8 +133,8 @@ function MarketRow({ m, rank }: { m: SportsMarket; rank: number }) {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          <span className="rounded-md bg-[hsl(150_60%_92%)] px-3 py-2 font-mono text-xs font-bold text-[hsl(150_70%_25%)]">YES {fmtCents(m.yesAsk)}</span>
-          <span className="rounded-md bg-destructive/10 px-3 py-2 font-mono text-xs font-bold text-destructive">NO {fmtCents(m.noAsk)}</span>
+          <span className="rounded-md bg-[hsl(155_40%_15%)] px-3 py-2 font-mono text-xs font-semibold text-[hsl(155_55%_67%)]">YES {fmtCents(m.yesAsk)}</span>
+          <span className="rounded-md bg-destructive/10 px-3 py-2 font-mono text-xs font-semibold text-destructive">NO {fmtCents(m.noAsk)}</span>
           <span className="px-1 text-xs">24h <Change value={m.change} /></span>
         </div>
       </div>
@@ -143,7 +143,7 @@ function MarketRow({ m, rank }: { m: SportsMarket; rank: number }) {
         <span>{fmtContracts(m.volume24h)} 24h</span>
         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{fullDate(m.closeTime)}</span>
         <span className="uppercase">{m.status}</span>
-        <button onClick={() => setOpen((v) => !v)} data-testid={`button-rules-${m.ticker}`} className="ml-auto flex items-center gap-1 font-bold uppercase text-foreground">
+        <button onClick={() => setOpen((v) => !v)} data-testid={`button-rules-${m.ticker}`} className="ml-auto flex items-center gap-1 font-semibold text-foreground transition-colors hover:text-primary">
           Rules <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
         </button>
       </div>
