@@ -30,7 +30,7 @@ export function FeedStatus({ feed, loading, error, retrying, onRetry, children, 
       <span className="text-[10px] text-muted-foreground">{timestamp ? `${feed.fetchedAt ? compact ? "Updated" : "Fetched" : "Checked"} ${formatSourceTime(timestamp)}` : "No source timestamp"}</span>
     </div>
     {feed.status === "stale" && feed.fetchedAt && <p className="mb-3 text-[10px] leading-4 text-amber-100/80">Showing the last successful source data from {formatSourceTime(feed.fetchedAt)}.</p>}
-    {feed.sourceUpdatedAt && <p className="mb-2 text-[10px] text-muted-foreground">Source updated {formatSourceTime(feed.sourceUpdatedAt)}</p>}
+    {!compact && feed.sourceUpdatedAt && <p className="mb-2 text-[10px] text-muted-foreground">Source updated {formatSourceTime(feed.sourceUpdatedAt)}</p>}
     {feed.backfillDone === false && <p role="status" className="mb-3 rounded-md border border-amber-300/25 bg-amber-300/[.06] px-3 py-2 text-[11px] leading-5 text-amber-100">Historical backfill is still in progress. This may be a partial historical scan.</p>}
     {feed.clamped && <p className="mb-3 text-[10px] text-muted-foreground">Source account limit applied{feed.effectiveLimit !== undefined ? ` · effective limit ${feed.effectiveLimit}` : ""}.</p>}
     {unavailable ? <FeedMessage title={feed.status === "unconfigured" ? "Not connected yet" : "Source is unavailable"} message={feed.message || "The source could not provide data."} retrying={retrying} onRetry={onRetry} compact /> :
