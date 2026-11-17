@@ -27,6 +27,21 @@ let snapshot: Snapshot | undefined;
 // False until one crawl has finished; until then the index grows progressively.
 let completed = false;
 let pending: Promise<void> | undefined;
+// The last complete crawl is saved so a restarted server serves it at once
+// instead of making visitors wait for a full re-crawl.
+const STORE_ID = "kalshi-open-events";
+const SAVE_INTERVAL = 30 * 60_000;
+const RESTORE_MAX_AGE = 24 * 60 * 60_000;
+type StoredSnapshot = { events: PredictionEvent[]; created: [string, number][] };
+export type IndexStore = {
+  saveIndex(id: string, data: unknown, eventCount: number, indexedAt: string): Promise<void>;
+  loadIndex<T>(id: string): Promise<{ data: T; indexedAt: string } | undefined>;
+};
+// Wired by the server entry point; without a store the index is memory-only.
+let indexStore: IndexStore | undefined;
+export function setIndexStore(store: IndexStore) { indexStore = store; }
+let restoring: Promise<void> | undefined;
+let savedAt = 0;
 let retryAfter = 0;
 let lastError: unknown;
 let metadata = new Map<string, Series>();
@@ -253,6 +268,13 @@ async function refresh(): Promise<void> {
     } while (cursor);
     snapshot = { events: [...events.values()], updatedAt: new Date().toISOString(), partial: warnings.length > 0, indexing: false, warnings };
     completed = true;
+    if (indexStore && !warnings.length && Date.now() - savedAt >= SAVE_INTERVAL) {
+      savedAt = Date.now();
+      const stored: StoredSnapshot = { events: snapshot.events, created: snapshot.events.map(e => [e.ticker, createdTimes.get(e.ticker) ?? 0]) };
+      const { events: saved, updatedAt } = snapshot;
+      void indexStore.saveIndex(STORE_ID, stored, saved.length, updatedAt)
+        .catch(err => { savedAt = 0; logger.warn({ err }, "Could not save the open-event index"); });
+    }
     // Keep newest ordering metadata bounded to the current index and recent details.
     for (const ticker of createdTimes.keys()) if (!events.has(ticker) && !detailCache.has(ticker)) createdTimes.delete(ticker);
   } catch (err) {
@@ -267,8 +289,24 @@ async function refresh(): Promise<void> {
   }
 }
 
+async function restore(): Promise<void> {
+  if (!indexStore) return;
+  try {
+    const stored = await indexStore.loadIndex<StoredSnapshot>(STORE_ID);
+    if (!stored || snapshot || !stored.data.events?.length) return;
+    if (Date.now() - Date.parse(stored.indexedAt) > RESTORE_MAX_AGE) return;
+    for (const [ticker, time] of stored.data.created ?? []) if (!createdTimes.has(ticker)) createdTimes.set(ticker, time);
+    // Served as-is while a fresh crawl runs; updatedAt keeps the saved time so staleness stays visible.
+    snapshot = { events: stored.data.events, updatedAt: stored.indexedAt, partial: false, indexing: true, warnings: [] };
+    logger.info({ events: stored.data.events.length, indexedAt: stored.indexedAt }, "Restored saved open-event index");
+  } catch (err) {
+    logger.warn({ err }, "Could not restore the saved open-event index");
+  }
+}
+
 export async function getSnapshot(): Promise<Snapshot> {
-  if (!pending && Date.now() >= retryAfter && (!snapshot || Date.now() - Date.parse(snapshot.updatedAt) >= INDEX_TTL || snapshot.partial)) {
+  if (!snapshot && !completed) await (restoring ??= restore());
+  if (!pending && Date.now() >= retryAfter && (!snapshot || Date.now() - Date.parse(snapshot.updatedAt) >= INDEX_TTL || snapshot.partial || snapshot.indexing)) {
     retryAfter = Date.now() + INDEX_TTL;
     pending = refresh().finally(() => { pending = undefined; });
   }

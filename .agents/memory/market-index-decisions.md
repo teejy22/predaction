@@ -37,3 +37,8 @@ Keep third-party intelligence visibly separate from the direct Kalshi event inde
 A single page timeout must never fail the whole crawl: retry the page, and treat an interrupted first crawl as "still indexing" (keep the largest progressive snapshot), not as a partial-data failure.
 **Why:** In production one 20s timeout left the sports page stuck on a small partial index with a raw "operation was aborted" warning; the user finds repeated index warnings unacceptable.
 **How to apply:** Only show a prominent warning when a refresh fails after a complete index exists, as one user-readable notice — never raw error text or stacked banners.
+
+## Saved index for restarts
+The last complete crawl is saved to the database (compressed, at most every 30 minutes) and restored at boot; it is served with `indexing: true` and its original timestamp until a fresh crawl replaces it.
+**Why:** A cold start otherwise means a multi-minute re-crawl with partial counts, which the user explicitly rejected.
+**How to apply:** Keep persistence optional (injected store) so unit tests and DB outages fall back to memory-only; never let a store error fail a market request. Don't save more often — the payload is ~10 MB per write.

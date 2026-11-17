@@ -67,14 +67,15 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
     ));
-    const games = groupSportsGames(events).map(game => attachTeamLogos(game, teams));
+    const games = groupSportsGames(events);
     if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
     else if (sort === "newest") games.sort((a, b) =>
       Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
     );
     else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
     res.json(ListSportsGamesResponse.parse({
-      games: games.slice(offset, offset + limit).map(summarizeSportsGame), total: games.length,
+      // Logos are matched only for the page being returned, not the whole index.
+      games: games.slice(offset, offset + limit).map(game => summarizeSportsGame(attachTeamLogos(game, teams))), total: games.length,
       updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,
@@ -93,11 +94,10 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
   try {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const games = groupSportsGames(selectMainMarketEvents(data.events
-      .filter(event => event.categories.some(category => category.toLowerCase() === "sports"))))
-      .map(game => attachTeamLogos(game, teams));
+      .filter(event => event.categories.some(category => category.toLowerCase() === "sports"))));
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
-    res.json(GetSportsGameResponse.parse(game));
+    res.json(GetSportsGameResponse.parse(attachTeamLogos(game, teams)));
   } catch (err) {
     sourceError(res, req, err, "Kalshi sports game request failed");
   }

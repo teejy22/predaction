@@ -1,5 +1,9 @@
 import app from "./app";
+import * as indexStore from "./lib/index-store";
+import { getSnapshot, setIndexStore } from "./lib/kalshi";
 import { logger } from "./lib/logger";
+
+setIndexStore(indexStore);
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +26,6 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+  // Load the saved market index and start refreshing it before the first visitor arrives.
+  void getSnapshot().catch((err) => logger.warn({ err }, "Market index warm-up failed"));
 });
