@@ -4,6 +4,7 @@ import {
   Landmark, Newspaper, Scale, Trophy, Vote,
 } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
+import { TeamLogos } from "@/components/team-logos";
 
 const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   Crypto: Bitcoin,
@@ -30,6 +31,8 @@ const SIZES = {
 export function MarketVisual({
   event, market, size = "md",
 }: { event: PredictionEvent; market?: PredictionMarket; size?: keyof typeof SIZES }) {
+  if (event.teams?.length) return <TeamLogos teams={event.teams} size={size} />;
+
   const src = market?.image || event.image || event.featuredImage;
   const Icon = CATEGORY_ICONS[event.category] ?? (event.sport ? Trophy : Briefcase);
   const box = `relative flex ${SIZES[size]} shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background shadow-sm`;

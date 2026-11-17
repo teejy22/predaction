@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { ArrowUpRight, Clock } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
 import { Change, CategoryTag, WatchButton } from "@/components/bits";
+import { MarketVisual } from "@/components/market-visual";
 import { closeLabel, fmtContracts } from "@/lib/format";
 
 function leaderOf(event: PredictionEvent): PredictionMarket | undefined {
@@ -24,13 +25,18 @@ export function EventsTable({ events, removable = false }: { events: PredictionE
             style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}
           >
             <div className="relative col-span-2 min-w-0 pr-12 lg:col-span-1 lg:pr-0">
-              <div className="mb-1.5"><CategoryTag category={event.category} sport={event.sport} league={event.league} /></div>
-              <Link href={`/event/${encodeURIComponent(event.ticker)}`} data-testid={`link-event-${event.ticker}`} className="group inline-flex max-w-full items-center gap-1 font-semibold leading-snug text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <span className="line-clamp-2" data-testid={`text-event-title-${event.ticker}`}>{event.title}</span>
-                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" />
-              </Link>
-              {event.subtitle && <p className="mt-1 truncate text-xs text-muted-foreground" title={event.subtitle}>{event.subtitle}</p>}
-              <p className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground lg:hidden"><Clock className="h-3 w-3" />{closeLabel(event.closeTime)}</p>
+              <div className="flex min-w-0 items-start gap-3">
+                <MarketVisual event={event} market={market} size="md" />
+                <div className="min-w-0">
+                  <div className="mb-1.5"><CategoryTag category={event.category} sport={event.sport} league={event.league} /></div>
+                  <Link href={`/event/${encodeURIComponent(event.ticker)}`} data-testid={`link-event-${event.ticker}`} className="group inline-flex max-w-full items-center gap-1 font-semibold leading-snug text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <span className="line-clamp-2" data-testid={`text-event-title-${event.ticker}`}>{event.title}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" />
+                  </Link>
+                  {event.subtitle && <p className="mt-1 truncate text-xs text-muted-foreground" title={event.subtitle}>{event.subtitle}</p>}
+                  <p className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground lg:hidden"><Clock className="h-3 w-3" />{closeLabel(event.closeTime)}</p>
+                </div>
+              </div>
             </div>
             <div className="min-w-0 text-right lg:text-left">
               <span className="block truncate text-xs text-muted-foreground lg:text-sm lg:text-foreground">{market ? (market.subtitle || market.title) : "No open outcome"}</span>
