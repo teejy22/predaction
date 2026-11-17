@@ -29,19 +29,19 @@ export function PromoBars() {
         target="_blank"
         rel="noreferrer"
         data-testid="link-promo-polymarket"
-        className="group flex min-h-[54px] items-center justify-between gap-3 overflow-hidden rounded-lg border border-violet-400/25 bg-gradient-to-r from-indigo-500/15 to-fuchsia-500/10 px-3 py-2 transition-colors hover:border-violet-300/50 hover:from-indigo-500/20 hover:to-fuchsia-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+        className="group flex min-h-[72px] items-center justify-between gap-3 overflow-hidden rounded-lg border border-[#313449] bg-[#1C1E29] px-3 py-3 transition-colors hover:border-[#007FFF]/60 hover:bg-[#202331] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007FFF]"
       >
         <span className="min-w-0">
-          <span className="flex items-center gap-2">
-            <span className="font-display text-sm font-bold tracking-[-.02em] text-violet-200">Polymarket</span>
-            <span className="font-mono text-[8px] font-semibold uppercase tracking-[.14em] text-violet-100/75">Promo PREDICTPRO</span>
+          <span className="flex items-center gap-3">
+            <img src={`${import.meta.env.BASE_URL}polymarket-logo.png`} alt="Polymarket" width="130" height="42" className="h-7 w-auto" />
+            <span className="font-mono text-[8px] font-semibold uppercase tracking-[.14em] text-[#878A9C]"><span className="text-sm font-bold tracking-normal text-[#E7EAF1]">$25</span> bonus</span>
           </span>
-          <span className="mt-1 block truncate text-[10px] font-medium text-muted-foreground">
-            Get $25 · New users deposit $10 · 18+ · 41 states + DC
+          <span className="mt-1.5 block truncate text-[10px] font-medium text-[#B7C5CC]">
+            Deposit $10, get a $25 trading bonus · Code PREDICTPRO
           </span>
         </span>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-violet-200/40 px-2.5 py-1.5 text-[10px] font-bold text-violet-100 transition-colors group-hover:bg-violet-300/10">
-          Claim $25 <ArrowUpRight className="h-3 w-3" />
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#007FFF] px-3 py-2 text-[10px] font-bold text-white transition-colors group-hover:bg-[#2492ff]">
+          Sign up to trade <ArrowUpRight className="h-3 w-3" />
         </span>
       </a>
     </section>
