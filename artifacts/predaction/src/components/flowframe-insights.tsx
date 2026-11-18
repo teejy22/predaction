@@ -1,10 +1,10 @@
 import { useState, type RefObject } from "react";
-import { ArrowUpRight, TrendingUp } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
 import type { FlowframeFeed } from "@workspace/api-client-react";
 import { useFlowframeData } from "@/components/flowframe-data";
 import { FeedStatus, FlowframeAttribution } from "@/components/flowframe-feed-ui";
-import { MoversList, PulseList, TradeList } from "@/components/flowframe-lists";
+import { MoversList, TradeList } from "@/components/flowframe-lists";
 
 type Venue = "kalshi" | "polymarket";
 type Direction = "all" | "up" | "down";
@@ -51,16 +51,6 @@ export function FlowframeInsights({ moversRef }: { moversRef?: RefObject<HTMLDiv
       </section>
     </div>
 
-    <div className="grid gap-4 lg:grid-cols-2">
-      <section className="min-w-0 rounded-lg border border-border bg-card/50 p-4" aria-labelledby="flowframe-trending-title">
-        <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Activity snapshot</p><h2 id="flowframe-trending-title" className="font-display mt-1 text-lg font-bold tracking-[-.035em]">Trending markets</h2><p className="mt-1 text-[10px] text-muted-foreground">Ranked by 24-hour volume · excludes sports</p></div><TrendingUp className="mt-1 h-4 w-4 text-primary" /></div>
-        <FeedStatus feed={data?.trending} loading={query.isLoading} error={query.isError && !data} retrying={query.isFetching} onRetry={retry}><MoversList items={data?.trending.items ?? []} limit={3} /></FeedStatus>
-      </section>
-      <section className="min-w-0 rounded-lg border border-border bg-card/50 p-4" aria-labelledby="flowframe-pulse-title">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Published intelligence</p><h2 id="flowframe-pulse-title" className="font-display mt-1 text-lg font-bold tracking-[-.035em]">Pulse updates</h2><p className="mt-1 text-[10px] text-muted-foreground">Editorial publications, not price timestamps</p></div><Link href="/pulse" data-testid="link-pulse-all" className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">All updates <ArrowUpRight className="h-3 w-3" /></Link></div>
-        <FeedStatus feed={data?.pulse} loading={query.isLoading} error={query.isError && !data} retrying={query.isFetching} onRetry={retry}><PulseList items={data?.pulse.items ?? []} limit={2} /></FeedStatus>
-      </section>
-    </div>
     <FlowframeAttribution refreshMinutes={data?.refreshMinutes ?? 20} />
   </div>;
 }
