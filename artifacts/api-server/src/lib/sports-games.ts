@@ -133,6 +133,14 @@ export function gameSchedule(ticker: string): { gameDate: string; startTime?: st
   return { gameDate, startTime: new Date(at).toISOString() };
 }
 
+const keyOf = (id: string) => createHash("sha256").update(id).digest("base64url").slice(0, 24);
+
+// Key of the game page a dated sports matchup belongs to; undefined for futures and non-sports events.
+export function gameKeyFor(event: PredictionEvent) {
+  if (!event.categories.some(category => category.toLowerCase() === "sports") || !gameSchedule(event.ticker)) return undefined;
+  return keyOf(identity(event));
+}
+
 export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
   const buckets = new Map<string, PredictionEvent[]>();
   for (const event of events) {
@@ -153,7 +161,7 @@ export function groupSportsGames(events: PredictionEvent[]): SportsGame[] {
     const schedules = ordered.flatMap(event => gameSchedule(event.ticker) ?? []);
     const schedule = schedules.find(item => item.startTime) ?? schedules[0];
     return {
-      key: createHash("sha256").update(id).digest("base64url").slice(0, 24),
+      key: keyOf(id),
       title: matchupTitle(main.title),
       subtitle: main.subtitle,
       category: main.category,

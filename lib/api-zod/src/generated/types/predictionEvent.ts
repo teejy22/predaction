@@ -17,6 +17,8 @@ export interface PredictionEvent {
   categories: string[];
   sport: string;
   league: string;
+  /** Key of the grouped sports game page this event belongs to. Present only for dated matchups. */
+  gameKey?: string;
   teams?: TeamLogo[];
   image?: string;
   featuredImage?: string;

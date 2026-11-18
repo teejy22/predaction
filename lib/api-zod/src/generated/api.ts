@@ -569,6 +569,7 @@ export const ListEventsResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "gameKey": zod.string().optional().describe('Key of the grouped sports game page this event belongs to. Present only for dated matchups.'),
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
@@ -626,6 +627,7 @@ export const GetEventResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "gameKey": zod.string().optional().describe('Key of the grouped sports game page this event belongs to. Present only for dated matchups.'),
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
@@ -724,6 +726,7 @@ export const ListSportsGamesResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "gameKey": zod.string().optional().describe('Key of the grouped sports game page this event belongs to. Present only for dated matchups.'),
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
@@ -817,6 +820,7 @@ export const GetSportsGameResponse = zod.object({
   "categories": zod.array(zod.string()),
   "sport": zod.string(),
   "league": zod.string(),
+  "gameKey": zod.string().optional().describe('Key of the grouped sports game page this event belongs to. Present only for dated matchups.'),
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),

@@ -9,7 +9,7 @@ import {
 } from "../lib/kalshi";
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
 import { attachPolymarket, getPolymarketGames } from "../lib/polymarket-us";
-import { easternDate, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
+import { easternDate, gameKeyFor, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
 
@@ -42,7 +42,10 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
     const pageEvents = attachKalshiVisuals(
       events.slice(offset, offset + limit).map(event => attachEventTeamLogos(event, teams)),
       12,
-    );
+    ).map(event => {
+      const gameKey = gameKeyFor(event);
+      return gameKey ? { ...event, gameKey } : event;
+    });
     res.json(ListEventsResponse.parse({
       events: pageEvents, total: events.length,
       updatedAt: data.updatedAt, source: "Kalshi public API · regular open events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · Kalshi market images · ESPN team logos",

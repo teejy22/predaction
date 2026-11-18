@@ -1,3 +1,4 @@
+import { eventHref } from "@/lib/event-href";
 import { Link } from "wouter";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
@@ -20,7 +21,7 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
             {event.league || event.sport || "Sports"} <span className="text-muted-foreground">· Kalshi</span>
           </p>
           <Link
-            href={`/event/${encodeURIComponent(event.ticker)}`}
+            href={eventHref(event)}
             data-testid={`link-sports-event-${event.ticker}`}
             className="group mt-2 flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
@@ -50,7 +51,7 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
         <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground">
           <Clock3 className="h-3 w-3" /> {closeLabel(event.closeTime)}
         </span>
-        <Link href={`/event/${encodeURIComponent(event.ticker)}`} className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">
+        <Link href={eventHref(event)} className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">
           Event details <ArrowUpRight className="h-3 w-3" />
         </Link>
       </div>

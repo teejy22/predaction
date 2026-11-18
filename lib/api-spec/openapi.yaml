@@ -232,6 +232,7 @@ components:
         categories: { type: array, items: { type: string } }
         sport: { type: string }
         league: { type: string }
+        gameKey: { type: string, description: Key of the grouped sports game page this event belongs to. Present only for dated matchups. }
         teams:
           type: array
           items: { $ref: "#/components/schemas/TeamLogo" }

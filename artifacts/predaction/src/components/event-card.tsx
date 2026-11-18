@@ -1,3 +1,4 @@
+import { eventHref } from "@/lib/event-href";
 import { Link } from "wouter";
 import { ArrowUpRight } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
@@ -23,7 +24,7 @@ export function EventsTable({ events, removable = false }: { events: PredictionE
             {/* Phones and tablets: one compact line per event with the chance as a pill. */}
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 px-3.5 py-3 sm:px-5 lg:hidden">
               <MarketVisual event={event} market={market} size="md" />
-              <Link href={`/event/${encodeURIComponent(event.ticker)}`} data-testid={`link-event-compact-${event.ticker}`} className="min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Link href={eventHref(event)} data-testid={`link-event-compact-${event.ticker}`} className="min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <span className="line-clamp-2 text-sm font-semibold leading-snug">{event.title}</span>
                 <span className="mt-1 block truncate text-[11px] text-muted-foreground">{market ? `${market.subtitle || market.title} · ` : ""}{fmtContracts(event.volume)} vol</span>
               </Link>
@@ -35,7 +36,7 @@ export function EventsTable({ events, removable = false }: { events: PredictionE
                 <MarketVisual event={event} market={market} size="md" />
                 <div className="min-w-0">
                   <div className="mb-1.5"><CategoryTag category={event.category} sport={event.sport} league={event.league} /></div>
-                  <Link href={`/event/${encodeURIComponent(event.ticker)}`} data-testid={`link-event-${event.ticker}`} className="group inline-flex max-w-full items-center gap-1 font-semibold leading-snug text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  <Link href={eventHref(event)} data-testid={`link-event-${event.ticker}`} className="group inline-flex max-w-full items-center gap-1 font-semibold leading-snug text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <span className="line-clamp-2" data-testid={`text-event-title-${event.ticker}`}>{event.title}</span>
                     <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </Link>

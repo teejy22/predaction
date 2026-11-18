@@ -1,3 +1,4 @@
+import { eventHref } from "@/lib/event-href";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Clock3, RotateCw } from "lucide-react";
 import { Link } from "wouter";
@@ -18,7 +19,7 @@ function marketOf(event: PredictionEvent): PredictionMarket | undefined {
 }
 
 function EventLink({ event, children, className = "" }: { event: PredictionEvent; children: ReactNode; className?: string }) {
-  return <Link href={`/event/${encodeURIComponent(event.ticker)}`} className={className}>{children}</Link>;
+  return <Link href={eventHref(event)} className={className}>{children}</Link>;
 }
 
 export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
