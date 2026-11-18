@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
-import { ArrowLeft, ChevronDown } from "lucide-react";
-import { getGetSportsGameQueryKey, useGetSportsGame, type PredictionEvent, type PredictionMarket, type TeamLogo } from "@workspace/api-client-react";
+import { ArrowLeft, ArrowUpRight, ChevronDown } from "lucide-react";
+import { getGetSportsGameQueryKey, useGetSportsGame, type PredictionEvent, type PredictionMarket, type SportsGame, type TeamLogo } from "@workspace/api-client-react";
 import { ErrorPanel, KalshiCTA, WatchButton } from "@/components/bits";
 import { eventLabel } from "@/components/sports-game-card";
-import { logoFor } from "@/components/sports-matchup-card";
+import { logoFor, polymarketChance } from "@/components/sports-matchup-card";
 import { leagueName } from "@/components/sports-sidebar";
 import { TeamLogos } from "@/components/team-logos";
 import { dayHeading, formatStartTime } from "@/components/upcoming-games";
@@ -61,7 +61,7 @@ export default function SportsGamePage() {
   const rest = main ? events.slice(1) : events;
   const visible = active === "all" ? rest : rest.filter((e) => e.ticker === active);
   const when = [g.gameDate ? dayHeading(g.gameDate) : "", g.startTime ? formatStartTime(g.startTime) : ""].filter(Boolean).join(" · ");
-  const meta = [leagueName(g.league) || g.sport, when, `${fmtContracts(g.volume)} contracts traded`].filter(Boolean);
+  const meta = [leagueName(g.league) || g.sport, g.polymarket?.live ? `Live${g.polymarket.period ? ` · ${g.polymarket.period}` : ""}` : when, `${fmtContracts(g.volume)} contracts traded`].filter(Boolean);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-10">
@@ -79,7 +79,7 @@ export default function SportsGamePage() {
 
       {q.isRefetchError && <div className="mt-6 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs">Latest refresh failed. Showing last loaded data. <button onClick={() => q.refetch()} className="font-semibold text-primary underline">Retry</button></div>}
 
-      {main && <WinnerPanel e={main} teams={g.teams} />}
+      {main && <WinnerPanel e={main} teams={g.teams} game={g} />}
 
       {rest.length > 4 && <nav className="mt-8 flex gap-1.5 overflow-x-auto pb-1" aria-label="Filter markets in this game">
         {[{ t: "all", label: "All" }, ...rest.map((e) => ({ t: e.ticker, label: eventLabel(e) }))].map((x) => (
@@ -91,12 +91,14 @@ export default function SportsGamePage() {
         {visible.map((e) => <EventBlock key={e.ticker} e={e} />)}
         {!events.length && <p className="py-10 text-center text-sm text-muted-foreground">No events indexed for this game.</p>}
       </div>
-      <p className="mt-10 text-xs text-muted-foreground">Percentages are Kalshi implied chances. Yes and No are the current prices to buy each side. Not financial advice.</p>
+      <p className="mt-10 text-xs text-muted-foreground">Percentages are Kalshi implied chances unless labeled Polymarket US{g.polymarket ? ", which shows the midpoint of that exchange's best bid and ask" : ""}. Yes and No are the current prices to buy each side. Not financial advice.</p>
     </div>
   );
 }
 
-function WinnerPanel({ e, teams }: { e: PredictionEvent; teams: TeamLogo[] }) {
+function WinnerPanel({ e, teams, game }: { e: PredictionEvent; teams: TeamLogo[]; game: SportsGame }) {
+  const poly = game.polymarket;
+  const dual = !!poly && e.markets.some((m) => polymarketChance(game, m.ticker) !== undefined);
   const [open, setOpen] = useState(false);
   const markets = byChance(e);
   const total = markets.reduce((sum, m) => sum + m.probability, 0) || 1;
@@ -111,8 +113,18 @@ function WinnerPanel({ e, teams }: { e: PredictionEvent; teams: TeamLogo[] }) {
                 {logo && <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background"><img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" /></span>}
                 <p className="truncate text-sm font-semibold sm:text-base">{m.subtitle || m.title}</p>
               </div>
-              <p className={`mt-3 font-display text-4xl font-bold tracking-tight tabular sm:text-5xl ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>{Math.round(m.probability)}%</p>
+              {dual && <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Kalshi</p>}
+              <p className={`${dual ? "mt-0.5" : "mt-3"} font-display text-4xl font-bold tracking-tight tabular sm:text-5xl ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>{Math.round(m.probability)}%</p>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">Yes {fmtCents(m.yesAsk)}</p>
+              {dual && (() => {
+                const chance = polymarketChance(game, m.ticker);
+                return (
+                  <div className="mt-3 border-t border-border/70 pt-3" data-testid={`text-polymarket-${m.ticker}`}>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Polymarket US</p>
+                    <p className="mt-0.5 font-display text-2xl font-bold tracking-tight tabular text-foreground/90 sm:text-3xl">{chance === undefined ? <span className="text-muted-foreground" aria-label="No price available">–</span> : `${Math.round(chance)}%`}</p>
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
@@ -120,13 +132,14 @@ function WinnerPanel({ e, teams }: { e: PredictionEvent; teams: TeamLogo[] }) {
       <div className="mt-5 flex h-1.5 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
         {markets.map((m, i) => <span key={m.ticker} className={i === 0 ? "bg-primary" : i === 1 ? "bg-muted-foreground/40" : "bg-muted"} style={{ width: `${(m.probability / total) * 100}%` }} />)}
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-        <span>{fmtContracts(e.volume)} contracts traded</span>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+        <span>{fmtContracts(e.volume)} contracts traded{dual ? " on Kalshi" : ""}</span>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} data-testid={`button-rules-${markets[0]!.ticker}`} className="inline-flex items-center gap-1 rounded font-semibold hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Rules <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} /></button>
           <WatchButton event={watchTarget(e)} />
         </div>
       </div>
+      {dual && poly && <a href={poly.url} target="_blank" rel="noopener noreferrer" data-testid="link-polymarket-game" className="mt-3 inline-flex items-center gap-1 rounded text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">View this game on Polymarket US <ArrowUpRight className="h-3.5 w-3.5" /></a>}
       {open && <p className="mt-4 whitespace-pre-line border-t border-border pt-4 text-sm leading-relaxed text-muted-foreground">{markets[0]!.rules || "No rules text provided by the source."}</p>}
     </section>
   );

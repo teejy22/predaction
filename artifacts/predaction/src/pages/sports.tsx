@@ -275,7 +275,7 @@ export default function SportsPage() {
 
           <p className="mt-5 flex items-start gap-2 text-[11px] leading-5 text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            Prices and contract volumes are from Kalshi public event data. Volume is counted in contracts, not dollars. The indexed event count is not an exact count of all available markets.
+            Prices and contract volumes are from Kalshi public event data. Where a game is also listed on Polymarket US, its price is shown in a separate, labeled column. Volume is counted in contracts, not dollars. The indexed event count is not an exact count of all available markets.
           </p>
         </div>
       </section>

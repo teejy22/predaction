@@ -691,7 +691,19 @@ export const ListSportsGamesResponse = zod.object({
   "closeTime": zod.string(),
   "url": zod.string(),
   "gameDate": zod.string().optional().describe('Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one'),
-  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) when Kalshi publishes one'),
+  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one'),
+  "polymarket": zod.object({
+  "url": zod.string().url(),
+  "startTime": zod.string().optional(),
+  "live": zod.boolean(),
+  "period": zod.string().optional(),
+  "updatedAt": zod.string(),
+  "outcomes": zod.array(zod.object({
+  "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
+  "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "color": zod.string().optional()
+}))
+}).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({
@@ -770,7 +782,19 @@ export const GetSportsGameResponse = zod.object({
   "closeTime": zod.string(),
   "url": zod.string(),
   "gameDate": zod.string().optional().describe('Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one'),
-  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) when Kalshi publishes one'),
+  "startTime": zod.string().optional().describe('Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one'),
+  "polymarket": zod.object({
+  "url": zod.string().url(),
+  "startTime": zod.string().optional(),
+  "live": zod.boolean(),
+  "period": zod.string().optional(),
+  "updatedAt": zod.string(),
+  "outcomes": zod.array(zod.object({
+  "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
+  "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "color": zod.string().optional()
+}))
+}).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({

@@ -281,7 +281,8 @@ components:
         closeTime: { type: string }
         url: { type: string }
         gameDate: { type: string, description: "Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one" }
-        startTime: { type: string, description: "Scheduled start (ISO 8601) when Kalshi publishes one" }
+        startTime: { type: string, description: "Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one" }
+        polymarket: { $ref: "#/components/schemas/PolymarketGameQuote" }
         eventCount: { type: integer }
         marketCount: { type: integer }
         teams:
@@ -290,6 +291,25 @@ components:
         events:
           type: array
           items: { $ref: "#/components/schemas/PredictionEvent" }
+    PolymarketGameQuote:
+      type: object
+      description: "Polymarket US prices for the same game's winner market. Present only when the game was matched on both exchanges."
+      required: [url, live, updatedAt, outcomes]
+      properties:
+        url: { type: string, format: uri }
+        startTime: { type: string }
+        live: { type: boolean }
+        period: { type: string }
+        updatedAt: { type: string }
+        outcomes:
+          type: array
+          items:
+            type: object
+            required: [marketTicker, chance]
+            properties:
+              marketTicker: { type: string, description: "Kalshi winner market this outcome corresponds to" }
+              chance: { type: number, description: "Polymarket US implied chance, 0-100" }
+              color: { type: string }
     SportsGameFeed:
       type: object
       required: [games, total, updatedAt, source, partial, warnings, indexing, indexedEvents, hasMore, nextOffset]

@@ -8,6 +8,7 @@ import {
   newestFirst, categoryNames, eventCreatedAt, type PredictionEvent,
 } from "../lib/kalshi";
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
+import { attachPolymarket, getPolymarketGames } from "../lib/polymarket-us";
 import { easternDate, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -67,7 +68,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
     ));
-    let games = groupSportsGames(events);
+    let games = attachPolymarket(groupSportsGames(events), getPolymarketGames());
     if (sort === "upcoming") {
       // Only matchups with a published game day, soonest first, busiest first within a day.
       const today = easternDate();
@@ -81,7 +82,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     res.json(ListSportsGamesResponse.parse({
       // Logos are matched only for the page being returned, not the whole index.
       games: games.slice(offset, offset + limit).map(game => summarizeSportsGame(attachTeamLogos(game, teams))), total: games.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos",
+      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos · Polymarket US public API (winner prices on matched games)",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,
       nextOffset: Math.min(offset + limit, games.length),
@@ -98,8 +99,8 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
   }
   try {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
-    const games = groupSportsGames(selectMainMarketEvents(data.events
-      .filter(event => event.categories.some(category => category.toLowerCase() === "sports"))));
+    const games = attachPolymarket(groupSportsGames(selectMainMarketEvents(data.events
+      .filter(event => event.categories.some(category => category.toLowerCase() === "sports")))), getPolymarketGames());
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
     res.json(GetSportsGameResponse.parse(attachTeamLogos(game, teams)));

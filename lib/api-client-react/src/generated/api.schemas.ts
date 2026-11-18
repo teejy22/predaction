@@ -168,6 +168,26 @@ export interface EventFeed {
   nextOffset: number;
 }
 
+export type PolymarketGameQuoteOutcomesItem = {
+  /** Kalshi winner market this outcome corresponds to */
+  marketTicker: string;
+  /** Polymarket US implied chance, 0-100 */
+  chance: number;
+  color?: string;
+};
+
+/**
+ * Polymarket US prices for the same game's winner market. Present only when the game was matched on both exchanges.
+ */
+export interface PolymarketGameQuote {
+  url: string;
+  startTime?: string;
+  live: boolean;
+  period?: string;
+  updatedAt: string;
+  outcomes: PolymarketGameQuoteOutcomesItem[];
+}
+
 export interface SportsGame {
   key: string;
   title: string;
@@ -182,8 +202,9 @@ export interface SportsGame {
   url: string;
   /** Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one */
   gameDate?: string;
-  /** Scheduled start (ISO 8601) when Kalshi publishes one */
+  /** Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one */
   startTime?: string;
+  polymarket?: PolymarketGameQuote;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];

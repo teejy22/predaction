@@ -16,11 +16,19 @@ export function logoFor(market: PredictionMarket, teams: TeamLogo[]) {
   });
 }
 
+// Polymarket US chance for one Kalshi winner market; undefined when that side has no usable price.
+export function polymarketChance(game: Pick<SportsGame, "polymarket">, marketTicker: string) {
+  return game.polymarket?.outcomes.find((outcome) => outcome.marketTicker === marketTicker)?.chance;
+}
+
 // Compact schedule card: one row per side of the main market.
 export function SportsMatchupCard({ game }: { game: SportsGame }) {
   const event = game.events.find((item) => item.markets.length);
   const rows = event ? [...event.markets].sort((a, b) => b.probability - a.probability).slice(0, 3) : [];
   const favorite = rows[0];
+  const poly = game.polymarket;
+  const dual = !!poly && rows.some((market) => polymarketChance(game, market.ticker) !== undefined);
+  const pill = dual ? "w-14 sm:w-10" : "w-[4.5rem] sm:w-12";
   const when = [game.gameDate ? dayLabel(game.gameDate) : "", game.startTime ? formatStartTime(game.startTime) : ""].filter(Boolean).join(" @ ");
 
   return (
@@ -31,18 +39,27 @@ export function SportsMatchupCard({ game }: { game: SportsGame }) {
       className="group flex min-w-0 flex-col rounded-2xl border border-border bg-card/75 p-4 transition-colors sm:rounded-lg sm:p-3 hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-center justify-between gap-2 text-xs font-semibold sm:font-mono sm:text-[9px] sm:font-normal sm:uppercase sm:tracking-wider">
-        <span className="truncate text-muted-foreground">{when || "Scheduled"}</span>
+        {poly?.live ? (
+          <span className="flex min-w-0 items-center gap-1.5 truncate text-foreground" data-testid={`status-live-${game.key}`}><span className="live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />Live{poly.period ? ` · ${poly.period}` : ""}</span>
+        ) : <span className="truncate text-muted-foreground">{when || "Scheduled"}</span>}
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-primary sm:text-[9px]">{game.league || game.sport || "Sports"}</span>
       </div>
       {rows.length > 2 || !rows.length ? <p className="mt-2 truncate text-xs font-semibold text-foreground/90 sm:text-[11px]">{game.title}</p> : null}
-      <div className="mt-3 flex-1 space-y-3.5 sm:mt-2 sm:space-y-2">
+      {dual ? (
+        <div className="mt-3 flex justify-end gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mt-2 sm:font-mono sm:text-[8px] sm:font-normal sm:tracking-normal" aria-hidden="true">
+          <span className={`${pill} flex justify-center whitespace-nowrap`}>Kalshi</span>
+          <span className={`${pill} flex justify-center whitespace-nowrap`}>Polymarket</span>
+        </div>
+      ) : null}
+      <div className={`flex-1 space-y-3.5 sm:space-y-2 ${dual ? "mt-1.5 sm:mt-1" : "mt-3 sm:mt-2"}`}>
         {rows.length ? rows.map((market) => {
           const logo = logoFor(market, game.teams);
           const lead = market === favorite;
+          const polyChance = polymarketChance(game, market.ticker);
           return (
-            <div key={market.ticker} className="flex items-center gap-3 sm:gap-2.5">
+            <div key={market.ticker} className={`flex items-center gap-3 ${dual ? "sm:gap-2" : "sm:gap-2.5"}`}>
               {logo ? (
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background sm:h-7 sm:w-7">
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background ${dual ? "sm:h-6 sm:w-6" : "sm:h-7 sm:w-7"}`}>
                   <img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" />
                 </span>
               ) : game.teams.length ? (
@@ -54,7 +71,10 @@ export function SportsMatchupCard({ game }: { game: SportsGame }) {
                   <span className={`block h-full rounded-full ${lead ? "bg-primary" : "bg-muted-foreground/50"}`} style={{ width: `${Math.max(2, Math.min(100, market.probability))}%` }} />
                 </span>
               </div>
-              <span className={`w-[4.5rem] shrink-0 rounded-full px-2 py-2.5 text-center text-base font-semibold tabular sm:w-12 sm:py-1 sm:font-mono sm:text-[11px] ${lead ? "bg-primary text-primary-foreground sm:bg-primary/20 sm:text-[hsl(262_80%_84%)]" : "bg-muted text-foreground/80 sm:bg-muted/60 sm:text-muted-foreground"}`}>{Math.round(market.probability)}%</span>
+              <span aria-label={dual ? `Kalshi ${Math.round(market.probability)}%` : undefined} className={`${pill} shrink-0 rounded-full px-2 py-2.5 text-center text-base font-semibold tabular sm:px-0.5 sm:py-1 sm:font-mono sm:text-[11px] ${lead ? "bg-primary text-primary-foreground sm:bg-primary/20 sm:text-[hsl(262_80%_84%)]" : "bg-muted text-foreground/80 sm:bg-muted/60 sm:text-muted-foreground"}`}>{Math.round(market.probability)}%</span>
+              {dual ? (
+                <span data-testid={`text-polymarket-${market.ticker}`} aria-label={polyChance === undefined ? "No Polymarket US price" : `Polymarket US ${Math.round(polyChance)}%`} className={`${pill} -ml-1.5 shrink-0 rounded-full border border-border px-2 py-[9px] text-center text-base font-semibold tabular text-foreground/85 sm:-ml-0.5 sm:px-0.5 sm:py-[3px] sm:font-mono sm:text-[11px] sm:text-muted-foreground`}>{polyChance === undefined ? "–" : `${Math.round(polyChance)}%`}</span>
+              ) : null}
             </div>
           );
         }) : <p className="py-2 text-[10px] text-muted-foreground">No open outcomes available.</p>}

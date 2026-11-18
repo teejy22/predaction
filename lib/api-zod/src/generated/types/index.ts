@@ -23,6 +23,8 @@ export * from './listSportsGamesParams';
 export * from './listSportsGamesSort';
 export * from './marketOverview';
 export * from './marketOverviewCategoriesItem';
+export * from './polymarketGameQuote';
+export * from './polymarketGameQuoteOutcomesItem';
 export * from './predictionEvent';
 export * from './predictionMarket';
 export * from './sportCategory';

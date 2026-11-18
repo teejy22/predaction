@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PolymarketGameQuote } from './polymarketGameQuote';
 import type { PredictionEvent } from './predictionEvent';
 import type { TeamLogo } from './teamLogo';
 
@@ -22,8 +23,9 @@ export interface SportsGame {
   url: string;
   /** Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one */
   gameDate?: string;
-  /** Scheduled start (ISO 8601) when Kalshi publishes one */
+  /** Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one */
   startTime?: string;
+  polymarket?: PolymarketGameQuote;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];
