@@ -72,6 +72,16 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     ));
     let games = attachPolymarket(groupSportsGames(events), getPolymarketGames());
     if (liveOnly) games = games.filter(game => game.polymarket?.live);
+    if (req.query.notStarted === "true") {
+      // A game counts as not started only when that is known: a start time still ahead, or a later game day.
+      const now = Date.now();
+      const today = easternDate();
+      games = games.filter(game => {
+        if (game.polymarket?.live) return false;
+        const start = Date.parse(game.startTime ?? "");
+        return Number.isFinite(start) ? start > now : !!game.gameDate && game.gameDate > today;
+      });
+    }
     if (sort === "upcoming") {
       // Only matchups with a published game day, soonest first, busiest first within a day.
       const today = easternDate();

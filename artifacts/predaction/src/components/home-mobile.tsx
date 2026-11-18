@@ -31,7 +31,7 @@ export function CategoryRail({ categories, active, onBrowse }: { categories: { n
 
 // Phone-only replacement for the scrolling upcoming-games panel: swipe through the next games.
 export function UpcomingSwipe() {
-  const params: ListSportsGamesParams = { sort: "upcoming", offset: 0, limit: 12 };
+  const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, offset: 0, limit: 12 };
   const feed = useListSportsGames(params, {
     query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });

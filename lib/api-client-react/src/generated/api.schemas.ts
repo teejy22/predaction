@@ -298,6 +298,10 @@ sort?: ListSportsGamesSort;
  */
 live?: boolean;
 /**
+ * Only games known not to have started (a future start time or a later game day).
+ */
+notStarted?: boolean;
+/**
  * @minimum 0
  */
 offset?: number;

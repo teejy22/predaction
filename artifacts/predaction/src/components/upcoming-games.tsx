@@ -36,7 +36,7 @@ function favorite(game: SportsGame) {
 
 export function UpcomingGames({ sport, league }: { sport?: string; league?: string }) {
   const railRef = useRef<HTMLDivElement>(null);
-  const params: ListSportsGamesParams = { sort: "upcoming", offset: 0, limit: 12 };
+  const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, offset: 0, limit: 12 };
   if (sport) params.sport = sport;
   if (league) params.league = league;
   const feed = useListSportsGames(params, {
@@ -106,7 +106,7 @@ function UpcomingCard({ game }: { game: SportsGame }) {
 
 // Home-page rail: the same upcoming games, drifting upward in a loop. Hover or keyboard focus pauses it.
 export function UpcomingTicker() {
-  const params: ListSportsGamesParams = { sort: "upcoming", offset: 0, limit: 12 };
+  const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, offset: 0, limit: 12 };
   const feed = useListSportsGames(params, {
     query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });
