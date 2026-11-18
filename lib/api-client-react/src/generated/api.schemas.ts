@@ -173,6 +173,8 @@ export type PolymarketGameQuoteOutcomesItem = {
   marketTicker: string;
   /** Polymarket US implied chance, 0-100 */
   chance: number;
+  /** Best price to buy this outcome on Polymarket US, in cents */
+  ask?: number;
   color?: string;
 };
 

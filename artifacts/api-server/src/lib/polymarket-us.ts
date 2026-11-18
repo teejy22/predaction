@@ -29,7 +29,7 @@ export type RawPolymarketEvent = {
 };
 
 export type PolymarketTeam = { id: number; names: string[]; abbreviation: string; color?: string };
-export type PolymarketOutcome = { team?: PolymarketTeam; chance: number };
+export type PolymarketOutcome = { team?: PolymarketTeam; chance: number; ask: number };
 export type PolymarketGame = {
   slug: string; league: string; startTime: string; gameDate: string; live: boolean; period?: string;
   url: string; teams: PolymarketTeam[]; outcomes: PolymarketOutcome[]; fetchedAt: number;
@@ -75,12 +75,14 @@ const price = (quote: RawQuote | undefined) => {
   return Number.isFinite(value) && value > 0 && value < 1 ? value : undefined;
 };
 
+const tenth = (value: number) => Math.round(value * 10) / 10;
+
 // A market is priced from its long side only when it has both a bid and an ask that sit close together.
 function midpoint(market: RawMarket) {
   const bid = price(market.bestBidQuote);
   const ask = price(market.bestAskQuote);
   if (bid === undefined || ask === undefined || ask < bid || ask - bid > MAX_SPREAD) return undefined;
-  return Math.round(((bid + ask) / 2) * 1000) / 10;
+  return { chance: tenth(((bid + ask) / 2) * 100), ask: tenth(ask * 100), otherAsk: tenth((1 - bid) * 100) };
 }
 
 function team(raw: RawTeam | null | undefined): PolymarketTeam | undefined {
@@ -107,20 +109,21 @@ export function normalizePolymarketEvent(event: RawPolymarketEvent, fetchedAt: n
   );
   const outcomes: PolymarketOutcome[] = [];
   for (const market of markets) {
-    const chance = midpoint(market);
+    const quote = midpoint(market);
     const sides = market.marketSides ?? [];
     const long = sides.find(side => side.long === true);
     const short = sides.find(side => side.long === false);
-    if (chance === undefined || !long || !short) continue;
+    if (!quote || !long || !short) continue;
+    const { chance, ask } = quote;
     const longTeam = teams.find(item => item.id === long.teamId);
     const shortTeam = teams.find(item => item.id === short.teamId);
     if (longTeam && shortTeam && longTeam.id !== shortTeam.id) {
-      // Two-way market: one book prices both teams.
-      outcomes.push({ team: longTeam, chance }, { team: shortTeam, chance: Math.round((100 - chance) * 10) / 10 });
+      // Two-way market: one book prices both teams. Buying the other team costs 100 minus the best bid.
+      outcomes.push({ team: longTeam, chance, ask }, { team: shortTeam, chance: tenth(100 - chance), ask: quote.otherAsk });
     } else if (longTeam && (!shortTeam || shortTeam.id === longTeam.id)) {
-      outcomes.push({ team: longTeam, chance });
+      outcomes.push({ team: longTeam, chance, ask });
     } else if (!longTeam && long.teamId === undefined && short.teamId === undefined) {
-      outcomes.push({ chance });
+      outcomes.push({ chance, ask });
     }
   }
   // A repeated side means the event carries more than one winner market; skip rather than pick one.
@@ -204,7 +207,7 @@ export function attachPolymarket(games: SportsGame[], source: PolymarketGame[]):
     // One Polymarket game claimed by two Kalshi games is ambiguous, so neither gets it.
     if (!match || claims.get(match.game.slug) !== 1) return game;
     const outcomes = match.pairs.flatMap(pair => pair.outcome ? [{
-      marketTicker: pair.ticker, chance: pair.outcome.chance,
+      marketTicker: pair.ticker, chance: pair.outcome.chance, ask: pair.outcome.ask,
       ...(pair.outcome.team?.color ? { color: pair.outcome.team.color } : {}),
     }] : []);
     if (!outcomes.length) return game;

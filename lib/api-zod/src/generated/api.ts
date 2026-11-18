@@ -701,6 +701,7 @@ export const ListSportsGamesResponse = zod.object({
   "outcomes": zod.array(zod.object({
   "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
   "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "ask": zod.number().optional().describe('Best price to buy this outcome on Polymarket US, in cents'),
   "color": zod.string().optional()
 }))
 }).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),
@@ -792,6 +793,7 @@ export const GetSportsGameResponse = zod.object({
   "outcomes": zod.array(zod.object({
   "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
   "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "ask": zod.number().optional().describe('Best price to buy this outcome on Polymarket US, in cents'),
   "color": zod.string().optional()
 }))
 }).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),

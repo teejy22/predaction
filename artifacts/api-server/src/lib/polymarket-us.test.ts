@@ -58,6 +58,8 @@ test("normalizes a two-way winner market from the long side's bid and ask", () =
   assert.equal(game.league, "nba");
   assert.equal(game.gameDate, "2026-11-17");
   assert.deepEqual(game.outcomes.map(outcome => outcome.chance), [49, 51]);
+  // Buying the first team costs the ask; buying the other team costs 100 minus the bid.
+  assert.deepEqual(game.outcomes.map(outcome => outcome.ask), [50, 52]);
   assert.equal(game.url, "https://polymarket.us/event/nba-ny-tor-2026-11-17");
 });
 

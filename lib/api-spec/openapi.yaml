@@ -309,6 +309,7 @@ components:
             properties:
               marketTicker: { type: string, description: "Kalshi winner market this outcome corresponds to" }
               chance: { type: number, description: "Polymarket US implied chance, 0-100" }
+              ask: { type: number, description: "Best price to buy this outcome on Polymarket US, in cents" }
               color: { type: string }
     SportsGameFeed:
       type: object

@@ -104,34 +104,28 @@ function WinnerPanel({ e, teams, game }: { e: PredictionEvent; teams: TeamLogo[]
   const total = markets.reduce((sum, m) => sum + m.probability, 0) || 1;
   return (
     <section className="rise mt-8 rounded-xl border border-border bg-card/70 p-5 sm:p-6" aria-label="Who wins" data-testid={`section-game-event-${e.ticker}`}>
-      <div className={`grid gap-4 ${markets.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-        {markets.map((m, i) => {
-          const logo = logoFor(m, teams);
-          return (
-            <div key={m.ticker} className="min-w-0" data-testid={`row-market-${m.ticker}`}>
-              <div className="flex items-center gap-2.5">
-                {logo && <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background"><img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" /></span>}
-                <p className="truncate text-sm font-semibold sm:text-base">{m.subtitle || m.title}</p>
-              </div>
-              {dual && <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Kalshi</p>}
-              <p className={`${dual ? "mt-0.5" : "mt-3"} font-display text-4xl font-bold tracking-tight tabular sm:text-5xl ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>{Math.round(m.probability)}%</p>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">Yes {fmtCents(m.yesAsk)}</p>
-              {dual && (() => {
-                const chance = polymarketChance(game, m.ticker);
-                return (
-                  <div className="mt-3 border-t border-border/70 pt-3" data-testid={`text-polymarket-${m.ticker}`}>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Polymarket US</p>
-                    <p className="mt-0.5 font-display text-2xl font-bold tracking-tight tabular text-foreground/90 sm:text-3xl">{chance === undefined ? <span className="text-muted-foreground" aria-label="No price available">–</span> : `${Math.round(chance)}%`}</p>
+      {dual && poly ? <VenueTable markets={markets} teams={teams} game={game} /> : (
+        <>
+          <div className={`grid gap-4 ${markets.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+            {markets.map((m, i) => {
+              const logo = logoFor(m, teams);
+              return (
+                <div key={m.ticker} className="min-w-0" data-testid={`row-market-${m.ticker}`}>
+                  <div className="flex items-center gap-2.5">
+                    {logo && <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background"><img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" /></span>}
+                    <p className="truncate text-sm font-semibold sm:text-base">{m.subtitle || m.title}</p>
                   </div>
-                );
-              })()}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-5 flex h-1.5 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
-        {markets.map((m, i) => <span key={m.ticker} className={i === 0 ? "bg-primary" : i === 1 ? "bg-muted-foreground/40" : "bg-muted"} style={{ width: `${(m.probability / total) * 100}%` }} />)}
-      </div>
+                  <p className={`mt-3 font-display text-4xl font-bold tracking-tight tabular sm:text-5xl ${i === 0 ? "text-foreground" : "text-muted-foreground"}`}>{Math.round(m.probability)}%</p>
+                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">Yes {fmtCents(m.yesAsk)}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-5 flex h-1.5 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+            {markets.map((m, i) => <span key={m.ticker} className={i === 0 ? "bg-primary" : i === 1 ? "bg-muted-foreground/40" : "bg-muted"} style={{ width: `${(m.probability / total) * 100}%` }} />)}
+          </div>
+        </>
+      )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>{fmtContracts(e.volume)} contracts traded{dual ? " on Kalshi" : ""}</span>
         <div className="flex items-center gap-3">
@@ -139,9 +133,74 @@ function WinnerPanel({ e, teams, game }: { e: PredictionEvent; teams: TeamLogo[]
           <WatchButton event={watchTarget(e)} />
         </div>
       </div>
-      {dual && poly && <a href={poly.url} target="_blank" rel="noopener noreferrer" data-testid="link-polymarket-game" className="mt-3 inline-flex items-center gap-1 rounded text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">View this game on Polymarket US <ArrowUpRight className="h-3.5 w-3.5" /></a>}
       {open && <p className="mt-4 whitespace-pre-line border-t border-border pt-4 text-sm leading-relaxed text-muted-foreground">{markets[0]!.rules || "No rules text provided by the source."}</p>}
     </section>
+  );
+}
+
+const usablePrice = (cents: number | null | undefined) => typeof cents === "number" && cents > 0 && cents < 100 ? cents : undefined;
+const fmtPrice = (cents: number) => `${Number.isInteger(cents) ? cents : cents.toFixed(1)}¢`;
+
+// One row per exchange, one column per side, so the same side lines up across exchanges.
+function VenueTable({ markets, teams, game }: { markets: PredictionMarket[]; teams: TeamLogo[]; game: SportsGame }) {
+  const poly = game.polymarket!;
+  const quote = (m: PredictionMarket) => poly.outcomes.find((o) => o.marketTicker === m.ticker);
+  const venues = [
+    { id: "kalshi", name: "Kalshi", short: "Kalshi", mark: "K", markClass: "bg-[hsl(158_64%_45%)] text-black", url: undefined as string | undefined,
+      cell: (m: PredictionMarket) => ({ chance: m.probability as number | undefined, price: usablePrice(m.yesAsk) }) },
+    { id: "polymarket", name: "Polymarket US", short: "Polymarket", mark: "P", markClass: "bg-[hsl(222_85%_58%)] text-white", url: poly.url,
+      cell: (m: PredictionMarket) => ({ chance: quote(m)?.chance, price: usablePrice(quote(m)?.ask) }) },
+  ];
+  // "Best" is the lower price to buy that side, only when both exchanges have a price and they differ.
+  const best = new Map(markets.map((m) => {
+    const prices = venues.map((v) => v.cell(m).price);
+    const known = prices.every((p) => p !== undefined) ? prices as number[] : [];
+    return [m.ticker, new Set(known).size > 1 ? Math.min(...known) : undefined] as const;
+  }));
+  const cols = markets.length === 3 ? "grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))] sm:grid-cols-[minmax(0,1.1fr)_repeat(3,minmax(0,1fr))]" : "grid-cols-[minmax(0,1.1fr)_repeat(2,minmax(0,1fr))]";
+  return (
+    <div role="table" aria-label="Winner prices by exchange" data-testid="table-venue-prices">
+      <div role="row" className={`grid ${cols} items-end gap-2 border-b border-border pb-3 sm:gap-3`}>
+        <span role="columnheader" className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Exchange</span>
+        {markets.map((m) => {
+          const logo = logoFor(m, teams);
+          return (
+            <div role="columnheader" key={m.ticker} className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:justify-center sm:gap-2">
+              {logo && <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background"><img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" /></span>}
+              <span className="max-w-full truncate text-xs font-semibold sm:text-sm">{m.subtitle || m.title}</span>
+            </div>
+          );
+        })}
+      </div>
+      {venues.map((v) => (
+        <div role="row" key={v.id} className={`grid ${cols} items-center gap-2 border-b border-border/60 py-3 sm:gap-3`} data-testid={`row-venue-${v.id}`}>
+          <div role="rowheader" className="flex min-w-0 items-center gap-2">
+            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${v.markClass}`} aria-hidden="true">{v.mark}</span>
+            {v.url ? (
+              <a href={v.url} target="_blank" rel="noopener noreferrer" data-testid="link-polymarket-game" aria-label={`View this game on ${v.name}`} className="inline-flex min-w-0 items-center gap-0.5 rounded text-[11px] font-semibold underline decoration-border underline-offset-4 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm sm:no-underline">
+                <span className="truncate sm:hidden">{v.short}</span><span className="hidden truncate sm:inline">{v.name}</span><ArrowUpRight className="hidden h-3 w-3 shrink-0 text-muted-foreground sm:block" />
+              </a>
+            ) : <span className="truncate text-[11px] font-semibold sm:text-sm">{v.name}</span>}
+          </div>
+          {markets.map((m) => {
+            const { chance, price } = v.cell(m);
+            const isBest = price !== undefined && best.get(m.ticker) === price;
+            return (
+              <div role="cell" key={m.ticker} data-testid={`cell-${v.id}-${m.ticker}`} className={`relative rounded-lg border px-1 py-2 text-center ${isBest ? "border-[hsl(155_45%_32%)] bg-[hsl(155_40%_12%)]" : "border-transparent bg-muted/30"}`}>
+                {chance === undefined ? <p className="py-2.5 font-mono text-sm text-muted-foreground" aria-label="No price available">–</p> : (
+                  <>
+                    <p className="font-display text-2xl font-bold leading-none tracking-tight tabular text-foreground sm:text-3xl">{Math.round(chance)}%</p>
+                    <p className={`mt-1.5 font-mono text-[10px] sm:text-[11px] ${isBest ? "font-bold text-[hsl(155_60%_72%)]" : "text-muted-foreground"}`}>{price === undefined ? "No offer" : `Buy ${fmtPrice(price)}`}</p>
+                  </>
+                )}
+                {isBest && <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded bg-[hsl(155_50%_30%)] px-1.5 py-px font-mono text-[9px] font-bold uppercase tracking-wider text-[hsl(155_70%_88%)]">Best</span>}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Each row is one exchange. The large number is that exchange's implied chance; "Buy" is its current price for a $1 contract on that side. "Best" marks the lower price when the two differ, before fees.</p>
+    </div>
   );
 }
 
