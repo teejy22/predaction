@@ -194,23 +194,15 @@ export default function SportsPage() {
   const indexedSports = overview.data?.categories.find((item) => item.name === "Sports")?.count ?? (!sport && !league && !search ? data?.total : undefined);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pt-11">
-      <header className="pb-1 sm:border-b sm:border-border sm:pb-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="hidden font-mono text-[10px] uppercase tracking-[.18em] text-primary sm:block">Kalshi · sports markets</p>
-            <h1 className="font-display text-3xl sm:mt-2 font-bold tracking-[-.045em] sm:text-4xl">Sports</h1>
-            <p className="mt-2 hidden max-w-xl text-sm leading-6 text-muted-foreground sm:block">Every open matchup, laid out by game day. Open a game for spreads, totals and props, or sort by volume to include futures.</p>
-          </div>
-          <div className="hidden text-right sm:block">
-            <p className="font-mono text-xl font-semibold tabular">{indexedSports !== undefined ? indexedSports.toLocaleString() : "—"}</p>
-            <p className="font-mono text-[9px] uppercase tracking-[.15em] text-muted-foreground">indexed sports events</p>
-            {overview.data?.updatedAt && <p className="mt-1 text-[10px] text-muted-foreground">Updated {updatedLabel(overview.data.updatedAt)}</p>}
-          </div>
-        </div>
+    <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 md:px-6 md:pt-6">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="font-display text-2xl font-bold tracking-[-.04em] sm:text-3xl">Sports</h1>
+        <p className="hidden font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:block">
+          {indexedSports !== undefined ? `${indexedSports.toLocaleString()} sports events` : ""}{overview.data?.updatedAt ? ` · updated ${updatedLabel(overview.data.updatedAt)}` : ""}
+        </p>
       </header>
 
-      <section className="mt-4 grid gap-5 sm:mt-6 lg:grid-cols-[245px_minmax(0,1fr)]">
+      <section className="mt-3 grid gap-5 sm:mt-4 lg:grid-cols-[245px_minmax(0,1fr)]">
         <SportsSidebar
           sports={sports} sport={sport} league={league}
           loading={overview.isLoading} failed={overview.isError && !overview.data}
