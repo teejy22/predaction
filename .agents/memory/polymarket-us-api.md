@@ -11,4 +11,10 @@ description: What the keyless polymarket.us gateway offers for market discovery 
 - Documented limit: 25 requests/s per IP.
 
 **Why:** the user asked whether Polymarket US markets could be added next to Kalshi; research only, no decision yet.
-**How to apply:** if integrated, index from `/v1/events` on a slow cadence like the Kalshi index and fetch BBO only for visible events. Terms of use for redisplaying the data were not reviewed.
+**How to apply:** if integrated, index from `/v1/events` on a slow cadence like the Kalshi index and fetch BBO only for visible events. See the terms note below before building anything.
+
+## Terms of use (read Nov 17, 2026; terms effective Oct 23, 2026)
+The Polymarket US terms cover the app, websites and APIs. They license market data for "personal, non-commercial use in connection with your trading" and prohibit "redistribution, resale, scraping, bulk downloads, and commercialization of derived works" without an express license. The API docs do say the public gateway is for "building something that displays market information", but grant no redistribution license.
+
+**Why:** Prediction Pro is a public site with sign-up offers, so showing these prices is redistribution on a commercial site. The integration task was paused at this check.
+**How to apply:** do not build or ship Polymarket US price display unless the user confirms they have written permission (contact: support@polymarket.us) or explicitly accepts the risk.
