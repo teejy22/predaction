@@ -72,6 +72,7 @@ paths:
         - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest, upcoming, gap], description: "gap keeps only games priced on both exchanges, widest disagreement first" } }
         - { name: live, in: query, description: Only games reported as in progress by Polymarket US., schema: { type: boolean } }
         - { name: major, in: query, description: "Only the major American leagues (NFL, NBA, NHL, MLB, WNBA, NCAAF, NCAAB).", schema: { type: boolean } }
+        - { name: titled, in: query, description: "Only games with a known league; for esports, a known video game (leaves out simulated eSoccer and eBasketball).", schema: { type: boolean } }
         - { name: notStarted, in: query, description: Only games known not to have started (a future start time or a later game day)., schema: { type: boolean } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }

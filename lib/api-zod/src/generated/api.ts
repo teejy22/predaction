@@ -677,6 +677,7 @@ export const ListSportsGamesQueryParams = zod.object({
   "sort": zod.enum(['volume', 'closing', 'newest', 'upcoming', 'gap']).optional(),
   "live": zod.coerce.boolean().optional().describe('Only games reported as in progress by Polymarket US.'),
   "major": zod.coerce.boolean().optional().describe('Only the major American leagues (NFL, NBA, NHL, MLB, WNBA, NCAAF, NCAAB).'),
+  "titled": zod.coerce.boolean().optional().describe('Only games with a known league; for esports, a known video game (leaves out simulated eSoccer and eBasketball).'),
   "notStarted": zod.coerce.boolean().optional().describe('Only games known not to have started (a future start time or a later game day).'),
   "offset": zod.coerce.number().int().min(listSportsGamesQueryOffsetMin).default(listSportsGamesQueryOffsetDefault),
   "limit": zod.coerce.number().int().min(1).max(listSportsGamesQueryLimitMax).default(listSportsGamesQueryLimitDefault)

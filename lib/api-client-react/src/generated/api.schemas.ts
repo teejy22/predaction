@@ -323,6 +323,10 @@ live?: boolean;
  */
 major?: boolean;
 /**
+ * Only games with a known league; for esports, a known video game (leaves out simulated eSoccer and eBasketball).
+ */
+titled?: boolean;
+/**
  * Only games known not to have started (a future start time or a later game day).
  */
 notStarted?: boolean;

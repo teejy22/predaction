@@ -76,6 +76,9 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!text || matchesText(event, text)),
     ));
     let games = attachPolymarket(groupSportsGames(events), getPolymarketGames()).map(attachPriceGap);
+    // An esports match is listed only when its match-winner market is open; map, spread and total bets alone are not a match card.
+    games = games.filter(game => game.sport !== "Esports" || game.events.some(event => /GAME$/.test(event.seriesTicker)));
+    if (req.query.titled === "true") games = games.filter(game => game.league);
     if (liveOnly) games = games.filter(game => game.polymarket?.live);
     if (req.query.major === "true") games = games.filter(game => MAJOR_LEAGUES.has(game.league.toUpperCase()));
     if (req.query.notStarted === "true") {

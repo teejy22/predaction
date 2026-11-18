@@ -4,6 +4,7 @@ description: How esports matches are labeled and compared across Kalshi and Poly
 ---
 
 - Kalshi tags every esports series only as "Esports"; the video game is known only from the series ticker, so the game title is used as the "league". eSoccer/eBasketball are simulated sports and never appear on Polymarket US. No League of Legends matches were open on Kalshi on Nov 18, 2026, and its Polymarket league slug is unconfirmed, so LoL is not matched yet.
+- Kalshi's esports side bets (map winner, spread, total maps) abbreviate team names in their titles, so they only join their match when grouped by the date-and-teams part of the ticker. A match card needs an open match-winner market; side bets alone are not shown as matches. The Esports page leaves out simulated eSoccer/eBasketball (user asked for a cleaner page, Nov 18, 2026).
 - Price gaps compare order-book midpoints on both exchanges, never Kalshi's last traded price. **Why:** the last trade is often stale (two sides summing to 111, a 22-point "gap" that was really 3-5 points). Typical real gaps measured: 3-5 points; about 37 of ~350 esports matches had a reliable price on both sides.
 - No esports team logos exist in current sources (ESPN has no esports).
 

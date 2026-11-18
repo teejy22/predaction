@@ -73,6 +73,10 @@ export function selectMainMarketEvents(events: PredictionEvent[]) {
 }
 
 function identity(event: PredictionEvent) {
+  // Esports side bets (map winner, spread, total maps) abbreviate the team names, so the match is told apart
+  // by the shared date-and-teams part of the ticker instead of by the wording.
+  const code = event.sport === "Esports" ? /^[A-Z0-9]+-(\d{2}[A-Z]{3}\d{2}[A-Z0-9]+)/.exec(event.ticker)?.[1] : undefined;
+  if (code) return `esports\u001f${code.toLowerCase()}`;
   return [
     event.sport,
     matchupTitle(event.title),

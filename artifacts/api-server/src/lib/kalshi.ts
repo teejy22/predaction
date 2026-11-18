@@ -138,7 +138,7 @@ const leagueTitleAliases: Record<string, string> = {
 // Esports series are named after the video game; the game title stands in for a league.
 const ESPORTS_TITLES: [RegExp, string][] = [
   [/^KXCS2/, "Counter-Strike"], [/^KXDOTA2/, "Dota 2"], [/^KXVALORANT/, "Valorant"], [/^KXLOL/, "League of Legends"],
-  [/^KXOW/, "Overwatch"], [/^KXESOCCER/, "eSoccer"], [/^KXEBASKETBALL/, "eBasketball"],
+  [/^KXOW/, "Overwatch"],
 ];
 export function normalize(event: RawEvent, info?: Series, openOnly = true): PredictionEvent {
   const url = `https://kalshi.com/markets/${encodeURIComponent(event.series_ticker.toLowerCase())}/${encodeURIComponent(event.event_ticker.toLowerCase())}`;

@@ -15,8 +15,6 @@ const TITLES: { name: string; label: string; icon: string }[] = [
   { name: "Dota 2", label: "Dota 2", icon: "🛡️" },
   { name: "Valorant", label: "Valorant", icon: "🎯" },
   { name: "Overwatch", label: "Overwatch", icon: "🦾" },
-  { name: "eSoccer", label: "eSoccer", icon: "⚽" },
-  { name: "eBasketball", label: "eBasket", icon: "🏀" },
 ];
 const PAGE = 48;
 const pct = (value: number) => `${Math.round(value)}%`;
@@ -80,7 +78,7 @@ export default function EsportsPage() {
   const open = new Set(overview.data?.sports.find((item) => item.name === "Esports")?.leagues ?? []);
   const titles = TITLES.filter((item) => open.has(item.name) || item.name === title);
 
-  const base: ListSportsGamesParams = { sport: "Esports", ...(title ? { league: title } : {}) };
+  const base: ListSportsGamesParams = { sport: "Esports", titled: true, ...(title ? { league: title } : {}) };
   const gaps = useGames({ ...base, sort: "gap", limit: 8 });
   const live = useGames({ ...base, live: true, sort: "volume", limit: 24 });
   const schedule = useGames({ ...base, sort: "upcoming", limit });
@@ -95,6 +93,9 @@ export default function EsportsPage() {
     if (last && last.date === date) last.games.push(game);
     else days.push({ date, games: [game] });
   }
+  // Within a day, earliest start first; matches without a published start time go last.
+  const startOf = (game: SportsGame) => Date.parse(game.startTime ?? "") || Infinity;
+  for (const day of days) day.games.sort((a, b) => startOf(a) - startOf(b));
   const gapGames = (gaps.data?.games ?? []).filter((game) => game.priceGap && game.priceGap.points >= 1);
   const loading = schedule.isLoading || live.isLoading;
   const indexing = !!schedule.data?.indexing;
