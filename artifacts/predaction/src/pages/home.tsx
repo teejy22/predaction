@@ -9,6 +9,7 @@ import { EventsTable, EventCardSkeleton } from "@/components/event-card";
 import { ErrorPanel } from "@/components/bits";
 import { StepsGrid } from "@/components/how-it-works";
 import { HomeDiscovery } from "@/components/home-discovery";
+import { LiveStrip } from "@/components/live-strip";
 import { fmtContracts, updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
@@ -134,6 +135,7 @@ export default function Home() {
   return (
     <div>
       <div className="hero-field border-b border-border">
+        <LiveStrip />
         <HomeDiscovery category={category} onBrowse={(c) => {
           if (c !== undefined) {
             setCategory(c);

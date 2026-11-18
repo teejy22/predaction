@@ -70,6 +70,7 @@ paths:
         - { name: league, in: query, schema: { type: string } }
         - { name: search, in: query, schema: { type: string } }
         - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest, upcoming] } }
+        - { name: live, in: query, description: Only games reported as in progress by Polymarket US., schema: { type: boolean } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
       responses:

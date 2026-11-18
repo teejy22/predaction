@@ -294,6 +294,10 @@ league?: string;
 search?: string;
 sort?: ListSportsGamesSort;
 /**
+ * Only games reported as in progress by Polymarket US.
+ */
+live?: boolean;
+/**
  * @minimum 0
  */
 offset?: number;

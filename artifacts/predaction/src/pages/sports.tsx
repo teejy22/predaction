@@ -12,7 +12,7 @@ import { updatedLabel } from "@/lib/format";
 import { usePageMeta } from "@/lib/meta";
 
 type Sort = "date" | "volume" | "closing" | "newest";
-type Filters = { sport: string; league: string; q: string; sort: Sort; page: number };
+type Filters = { sport: string; league: string; q: string; sort: Sort; page: number; live: boolean };
 const SORTS: { value: Sort; label: string }[] = [
   { value: "date", label: "By date" },
   { value: "volume", label: "Volume" },
@@ -29,6 +29,7 @@ function readFilters(): Filters {
     q: params.get("q") ?? "",
     sort: rawSort === "volume" || rawSort === "closing" || rawSort === "newest" ? rawSort : "date",
     page: Math.max(0, (Number.parseInt(params.get("page") || "1", 10) || 1) - 1),
+    live: params.get("live") === "1",
   };
 }
 
@@ -38,6 +39,7 @@ function filtersUrl(filters: Filters) {
   if (filters.league) params.set("league", filters.league);
   if (filters.q) params.set("q", filters.q);
   if (filters.sort !== "date") params.set("sort", filters.sort);
+  if (filters.live) params.set("live", "1");
   if (filters.page > 0) params.set("page", String(filters.page + 1));
   const query = params.toString();
   return `${window.location.pathname}${query ? `?${query}` : ""}`;
@@ -62,6 +64,7 @@ export default function SportsPage() {
   const [search, setSearch] = useState(initial.q);
   const [sort, setSort] = useState<Sort>(initial.sort);
   const [page, setPage] = useState(initial.page);
+  const [live, setLive] = useState(initial.live);
   const skipHistoryWrite = useRef(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -78,7 +81,7 @@ export default function SportsPage() {
   }, [q, search]);
 
   useEffect(() => {
-    const target = filtersUrl({ sport, league, q: search, sort, page });
+    const target = filtersUrl({ sport, league, q: search, sort, page, live });
     const current = `${window.location.pathname}${window.location.search}`;
     if (skipHistoryWrite.current) {
       skipHistoryWrite.current = false;
@@ -86,7 +89,7 @@ export default function SportsPage() {
       return;
     }
     if (target !== current) window.history.pushState(null, "", target);
-  }, [sport, league, search, sort, page]);
+  }, [sport, league, search, sort, page, live]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -98,6 +101,7 @@ export default function SportsPage() {
       setSearch(filters.q);
       setSort(filters.sort);
       setPage(filters.page);
+      setLive(filters.live);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -106,7 +110,7 @@ export default function SportsPage() {
   // Wouter can navigate between two /sports links without remounting this page.
   useEffect(() => {
     const next = readFilters();
-    if (next.sport === sport && next.league === league && next.q === search && next.sort === sort && next.page === page) return;
+    if (next.sport === sport && next.league === league && next.q === search && next.sort === sort && next.page === page && next.live === live) return;
     skipHistoryWrite.current = true;
     setSport(next.sport);
     setLeague(next.league);
@@ -114,22 +118,26 @@ export default function SportsPage() {
     setSearch(next.q);
     setSort(next.sort);
     setPage(next.page);
+    setLive(next.live);
   }, [urlSearch]);
 
   const overview = useGetOverview({ query: { queryKey: getGetOverviewQueryKey(), refetchInterval: 60000 } });
   const sports = overview.data?.sports ?? [];
   // Uncommitted search edits hold results on page one; no stale offset request is issued.
   // The schedule view uses compact cards, so a page holds more games.
-  const byDate = sort === "date";
+  // Live games are shown as one list, busiest first, rather than grouped by day.
+  const byDate = sort === "date" && !live;
+  const compact = byDate || live;
   const PAGE_SIZE = byDate ? 30 : 24;
   const params: ListSportsGamesParams = {
-    sort: byDate ? "upcoming" : sort,
+    sort: byDate ? "upcoming" : sort === "date" ? "volume" : sort,
     offset: page * PAGE_SIZE,
     limit: PAGE_SIZE,
   };
   if (sport) params.sport = sport;
   if (league) params.league = league;
   if (search) params.search = search;
+  if (live) params.live = true;
   const feed = useListSportsGames(params, {
     query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });
@@ -138,7 +146,7 @@ export default function SportsPage() {
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
   const canGoPrev = page > 0;
   const canGoNext = !!data?.hasMore;
-  const filtersActive = !!(sport || league || search);
+  const filtersActive = !!(sport || league || search || live);
 
   useEffect(() => {
     if (data && !feed.isPlaceholderData && page >= pages) setPage(Math.max(0, pages - 1));
@@ -172,6 +180,7 @@ export default function SportsPage() {
     setQ("");
     setSearch("");
     setSort("date");
+    setLive(false);
     setPage(0);
   };
   const goToPage = (next: number) => {
@@ -211,7 +220,7 @@ export default function SportsPage() {
 
         <div ref={pageRef} className="min-w-0 scroll-mt-20">
           <SportsRail sports={sports} sport={sport} league={league} onAll={() => { setSport(""); setLeague(""); setPage(0); }} onSport={chooseSport} onLeague={pickLeague} />
-          {!byDate && !search && page === 0 && <UpcomingGames sport={sport} league={league} />}
+          {!compact && !search && page === 0 && <UpcomingGames sport={sport} league={league} />}
           <div className="flex flex-col gap-3 sm:flex-row">
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">Search sports events</span>
@@ -228,7 +237,8 @@ export default function SportsPage() {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-            <h2 className="font-display text-xl font-bold tracking-[-.035em]">
+            <h2 className="flex flex-wrap items-center gap-2.5 font-display text-xl font-bold tracking-[-.035em]">
+              <button type="button" onClick={() => { setLive(!live); setPage(0); }} aria-pressed={live} data-testid="button-sports-live" className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs font-semibold tracking-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${live ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"}`}><span className={`live-dot h-1.5 w-1.5 rounded-full ${live ? "bg-primary-foreground" : "bg-primary"}`} aria-hidden="true" />Live now</button>
               {(league && leagueName(league)) || sport || "All sports"}{search && <span className="font-sans text-sm font-normal text-muted-foreground"> · “{search}”</span>}
             </h2>
             <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
@@ -254,6 +264,9 @@ export default function SportsPage() {
                       {day.games.map((game) => <SportsMatchupCard key={game.key} game={game} />)}
                     </div>
                   </section>)}
+                </div> :
+                games.length && live ? <div className={`grid grid-cols-1 items-start gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
+                  {games.map((game) => <SportsMatchupCard key={game.key} game={game} />)}
                 </div> :
                 games.length ? <div className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
                   {games.map((game) => <SportsGameCard key={game.key} game={game} />)}

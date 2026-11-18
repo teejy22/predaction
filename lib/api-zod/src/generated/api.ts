@@ -673,6 +673,7 @@ export const ListSportsGamesQueryParams = zod.object({
   "league": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional(),
   "sort": zod.enum(['volume', 'closing', 'newest', 'upcoming']).optional(),
+  "live": zod.coerce.boolean().optional().describe('Only games reported as in progress by Polymarket US.'),
   "offset": zod.coerce.number().int().min(listSportsGamesQueryOffsetMin).default(listSportsGamesQueryOffsetDefault),
   "limit": zod.coerce.number().int().min(1).max(listSportsGamesQueryLimitMax).default(listSportsGamesQueryLimitDefault)
 })

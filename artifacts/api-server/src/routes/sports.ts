@@ -61,6 +61,8 @@ router.get("/sports/games", async (req, res): Promise<void> => {
   try {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const { sport, league, search, sort, offset = 0, limit = 50 } = parsed.data;
+    // Read from the raw query: only the literal "true" turns the live filter on.
+    const liveOnly = req.query.live === "true";
     const text = search?.trim().toLowerCase();
     const events = selectMainMarketEvents(data.events.filter(event =>
       event.categories.some(category => category.toLowerCase() === "sports") &&
@@ -69,6 +71,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!text || matchesText(event, text)),
     ));
     let games = attachPolymarket(groupSportsGames(events), getPolymarketGames());
+    if (liveOnly) games = games.filter(game => game.polymarket?.live);
     if (sort === "upcoming") {
       // Only matchups with a published game day, soonest first, busiest first within a day.
       const today = easternDate();
