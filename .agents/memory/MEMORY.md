@@ -6,3 +6,4 @@
 - [Polymarket wallet endpoints](polymarket-wallet-endpoints.md) — Public profile and v2 positions endpoints resolve wallet addresses to usernames and current holdings.
 - [Sports game schedule](sports-game-schedule.md) — closeTime is ~2 days after a game; the game day/start time come only from the ticker, in US Eastern.
 - [Preview CSS and motion checks](preview-css-and-motion-checks.md) — restart the web workflow after stylesheet edits; verify animations with two headless chromium captures.
+- [Polymarket US public API](polymarket-us-api.md) — keyless gateway lists ~5.6k open events with prices and real game start times, but volume needs a per-market call.
