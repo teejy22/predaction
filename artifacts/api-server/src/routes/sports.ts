@@ -58,6 +58,8 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
   }
 });
 
+const MAJOR_LEAGUES = new Set(["NFL", "NBA", "NHL", "MLB", "WNBA", "NCAAF", "NCAAB"]);
+
 router.get("/sports/games", async (req, res): Promise<void> => {
   const parsed = ListSportsGamesQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: "Invalid sports game filters." }); return; }
@@ -75,6 +77,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
     ));
     let games = attachPolymarket(groupSportsGames(events), getPolymarketGames());
     if (liveOnly) games = games.filter(game => game.polymarket?.live);
+    if (req.query.major === "true") games = games.filter(game => MAJOR_LEAGUES.has(game.league.toUpperCase()));
     if (req.query.notStarted === "true") {
       // A game counts as not started only when that is known: a start time still ahead, or a later game day.
       const now = Date.now();

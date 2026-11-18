@@ -17,6 +17,10 @@ sort?: ListSportsGamesSort;
  */
 live?: boolean;
 /**
+ * Only the major American leagues (NFL, NBA, NHL, MLB, WNBA, NCAAF, NCAAB).
+ */
+major?: boolean;
+/**
  * Only games known not to have started (a future start time or a later game day).
  */
 notStarted?: boolean;

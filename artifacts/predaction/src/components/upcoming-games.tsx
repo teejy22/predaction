@@ -39,6 +39,8 @@ export function UpcomingGames({ sport, league }: { sport?: string; league?: stri
   const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, offset: 0, limit: 12 };
   if (sport) params.sport = sport;
   if (league) params.league = league;
+  // With no sport or league picked, the row sticks to the major American leagues.
+  if (!sport && !league) params.major = true;
   const feed = useListSportsGames(params, {
     query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });
@@ -106,7 +108,7 @@ function UpcomingCard({ game }: { game: SportsGame }) {
 
 // Home-page rail: the same upcoming games, drifting upward in a loop. Hover or keyboard focus pauses it.
 export function UpcomingTicker() {
-  const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, offset: 0, limit: 12 };
+  const params: ListSportsGamesParams = { sort: "upcoming", notStarted: true, major: true, offset: 0, limit: 12 };
   const feed = useListSportsGames(params, {
     query: { queryKey: getListSportsGamesQueryKey(params), refetchInterval: 60000, placeholderData: (prev) => prev },
   });
