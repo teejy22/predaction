@@ -134,6 +134,10 @@ export interface TeamLogo {
   name: string;
   abbreviation: string;
   logo: string;
+  /** All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota) */
+  wins?: number;
+  /** All-time recorded losses, where the source publishes a record */
+  losses?: number;
 }
 
 export interface PredictionEvent {

@@ -270,6 +270,8 @@ components:
         name: { type: string }
         abbreviation: { type: string }
         logo: { type: string, format: uri }
+        wins: { type: integer, description: "All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)" }
+        losses: { type: integer, description: "All-time recorded losses, where the source publishes a record" }
     SportsGame:
       type: object
       required: [key, title, subtitle, category, categories, sport, league, volume, volume24h, closeTime, url, eventCount, marketCount, teams, events]

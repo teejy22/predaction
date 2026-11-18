@@ -81,6 +81,25 @@ export default function SportsGamePage() {
 
       {main && <WinnerPanel e={main} teams={g.teams} game={g} />}
 
+      {g.teams.some((team) => team.wins !== undefined && team.losses !== undefined) && (
+        <div className="mt-4 rounded-lg border border-border bg-card/75 px-4 py-3" data-testid="panel-team-records">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">All-time record in pro matches</p>
+          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-2">
+            {g.teams.filter((team) => team.wins !== undefined && team.losses !== undefined).map((team) => {
+              const played = team.wins! + team.losses!;
+              return (
+                <p key={team.name} className="text-sm">
+                  <span className="font-semibold">{team.name}</span>{" "}
+                  <span className="font-mono tabular text-foreground/85">{team.wins}–{team.losses}</span>
+                  {played > 0 && <span className="text-muted-foreground"> · won {Math.round((team.wins! / played) * 100)}%</span>}
+                </p>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">Logos and records from <a href="https://www.opendota.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary">OpenDota</a>. Shown only for teams it lists.</p>
+        </div>
+      )}
+
       {rest.length > 4 && <nav className="mt-8 flex gap-1.5 overflow-x-auto pb-1" aria-label="Filter markets in this game">
         {[{ t: "all", label: "All" }, ...rest.map((e) => ({ t: e.ticker, label: eventLabel(e) }))].map((x) => (
           <button key={x.t} type="button" onClick={() => setActive(x.t)} aria-pressed={active === x.t} data-testid={`button-game-event-${x.t}`} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active === x.t ? "border-primary bg-primary/20 text-foreground" : "border-border text-muted-foreground hover:text-foreground"}`}>{x.label}</button>

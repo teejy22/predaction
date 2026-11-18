@@ -573,7 +573,9 @@ export const ListEventsResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })).optional(),
   "image": zod.string().url().optional(),
   "featuredImage": zod.string().url().optional(),
@@ -631,7 +633,9 @@ export const GetEventResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })).optional(),
   "image": zod.string().url().optional(),
   "featuredImage": zod.string().url().optional(),
@@ -724,7 +728,9 @@ export const ListSportsGamesResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })),
   "events": zod.array(zod.object({
   "ticker": zod.string(),
@@ -739,7 +745,9 @@ export const ListSportsGamesResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })).optional(),
   "image": zod.string().url().optional(),
   "featuredImage": zod.string().url().optional(),
@@ -825,7 +833,9 @@ export const GetSportsGameResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })),
   "events": zod.array(zod.object({
   "ticker": zod.string(),
@@ -840,7 +850,9 @@ export const GetSportsGameResponse = zod.object({
   "teams": zod.array(zod.object({
   "name": zod.string(),
   "abbreviation": zod.string(),
-  "logo": zod.string().url()
+  "logo": zod.string().url(),
+  "wins": zod.number().int().optional().describe('All-time recorded wins, where the source publishes a record (Dota 2, from OpenDota)'),
+  "losses": zod.number().int().optional().describe('All-time recorded losses, where the source publishes a record')
 })).optional(),
   "image": zod.string().url().optional(),
   "featuredImage": zod.string().url().optional(),

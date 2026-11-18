@@ -10,6 +10,6 @@ description: How esports matches are labeled and compared across Kalshi and Poly
 
 ## Outside sources (terms read Nov 18, 2026)
 - PandaScore: free "Fixtures" plan (schedules, teams, players, tournaments for CS, LoL, Dota 2, Valorant; 1,000 requests/hour; needs a key from a free sign-up). Paid stats plans are "only available to customers with non betting-related usage"; they sell a separate product for prediction users via sales. Terms bar passing raw data to third parties. Not approved by the user yet.
-- OpenDota: free, no key, 3,000 calls/day; Dota 2 only; team list includes logos, ratings, win/loss.
+- OpenDota: free, no key, 3,000 calls/day; Dota 2 only; team list includes logos, ratings, win/loss. In use since Nov 18, 2026 for Dota 2 logos and all-time records. The team list is paged 1,000 at a time by rating and active lower-tier teams sit several pages deep; old inactive teams reuse names, so only recently active teams with an exact name match are used. Measured coverage: about half of the teams in open Kalshi Dota 2 matches.
 - Liquipedia data API: free plan only for non-commercial, open-source projects; otherwise paid. Wiki API is for editors only.
 - Riot/Steam/Faceit official APIs do not offer pro match schedules.
