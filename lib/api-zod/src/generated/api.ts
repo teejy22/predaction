@@ -700,7 +700,8 @@ export const ListSportsGamesResponse = zod.object({
   "updatedAt": zod.string(),
   "outcomes": zod.array(zod.object({
   "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
-  "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "chance": zod.number().optional().describe('Polymarket US implied chance, 0-100. Absent when there is no reliable two-sided price.'),
+  "score": zod.string().optional().describe('Live score for this side; tennis lists games won per set separated by spaces'),
   "ask": zod.number().optional().describe('Best price to buy this outcome on Polymarket US, in cents'),
   "color": zod.string().optional()
 }))
@@ -792,7 +793,8 @@ export const GetSportsGameResponse = zod.object({
   "updatedAt": zod.string(),
   "outcomes": zod.array(zod.object({
   "marketTicker": zod.string().describe('Kalshi winner market this outcome corresponds to'),
-  "chance": zod.number().describe('Polymarket US implied chance, 0-100'),
+  "chance": zod.number().optional().describe('Polymarket US implied chance, 0-100. Absent when there is no reliable two-sided price.'),
+  "score": zod.string().optional().describe('Live score for this side; tennis lists games won per set separated by spaces'),
   "ask": zod.number().optional().describe('Best price to buy this outcome on Polymarket US, in cents'),
   "color": zod.string().optional()
 }))

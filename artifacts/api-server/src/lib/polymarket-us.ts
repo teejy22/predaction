@@ -7,12 +7,13 @@ import { easternDate } from "./sports-games";
 const GATEWAY = "https://gateway.polymarket.us";
 const SITE = "https://polymarket.us";
 const PAGE_SIZE = 500;
-const MAX_PAGES = 12;
+const MAX_PAGES = 16;
 const PAGE_PAUSE = 250;
 const HOT_TTL = 2 * 60_000;
 const FULL_TTL = 15 * 60_000;
+const FAR_TTL = 30 * 60_000;
 // A record that has not been refreshed for this long is dropped rather than shown as current.
-const STALE_AFTER = 30 * 60_000;
+const STALE_AFTER = 75 * 60_000;
 const MAX_SPREAD = 0.1;
 const HOUR = 3_600_000;
 
@@ -24,12 +25,12 @@ type RawMarket = {
   bestBidQuote?: RawQuote; bestAskQuote?: RawQuote; marketSides?: RawSide[];
 };
 export type RawPolymarketEvent = {
-  slug?: string; startTime?: string; live?: boolean; ended?: boolean; closed?: boolean; period?: string;
+  slug?: string; startTime?: string; live?: boolean; ended?: boolean; closed?: boolean; period?: string; score?: string;
   teams?: RawTeam[]; markets?: RawMarket[];
 };
 
-export type PolymarketTeam = { id: number; names: string[]; abbreviation: string; color?: string };
-export type PolymarketOutcome = { team?: PolymarketTeam; chance: number; ask: number };
+export type PolymarketTeam = { id: number; names: string[]; abbreviation: string; color?: string; score?: string };
+export type PolymarketOutcome = { team?: PolymarketTeam; chance?: number; ask?: number };
 export type PolymarketGame = {
   slug: string; league: string; startTime: string; gameDate: string; live: boolean; period?: string;
   url: string; teams: PolymarketTeam[]; outcomes: PolymarketOutcome[]; fetchedAt: number;
@@ -47,7 +48,10 @@ const LEAGUES_BY_SERIES: Record<string, string[]> = {
   KXFIBACHAMPGAME: ["bcl"], KXCZENBLGAME: ["cznbl"], KXSLBGAME: ["slb"], KXKORISLIIGAGAME: ["koris"],
   KXSKLGAME: ["slnbl"], KXSBLGAME: ["svkbl"],
   KXATPMATCH: ["atp"], KXWTAMATCH: ["wta"], KXITFMATCH: ["itfme"], KXITFWMATCH: ["itfwo"],
-  KXATPDOUBLES: ["atpdb"], KXWTADOUBLES: ["wtadb"],
+  KXATPDOUBLES: ["atpdb"], KXWTADOUBLES: ["wtadb"], KXATPCHALLENGERMATCH: ["atp"], KXATPCHALLENGERDOUBLES: ["atpdb"],
+  KXITFDOUBLES: ["itfme", "atpdb"], KXITFWDOUBLES: ["itfwo", "wtadb"],
+  KXWTACHALLENGERMATCH: ["wta"], KXDBBFGAME: ["denbl"], KXSUPERETTANGAME: ["swe2"],
+  KXCS2GAME: ["cs2"], KXVALORANTGAME: ["valorant"], KXDOTA2GAME: ["dota2"], KXOWGAME: ["ow"],
   KXUFCFIGHT: ["ufc"], KXBOXING: ["boxing"], KXDARTSMATCH: ["modus", "pdcdarts"],
   KXODIMATCH: ["odicr"], KXTESTMATCH: ["testcr"],
   KXEPLGAME: ["epl"], KXEFLCHAMPIONSHIPGAME: ["eflch"], KXEFLL1GAME: ["efl1"], KXEFLL2GAME: ["efl2"],
@@ -68,6 +72,12 @@ const LEAGUES_BY_SERIES: Record<string, string[]> = {
   KXDIMAYORGAME: ["lco"], KXCONCACAFNLGAME: ["cnl"], KXINTLFRIENDLYGAME: ["intf"],
 };
 
+// Tour-level tennis is scheduled days ahead and Kalshi's ticker date can be the day the draw was set.
+const TENNIS_TOUR = new Set(["KXATPMATCH", "KXWTAMATCH", "KXATPDOUBLES", "KXWTADOUBLES"]);
+const LOOSE_DAY = new Set(["KXATPMATCH", "KXWTAMATCH", "KXITFMATCH", "KXITFWMATCH", "KXATPDOUBLES", "KXWTADOUBLES",
+  "KXATPCHALLENGERMATCH", "KXWTACHALLENGERMATCH", "KXATPCHALLENGERDOUBLES", "KXITFDOUBLES", "KXITFWDOUBLES", "KXUFCFIGHT", "KXBOXING", "KXDARTSMATCH",
+  "KXCS2GAME", "KXVALORANTGAME", "KXDOTA2GAME", "KXOWGAME"]);
+
 const WINNER_TYPE = /(full_game_winner|full_time_winner|match_winner|fight_winner)$/;
 
 const price = (quote: RawQuote | undefined) => {
@@ -77,13 +87,22 @@ const price = (quote: RawQuote | undefined) => {
 
 const tenth = (value: number) => Math.round(value * 10) / 10;
 
-// A market is priced from its long side only when it has both a bid and an ask that sit close together.
-function midpoint(market: RawMarket) {
+// One order book prices the long side. The chance is shown only when a bid and an ask sit close together;
+// the price to buy either side is kept whenever the book offers one.
+function quoteOf(market: RawMarket) {
   const bid = price(market.bestBidQuote);
   const ask = price(market.bestAskQuote);
-  if (bid === undefined || ask === undefined || ask < bid || ask - bid > MAX_SPREAD) return undefined;
-  return { chance: tenth(((bid + ask) / 2) * 100), ask: tenth(ask * 100), otherAsk: tenth((1 - bid) * 100) };
+  const tight = bid !== undefined && ask !== undefined && ask >= bid && ask - bid <= MAX_SPREAD + 1e-9;
+  return {
+    chance: tight ? tenth(((bid + ask) / 2) * 100) : undefined,
+    ask: ask === undefined ? undefined : tenth(ask * 100),
+    otherAsk: bid === undefined ? undefined : tenth((1 - bid) * 100),
+  };
 }
+
+const outcome = (chance: number | undefined, ask: number | undefined, item?: PolymarketTeam): PolymarketOutcome | undefined =>
+  chance === undefined && ask === undefined ? undefined
+    : { ...(item ? { team: item } : {}), ...(chance === undefined ? {} : { chance }), ...(ask === undefined ? {} : { ask }) };
 
 function team(raw: RawTeam | null | undefined): PolymarketTeam | undefined {
   if (!raw || typeof raw.id !== "number") return undefined;
@@ -96,76 +115,127 @@ function team(raw: RawTeam | null | undefined): PolymarketTeam | undefined {
   };
 }
 
+// "29-36" is first team then second team. Tennis lists one pair per set and may append the current game after a colon.
+export function parseScore(raw: string | undefined): [string, string] | undefined {
+  const body = (raw ?? "").split(":")[0]!.trim();
+  if (!/^\d{1,3}-\d{1,3}(,\s*\d{1,3}-\d{1,3})*$/.test(body)) return undefined;
+  const sets = body.split(",").map(part => part.trim().split("-") as [string, string]);
+  return [sets.map(set => set[0]).join(" "), sets.map(set => set[1]).join(" ")];
+}
+
+const PERIODS: Record<string, string> = { HT: "Halftime", SUS: "Suspended", "1H": "1st half", "2H": "2nd half", OT: "Overtime" };
+function periodLabel(raw: string | undefined) {
+  const value = (raw ?? "").trim();
+  if (!value || value === "NS" || value === "FT" || value.length > 12) return undefined;
+  const set = /^S(\d)$/.exec(value);
+  return set ? `Set ${set[1]}` : PERIODS[value] ?? value;
+}
+
 export function normalizePolymarketEvent(event: RawPolymarketEvent, fetchedAt: number): PolymarketGame | undefined {
   const at = Date.parse(event.startTime ?? "");
   const teams = (event.teams ?? []).flatMap(item => team(item) ?? []);
   const league = event.teams?.[0]?.league?.toLowerCase();
   if (!event.slug || !/^[a-z0-9-]+$/i.test(event.slug) || !league || !Number.isFinite(at)) return undefined;
   if (event.ended || event.closed || teams.length !== 2 || teams[0]!.id === teams[1]!.id) return undefined;
+  const live = event.live === true;
+  const score = live ? parseScore(event.score) : undefined;
+  if (score) teams.forEach((item, index) => { item.score = score[index]!; });
 
   const markets = (event.markets ?? []).filter(market =>
     WINNER_TYPE.test(market.sportsMarketType ?? "") && market.status === "MARKET_STATUS_OPEN" &&
     market.active !== false && market.closed !== true,
   );
-  const outcomes: PolymarketOutcome[] = [];
+  let outcomes: PolymarketOutcome[] = [];
   for (const market of markets) {
-    const quote = midpoint(market);
+    const quote = quoteOf(market);
     const sides = market.marketSides ?? [];
     const long = sides.find(side => side.long === true);
     const short = sides.find(side => side.long === false);
-    if (!quote || !long || !short) continue;
-    const { chance, ask } = quote;
+    if (!long || !short) continue;
     const longTeam = teams.find(item => item.id === long.teamId);
     const shortTeam = teams.find(item => item.id === short.teamId);
     if (longTeam && shortTeam && longTeam.id !== shortTeam.id) {
       // Two-way market: one book prices both teams. Buying the other team costs 100 minus the best bid.
-      outcomes.push({ team: longTeam, chance, ask }, { team: shortTeam, chance: tenth(100 - chance), ask: quote.otherAsk });
+      const other = quote.chance === undefined ? undefined : tenth(100 - quote.chance);
+      outcomes.push(...[outcome(quote.chance, quote.ask, longTeam), outcome(other, quote.otherAsk, shortTeam)].flatMap(item => item ?? []));
     } else if (longTeam && (!shortTeam || shortTeam.id === longTeam.id)) {
-      outcomes.push({ team: longTeam, chance, ask });
+      outcomes.push(...[outcome(quote.chance, quote.ask, longTeam)].flatMap(item => item ?? []));
     } else if (!longTeam && long.teamId === undefined && short.teamId === undefined) {
-      outcomes.push({ chance, ask });
+      outcomes.push(...[outcome(quote.chance, quote.ask)].flatMap(item => item ?? []));
     }
   }
-  // A repeated side means the event carries more than one winner market; skip rather than pick one.
-  const ids = outcomes.map(outcome => outcome.team?.id ?? -1);
-  if (!outcomes.length || new Set(ids).size !== ids.length) return undefined;
+  // A repeated side means the event carries more than one winner market; show no price rather than pick one.
+  const ids = outcomes.map(item => item.team?.id ?? -1);
+  if (new Set(ids).size !== ids.length) outcomes = [];
+  const period = live ? periodLabel(event.period) : undefined;
   return {
     slug: event.slug, league, startTime: new Date(at).toISOString(), gameDate: easternDate(at),
-    live: event.live === true, ...(event.live === true && event.period ? { period: event.period } : {}),
+    live, ...(period ? { period } : {}),
     url: `${SITE}/event/${event.slug}`, teams, outcomes, fetchedAt,
   };
 }
 
-const FILLER = new Set(["fc", "sc", "cf", "ac", "afc", "fk", "bc", "bk", "kk", "club", "the", "de", "and"]);
+const FILLER = new Set(["fc", "sc", "cf", "ac", "afc", "fk", "bc", "bk", "kk", "hc", "club", "the", "de", "and", "w", "university"]);
+// Words shared by many unrelated teams; never enough on their own to call two names the same team.
+const GENERIC = new Set(["city", "united", "real", "state", "saint", "san", "new", "los", "las", "team", "gaming", "esports",
+  "academy", "women", "sporting", "atletico", "athletic", "racing", "union", "olympique", "dynamo", "dinamo", "north", "south",
+  "east", "west", "northern", "southern", "eastern", "western", "central", "international", "college", "tech", "basket", "hockey"]);
 const tokens = (name: string) => name.split(" ").filter(token => token && !FILLER.has(token));
 
 type KalshiSide = { ticker: string; name: string; abbreviation: string };
 
-function nameMatches(sideName: string, teamName: string) {
-  if (sideName === teamName) return true;
-  const a = tokens(sideName);
-  const b = tokens(teamName);
-  if (!a.length || !b.length) return false;
-  if (a.every(token => b.includes(token)) || b.every(token => a.includes(token))) return true;
-  // "Los Angeles L" for "Los Angeles Lakers": same leading words, last word abbreviated.
-  return a.length <= b.length && a.every((token, index) =>
-    index === a.length - 1 ? b[index]!.startsWith(token) : b[index] === token);
+// "ga" for "georgia", "tenn" for "tennessee": same first letter, remaining letters in order.
+function abbreviates(short: string, long: string) {
+  if (short.length < 2 || short.length >= long.length || short[0] !== long[0]) return false;
+  let at = 0;
+  for (const letter of short) {
+    at = long.indexOf(letter, at) + 1;
+    if (!at) return false;
+  }
+  return true;
 }
 
-function sideMatches(side: KalshiSide, candidate: PolymarketTeam) {
-  if (side.abbreviation.length >= 2 && side.abbreviation === candidate.abbreviation) return true;
-  return candidate.names.some(name => nameMatches(side.name, name));
+// How confidently one written name refers to the same team as another: 0 none, 0.5 a shared distinctive word, 1 the same words.
+function nameScore(sideName: string, teamName: string) {
+  const a = tokens(sideName);
+  const b = tokens(teamName);
+  if (!a.length || !b.length) return 0;
+  if (a.every(token => b.includes(token)) || b.every(token => a.includes(token))) return 1;
+  // "Los Angeles L" for "Los Angeles Lakers": same leading words, last word abbreviated.
+  if (a.length <= b.length && a.every((token, index) =>
+    index === a.length - 1 ? b[index]!.startsWith(token) : b[index] === token)) return 1;
+  // "Ga. Tech" for "Georgia Tech", "Tenn. State" for "Tennessee State": word for word, some words shortened.
+  if (a.length === b.length && a.length > 1) {
+    const exact = a.filter((token, index) => token === b[index]).length;
+    const short = a.every((token, index) => token === b[index] || abbreviates(token, b[index]!) || abbreviates(b[index]!, token));
+    if (short && exact >= 1) return 1;
+  }
+  const distinctive = (token: string) => token.length >= 4 && !GENERIC.has(token);
+  const shared = a.some(token => distinctive(token) && b.some(other =>
+    distinctive(other) && (token === other || token.startsWith(other) || other.startsWith(token))));
+  return shared ? 0.5 : 0;
+}
+
+function sideScore(side: KalshiSide, candidate: PolymarketTeam) {
+  if (candidate.names.includes(side.name)) return 3;
+  const byName = Math.max(...candidate.names.map(name => nameScore(side.name, name)));
+  const byCode = side.abbreviation.length >= 2 && side.abbreviation === candidate.abbreviation ? 2 : 0;
+  return Math.max(byName, byCode);
 }
 
 const isDraw = (market: { ticker: string; subtitle: string; title: string }) =>
   /^(tie|draw)\b/i.test(market.subtitle || market.title) || /-TIE$/.test(market.ticker);
 
-type Assignment = { game: PolymarketGame; pairs: { ticker: string; outcome?: PolymarketOutcome }[] };
+type Assignment = { game: PolymarketGame; rank: number; pairs: { ticker: string; team?: PolymarketTeam; outcome?: PolymarketOutcome }[] };
+
+const dayOf = (date: string) => Date.parse(`${date}T12:00:00Z`) / (24 * HOUR);
 
 function candidateMatch(game: SportsGame, source: PolymarketGame[]): Assignment | undefined {
   const event = game.events.find(item => LEAGUES_BY_SERIES[item.seriesTicker]);
   if (!event || !game.gameDate) return undefined;
   const leagues = LEAGUES_BY_SERIES[event.seriesTicker]!;
+  // Kalshi dates tennis, fights and esports by local day, which can sit one day either side of the Eastern day.
+  const slack = TENNIS_TOUR.has(event.seriesTicker) ? 3 : LOOSE_DAY.has(event.seriesTicker) ? 1 : 0;
   const draws = event.markets.filter(isDraw);
   const sides: KalshiSide[] = event.markets.filter(market => !isDraw(market)).map(market => ({
     ticker: market.ticker, name: normalizeTeamName(market.subtitle || market.title),
@@ -175,24 +245,35 @@ function candidateMatch(game: SportsGame, source: PolymarketGame[]): Assignment 
 
   const found: Assignment[] = [];
   for (const candidate of source) {
-    if (candidate.gameDate !== game.gameDate || !leagues.includes(candidate.league)) continue;
+    if (!leagues.includes(candidate.league)) continue;
+    const apart = Math.abs(dayOf(candidate.gameDate) - dayOf(game.gameDate));
+    if (apart > slack) continue;
     const [first, second] = candidate.teams as [PolymarketTeam, PolymarketTeam];
-    const straight = sideMatches(sides[0]!, first) && sideMatches(sides[1]!, second);
-    const swapped = sideMatches(sides[0]!, second) && sideMatches(sides[1]!, first);
-    // Both teams must agree, and only one way round.
+    const score = (a: PolymarketTeam, b: PolymarketTeam) => {
+      const one = sideScore(sides[0]!, a);
+      const two = sideScore(sides[1]!, b);
+      return one > 0 && two > 0 ? one + two : 0;
+    };
+    const straight = score(first, second);
+    const swapped = score(second, first);
+    // Both teams must agree, and one way round must fit clearly better than the other.
     if (straight === swapped) continue;
-    const order = straight ? [first, second] : [second, first];
-    const pairs = sides.map((side, index) => ({
-      ticker: side.ticker, outcome: candidate.outcomes.find(outcome => outcome.team?.id === order[index]!.id),
+    const order = straight > swapped ? [first, second] : [second, first];
+    const pairs: Assignment["pairs"] = sides.map((side, index) => ({
+      ticker: side.ticker, team: order[index]!, outcome: candidate.outcomes.find(item => item.team?.id === order[index]!.id),
     }));
-    if (draws[0]) pairs.push({ ticker: draws[0].ticker, outcome: candidate.outcomes.find(outcome => !outcome.team) });
-    found.push({ game: candidate, pairs });
+    if (draws[0]) pairs.push({ ticker: draws[0].ticker, outcome: candidate.outcomes.find(item => !item.team) });
+    found.push({ game: candidate, pairs, rank: Math.max(straight, swapped) - apart * 10 });
   }
   if (found.length <= 1) return found[0];
+  // Several candidates: the nearest day and the closest names win, but only when one stands alone.
+  const top = Math.max(...found.map(item => item.rank));
+  const best = found.filter(item => item.rank === top);
+  if (best.length === 1) return best[0];
   // Same teams twice in a day: only a published Kalshi start time can tell the games apart.
   const start = Date.parse(game.startTime ?? "");
   if (!Number.isFinite(start)) return undefined;
-  const near = found.filter(item => Math.abs(Date.parse(item.game.startTime) - start) <= 1.5 * HOUR);
+  const near = best.filter(item => Math.abs(Date.parse(item.game.startTime) - start) <= 1.5 * HOUR);
   return near.length === 1 ? near[0] : undefined;
 }
 
@@ -206,11 +287,14 @@ export function attachPolymarket(games: SportsGame[], source: PolymarketGame[]):
     const match = matches[index];
     // One Polymarket game claimed by two Kalshi games is ambiguous, so neither gets it.
     if (!match || claims.get(match.game.slug) !== 1) return game;
-    const outcomes = match.pairs.flatMap(pair => pair.outcome ? [{
-      marketTicker: pair.ticker, chance: pair.outcome.chance, ask: pair.outcome.ask,
-      ...(pair.outcome.team?.color ? { color: pair.outcome.team.color } : {}),
-    }] : []);
-    if (!outcomes.length) return game;
+    // Every matched side is listed; a side without a usable price simply carries no chance.
+    const outcomes = match.pairs.map(pair => ({
+      marketTicker: pair.ticker,
+      ...(pair.outcome?.chance === undefined ? {} : { chance: pair.outcome.chance }),
+      ...(pair.outcome?.ask === undefined ? {} : { ask: pair.outcome.ask }),
+      ...(pair.team?.score ? { score: pair.team.score } : {}),
+      ...(pair.team?.color ? { color: pair.team.color } : {}),
+    }));
     return {
       ...game,
       startTime: match.game.startTime,
@@ -225,8 +309,12 @@ export function attachPolymarket(games: SportsGame[], source: PolymarketGame[]):
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const records = new Map<string, PolymarketGame>();
-let hotAt = 0;
-let fullAt = 0;
+const TIERS = [
+  // Games in progress or about to start, the week ahead, and games listed further out.
+  { name: "hot", from: -6, to: 3, ttl: HOT_TTL, at: 0 },
+  { name: "week", from: -6, to: 7 * 24, ttl: FULL_TTL, at: 0 },
+  { name: "far", from: 7 * 24, to: 45 * 24, ttl: FAR_TTL, at: 0 },
+];
 let retryAfter = 0;
 let pending: Promise<void> | undefined;
 
@@ -245,11 +333,10 @@ async function fetchPage(query: string, offset: number): Promise<RawPolymarketEv
   }
 }
 
-// Hot pass: games in progress or about to start. Full pass: the week ahead.
-async function refresh(full: boolean) {
+async function refresh(tier: typeof TIERS[number]) {
   const now = Date.now();
-  const from = new Date(now - 6 * HOUR).toISOString();
-  const to = new Date(now + (full ? 7 * 24 : 3) * HOUR).toISOString();
+  const from = new Date(now + tier.from * HOUR).toISOString();
+  const to = new Date(now + tier.to * HOUR).toISOString();
   const query = `startTimeMin=${encodeURIComponent(from)}&startTimeMax=${encodeURIComponent(to)}`;
   const seen = new Map<string, PolymarketGame>();
   for (let page = 0; page < MAX_PAGES; page++) {
@@ -261,24 +348,26 @@ async function refresh(full: boolean) {
     if (events.length < PAGE_SIZE) break;
     await sleep(PAGE_PAUSE);
   }
-  // Games inside the refreshed window that were not returned have closed or lost their price.
+  // Games inside the refreshed window that were not returned have closed.
   for (const [slug, game] of records) {
     const start = Date.parse(game.startTime);
     if (start >= Date.parse(from) && start <= Date.parse(to)) records.delete(slug);
   }
   for (const [slug, game] of seen) records.set(slug, game);
-  hotAt = now;
-  if (full) fullAt = now;
+  tier.at = now;
+  // The week pass covers the hot window too.
+  if (tier.name === "week") TIERS[0]!.at = now;
 }
 
 // Never blocks a request: returns what is cached and refreshes in the background when due.
 export function getPolymarketGames(): PolymarketGame[] {
   const now = Date.now();
-  const full = now - fullAt >= FULL_TTL;
-  if (!pending && now >= retryAfter && (full || now - hotAt >= HOT_TTL)) {
-    retryAfter = now + HOT_TTL;
-    pending = refresh(full)
-      .catch(err => { logger.warn({ err }, "Polymarket US refresh failed; keeping the last prices"); })
+  const [hot, week, far] = TIERS as [typeof TIERS[number], typeof TIERS[number], typeof TIERS[number]];
+  const due = [week, far, hot].find(tier => now - tier.at >= tier.ttl);
+  if (!pending && due && now >= retryAfter) {
+    retryAfter = now + 30_000;
+    pending = refresh(due)
+      .catch(err => { logger.warn({ err, tier: due.name }, "Polymarket US refresh failed; keeping the last prices"); })
       .finally(() => { pending = undefined; });
   }
   return [...records.values()].filter(game => now - game.fetchedAt < STALE_AFTER);

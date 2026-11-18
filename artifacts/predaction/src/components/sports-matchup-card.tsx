@@ -21,9 +21,16 @@ export function polymarketChance(game: Pick<SportsGame, "polymarket">, marketTic
   return game.polymarket?.outcomes.find((outcome) => outcome.marketTicker === marketTicker)?.chance;
 }
 
+// Live score for one side, from Polymarket US; only present while the game is in progress.
+export function liveScore(game: Pick<SportsGame, "polymarket">, marketTicker: string) {
+  return game.polymarket?.live ? game.polymarket.outcomes.find((outcome) => outcome.marketTicker === marketTicker)?.score : undefined;
+}
+
 // Compact schedule card: one row per side of the main market.
 export function SportsMatchupCard({ game }: { game: SportsGame }) {
-  const event = game.events.find((item) => item.markets.length);
+  // Prefer the market Polymarket US also lists, so the live score and second price line up with the rows shown.
+  const shared = new Set(game.polymarket?.outcomes.map((outcome) => outcome.marketTicker));
+  const event = game.events.find((item) => item.markets.some((market) => shared.has(market.ticker))) ?? game.events.find((item) => item.markets.length);
   const rows = event ? [...event.markets].sort((a, b) => b.probability - a.probability).slice(0, 3) : [];
   const favorite = rows[0];
   const poly = game.polymarket;
@@ -56,6 +63,7 @@ export function SportsMatchupCard({ game }: { game: SportsGame }) {
           const logo = logoFor(market, game.teams);
           const lead = market === favorite;
           const polyChance = polymarketChance(game, market.ticker);
+          const score = liveScore(game, market.ticker);
           return (
             <div key={market.ticker} className={`flex items-center gap-3 ${dual ? "sm:gap-2" : "sm:gap-2.5"}`}>
               {logo ? (
@@ -71,6 +79,7 @@ export function SportsMatchupCard({ game }: { game: SportsGame }) {
                   <span className={`block h-full rounded-full ${lead ? "bg-primary" : "bg-muted-foreground/50"}`} style={{ width: `${Math.max(2, Math.min(100, market.probability))}%` }} />
                 </span>
               </div>
+              {score !== undefined ? <span data-testid={`text-score-${market.ticker}`} aria-label={`Score ${score}`} className="shrink-0 whitespace-pre font-mono text-lg font-bold tabular text-foreground sm:text-sm">{score}</span> : null}
               <span aria-label={dual ? `Kalshi ${Math.round(market.probability)}%` : undefined} className={`${pill} shrink-0 rounded-full px-2 py-2.5 text-center text-base font-semibold tabular sm:px-0.5 sm:py-1 sm:font-mono sm:text-[11px] ${lead ? "bg-primary text-primary-foreground sm:bg-primary/20 sm:text-[hsl(262_80%_84%)]" : "bg-muted text-foreground/80 sm:bg-muted/60 sm:text-muted-foreground"}`}>{Math.round(market.probability)}%</span>
               {dual ? (
                 <span data-testid={`text-polymarket-${market.ticker}`} aria-label={polyChance === undefined ? "No Polymarket US price" : `Polymarket US ${Math.round(polyChance)}%`} className={`${pill} -ml-1.5 shrink-0 rounded-full border border-border px-2 py-[9px] text-center text-base font-semibold tabular text-foreground/85 sm:-ml-0.5 sm:px-0.5 sm:py-[3px] sm:font-mono sm:text-[11px] sm:text-muted-foreground`}>{polyChance === undefined ? "–" : `${Math.round(polyChance)}%`}</span>

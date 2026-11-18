@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowUpRight, ChevronDown } from "lucide-react";
 import { getGetSportsGameQueryKey, useGetSportsGame, type PredictionEvent, type PredictionMarket, type SportsGame, type TeamLogo } from "@workspace/api-client-react";
 import { ErrorPanel, KalshiCTA, WatchButton } from "@/components/bits";
 import { eventLabel } from "@/components/sports-game-card";
-import { logoFor, polymarketChance } from "@/components/sports-matchup-card";
+import { liveScore, logoFor, polymarketChance } from "@/components/sports-matchup-card";
 import { leagueName } from "@/components/sports-sidebar";
 import { TeamLogos } from "@/components/team-logos";
 import { dayHeading, formatStartTime } from "@/components/upcoming-games";
@@ -98,7 +98,8 @@ export default function SportsGamePage() {
 
 function WinnerPanel({ e, teams, game }: { e: PredictionEvent; teams: TeamLogo[]; game: SportsGame }) {
   const poly = game.polymarket;
-  const dual = !!poly && e.markets.some((m) => polymarketChance(game, m.ticker) !== undefined);
+  // A game found on both exchanges always gets the comparison table, even while Polymarket US has no price.
+  const dual = !!poly && e.markets.some((m) => poly.outcomes.some((o) => o.marketTicker === m.ticker));
   const [open, setOpen] = useState(false);
   const markets = byChance(e);
   const total = markets.reduce((sum, m) => sum + m.probability, 0) || 1;
@@ -168,6 +169,7 @@ function VenueTable({ markets, teams, game }: { markets: PredictionMarket[]; tea
             <div role="columnheader" key={m.ticker} className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:justify-center sm:gap-2">
               {logo && <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background"><img src={logo.logo} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-[76%] w-[76%] object-contain" /></span>}
               <span className="max-w-full truncate text-xs font-semibold sm:text-sm">{m.subtitle || m.title}</span>
+              {liveScore(game, m.ticker) !== undefined && <span data-testid={`text-score-${m.ticker}`} aria-label={`Score ${liveScore(game, m.ticker)}`} className="shrink-0 whitespace-pre rounded bg-muted px-1.5 py-0.5 font-mono text-sm font-bold tabular text-foreground sm:text-base">{liveScore(game, m.ticker)}</span>}
             </div>
           );
         })}
@@ -187,9 +189,9 @@ function VenueTable({ markets, teams, game }: { markets: PredictionMarket[]; tea
             const isBest = price !== undefined && best.get(m.ticker) === price;
             return (
               <div role="cell" key={m.ticker} data-testid={`cell-${v.id}-${m.ticker}`} className={`relative rounded-lg border px-1 py-2 text-center ${isBest ? "border-[hsl(155_45%_32%)] bg-[hsl(155_40%_12%)]" : "border-transparent bg-muted/30"}`}>
-                {chance === undefined ? <p className="py-2.5 font-mono text-sm text-muted-foreground" aria-label="No price available">–</p> : (
+                {chance === undefined && price === undefined ? <p className="py-2.5 font-mono text-sm text-muted-foreground" aria-label="No price available">–</p> : (
                   <>
-                    <p className="font-display text-2xl font-bold leading-none tracking-tight tabular text-foreground sm:text-3xl">{Math.round(chance)}%</p>
+                    <p className="font-display text-2xl font-bold leading-none tracking-tight tabular text-foreground sm:text-3xl">{chance === undefined ? <span className="text-muted-foreground">–</span> : `${Math.round(chance)}%`}</p>
                     <p className={`mt-1.5 font-mono text-[10px] sm:text-[11px] ${isBest ? "font-bold text-[hsl(155_60%_72%)]" : "text-muted-foreground"}`}>{price === undefined ? "No offer" : `Buy ${fmtPrice(price)}`}</p>
                   </>
                 )}
@@ -199,7 +201,7 @@ function VenueTable({ markets, teams, game }: { markets: PredictionMarket[]; tea
           })}
         </div>
       ))}
-      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Each row is one exchange. The large number is that exchange's implied chance; "Buy" is its current price for a $1 contract on that side. "Best" marks the lower price when the two differ, before fees.</p>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Each row is one exchange. The large number is that exchange's implied chance; "Buy" is its current price for a $1 contract on that side. "Best" marks the lower price when the two differ, before fees. A dash means that exchange has no reliable price right now.{poly.live ? " Live score and period come from Polymarket US and can trail the game by a couple of minutes." : ""}</p>
     </div>
   );
 }

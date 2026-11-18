@@ -305,10 +305,11 @@ components:
           type: array
           items:
             type: object
-            required: [marketTicker, chance]
+            required: [marketTicker]
             properties:
               marketTicker: { type: string, description: "Kalshi winner market this outcome corresponds to" }
-              chance: { type: number, description: "Polymarket US implied chance, 0-100" }
+              chance: { type: number, description: "Polymarket US implied chance, 0-100. Absent when there is no reliable two-sided price." }
+              score: { type: string, description: "Live score for this side; tennis lists games won per set separated by spaces" }
               ask: { type: number, description: "Best price to buy this outcome on Polymarket US, in cents" }
               color: { type: string }
     SportsGameFeed:

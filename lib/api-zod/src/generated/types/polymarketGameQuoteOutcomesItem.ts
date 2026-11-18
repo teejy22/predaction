@@ -9,8 +9,10 @@
 export type PolymarketGameQuoteOutcomesItem = {
   /** Kalshi winner market this outcome corresponds to */
   marketTicker: string;
-  /** Polymarket US implied chance, 0-100 */
-  chance: number;
+  /** Polymarket US implied chance, 0-100. Absent when there is no reliable two-sided price. */
+  chance?: number;
+  /** Live score for this side; tennis lists games won per set separated by spaces */
+  score?: string;
   /** Best price to buy this outcome on Polymarket US, in cents */
   ask?: number;
   color?: string;
