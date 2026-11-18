@@ -135,6 +135,11 @@ const leagueTitleAliases: Record<string, string> = {
   "college football": "NCAAF",
   "college basketball": "NCAAB",
 };
+// Esports series are named after the video game; the game title stands in for a league.
+const ESPORTS_TITLES: [RegExp, string][] = [
+  [/^KXCS2/, "Counter-Strike"], [/^KXDOTA2/, "Dota 2"], [/^KXVALORANT/, "Valorant"], [/^KXLOL/, "League of Legends"],
+  [/^KXOW/, "Overwatch"], [/^KXESOCCER/, "eSoccer"], [/^KXEBASKETBALL/, "eBasketball"],
+];
 export function normalize(event: RawEvent, info?: Series, openOnly = true): PredictionEvent {
   const url = `https://kalshi.com/markets/${encodeURIComponent(event.series_ticker.toLowerCase())}/${encodeURIComponent(event.event_ticker.toLowerCase())}`;
   const category = event.category || info?.category || "Uncategorized";
@@ -142,9 +147,10 @@ export function normalize(event: RawEvent, info?: Series, openOnly = true): Pred
   const tags = category === "Sports" ? info?.tags ?? [] : [];
   const seriesTitle = (info?.title ?? "").toLowerCase();
   const titleAlias = Object.entries(leagueTitleAliases).find(([phrase]) => new RegExp(`\\b${phrase}\\b`).test(seriesTitle))?.[1] ?? "";
-  const league = tags.find(t => leagueSports[t]) || titleAlias ||
+  const baseLeague = tags.find(t => leagueSports[t]) || titleAlias ||
     (category === "Sports" ? Object.keys(leagueSports).find(name => new RegExp(`\\b${name}\\b`).test(info?.title ?? "")) : "") || "";
-  const sport = tags.find(t => sportTags.includes(t)) || leagueSports[league] || "";
+  const sport = tags.find(t => sportTags.includes(t)) || leagueSports[baseLeague] || "";
+  const league = baseLeague || (sport === "Esports" ? ESPORTS_TITLES.find(([pattern]) => pattern.test(event.series_ticker))?.[1] ?? "" : "");
   const markets = (event.markets ?? [])
     .filter(m => !openOnly || m.status === "active" || m.status === "open")
     .map(m => ({

@@ -14,4 +14,5 @@ export const ListSportsGamesSort = {
   closing: 'closing',
   newest: 'newest',
   upcoming: 'upcoming',
+  gap: 'gap',
 } as const;

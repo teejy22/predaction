@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bookmark, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy, Globe } from "lucide-react";
+import { Bookmark, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy, Globe, Gamepad2 } from "lucide-react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -19,6 +19,7 @@ export function Shell({ children }: { children: ReactNode }) {
     { href: "/markets?category=Elections", label: "Elections", icon: TrendingUp },
     { href: "/markets?category=Economics", label: "Economics", icon: TrendingUp },
     { href: "/sports", label: "Sports", icon: Trophy },
+    { href: "/esports", label: "Esports", icon: Gamepad2 },
     { href: "/movers", label: "Market movers", icon: TrendingUp },
     { href: "/watchlist", label: "Watchlist", icon: Bookmark },
   ];
@@ -28,7 +29,7 @@ export function Shell({ children }: { children: ReactNode }) {
     { href: "/traders", label: "Trader Activity", icon: Activity },
   ];
   const toolsActive = loc.startsWith("/tools") || loc.startsWith("/traders");
-  const marketActive = loc === "/" || loc.startsWith("/markets") || loc.startsWith("/sports") || loc.startsWith("/movers") || loc.startsWith("/watchlist");
+  const marketActive = loc === "/" || loc.startsWith("/markets") || loc.startsWith("/sports") || loc.startsWith("/esports") || loc.startsWith("/movers") || loc.startsWith("/watchlist");
   const activeLink = (href: string) => href === "/" ? loc === "/" : loc === href || loc.startsWith(`${href}/`);
   const navClass = (active: boolean) => `group relative inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
   const dropItem = "flex cursor-pointer items-center gap-2 rounded px-2.5 py-2 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground";
@@ -52,6 +53,7 @@ export function Shell({ children }: { children: ReactNode }) {
               </DropdownMenuContent>
             </DropdownMenu>
             <Link href="/sports" data-testid="link-nav-sports" aria-current={loc.startsWith("/sports") ? "page" : undefined} className={navClass(loc.startsWith("/sports"))}>Sports</Link>
+            <Link href="/esports" data-testid="link-nav-esports-top" aria-current={activeLink("/esports") ? "page" : undefined} className={navClass(activeLink("/esports"))}>Esports</Link>
             <Link href="/model" data-testid="link-nav-model" aria-current={activeLink("/model") ? "page" : undefined} className={navClass(activeLink("/model"))}>Model</Link>
             <DropdownMenu>
               <DropdownMenuTrigger className={`${navClass(toolsActive)} data-[state=open]:text-foreground`} data-testid="button-nav-tools">Tools <ChevronDown className="h-3 w-3 opacity-60" /></DropdownMenuTrigger>

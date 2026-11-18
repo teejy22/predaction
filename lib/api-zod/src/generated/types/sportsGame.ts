@@ -7,6 +7,7 @@
  */
 import type { PolymarketGameQuote } from './polymarketGameQuote';
 import type { PredictionEvent } from './predictionEvent';
+import type { PriceGap } from './priceGap';
 import type { TeamLogo } from './teamLogo';
 
 export interface SportsGame {
@@ -26,6 +27,7 @@ export interface SportsGame {
   /** Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one */
   startTime?: string;
   polymarket?: PolymarketGameQuote;
+  priceGap?: PriceGap;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];

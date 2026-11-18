@@ -11,6 +11,9 @@ export type ListSportsGamesParams = {
 sport?: string;
 league?: string;
 search?: string;
+/**
+ * gap keeps only games priced on both exchanges, widest disagreement first
+ */
 sort?: ListSportsGamesSort;
 /**
  * Only games reported as in progress by Polymarket US.

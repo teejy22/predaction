@@ -27,6 +27,7 @@ export * from './polymarketGameQuote';
 export * from './polymarketGameQuoteOutcomesItem';
 export * from './predictionEvent';
 export * from './predictionMarket';
+export * from './priceGap';
 export * from './sportCategory';
 export * from './sportCategoryLeagueCountsItem';
 export * from './sportsGame';

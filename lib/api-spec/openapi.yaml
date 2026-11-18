@@ -69,7 +69,7 @@ paths:
         - { name: sport, in: query, schema: { type: string } }
         - { name: league, in: query, schema: { type: string } }
         - { name: search, in: query, schema: { type: string } }
-        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest, upcoming] } }
+        - { name: sort, in: query, schema: { type: string, enum: [volume, closing, newest, upcoming, gap], description: "gap keeps only games priced on both exchanges, widest disagreement first" } }
         - { name: live, in: query, description: Only games reported as in progress by Polymarket US., schema: { type: boolean } }
         - { name: major, in: query, description: "Only the major American leagues (NFL, NBA, NHL, MLB, WNBA, NCAAF, NCAAB).", schema: { type: boolean } }
         - { name: notStarted, in: query, description: Only games known not to have started (a future start time or a later game day)., schema: { type: boolean } }
@@ -287,6 +287,7 @@ components:
         gameDate: { type: string, description: "Scheduled game day (YYYY-MM-DD, US Eastern) when Kalshi publishes one" }
         startTime: { type: string, description: "Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one" }
         polymarket: { $ref: "#/components/schemas/PolymarketGameQuote" }
+        priceGap: { $ref: "#/components/schemas/PriceGap" }
         eventCount: { type: integer }
         marketCount: { type: integer }
         teams:
@@ -295,6 +296,16 @@ components:
         events:
           type: array
           items: { $ref: "#/components/schemas/PredictionEvent" }
+    PriceGap:
+      type: object
+      description: "Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price."
+      required: [marketTicker, name, kalshi, polymarket, points]
+      properties:
+        marketTicker: { type: string }
+        name: { type: string, description: "Side the numbers refer to: the one Polymarket US rates higher than Kalshi" }
+        kalshi: { type: number, description: "Kalshi chance for that side, midpoint of its buy and sell prices, 0-100" }
+        polymarket: { type: number, description: "Polymarket US chance for that side, 0-100" }
+        points: { type: number, description: "Absolute difference in percentage points" }
     PolymarketGameQuote:
       type: object
       description: "Polymarket US prices for the same game's winner market. Present only when the game was matched on both exchanges."

@@ -14,6 +14,7 @@ import PulsePage from '@/pages/pulse';
 import SmartMoneyPage from '@/pages/smart-money';
 import FootballSharpsPage from '@/pages/football-sharps';
 import SportsPage from '@/pages/sports';
+import EsportsPage from '@/pages/esports';
 import SportsGamePage from '@/pages/sports-game';
 import ModelPage from '@/pages/model';
 import { Shell } from '@/components/shell';
@@ -36,6 +37,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/markets" component={MarketsPage} />
         <Route path="/sports" component={SportsPage} />
+        <Route path="/esports" component={EsportsPage} />
         <Route path="/model" component={ModelPage} />
         <Route path="/sports/game/:key" component={SportsGamePage} />
         <Route path="/event/:ticker" component={EventPage} />

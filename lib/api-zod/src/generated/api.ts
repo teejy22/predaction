@@ -674,7 +674,7 @@ export const ListSportsGamesQueryParams = zod.object({
   "sport": zod.coerce.string().optional(),
   "league": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional(),
-  "sort": zod.enum(['volume', 'closing', 'newest', 'upcoming']).optional(),
+  "sort": zod.enum(['volume', 'closing', 'newest', 'upcoming', 'gap']).optional(),
   "live": zod.coerce.boolean().optional().describe('Only games reported as in progress by Polymarket US.'),
   "major": zod.coerce.boolean().optional().describe('Only the major American leagues (NFL, NBA, NHL, MLB, WNBA, NCAAF, NCAAB).'),
   "notStarted": zod.coerce.boolean().optional().describe('Only games known not to have started (a future start time or a later game day).'),
@@ -711,6 +711,13 @@ export const ListSportsGamesResponse = zod.object({
   "color": zod.string().optional()
 }))
 }).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),
+  "priceGap": zod.object({
+  "marketTicker": zod.string(),
+  "name": zod.string().describe('Side the numbers refer to: the one Polymarket US rates higher than Kalshi'),
+  "kalshi": zod.number().describe('Kalshi chance for that side, midpoint of its buy and sell prices, 0-100'),
+  "polymarket": zod.number().describe('Polymarket US chance for that side, 0-100'),
+  "points": zod.number().describe('Absolute difference in percentage points')
+}).optional().describe('Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({
@@ -805,6 +812,13 @@ export const GetSportsGameResponse = zod.object({
   "color": zod.string().optional()
 }))
 }).optional().describe('Polymarket US prices for the same game\'s winner market. Present only when the game was matched on both exchanges.'),
+  "priceGap": zod.object({
+  "marketTicker": zod.string(),
+  "name": zod.string().describe('Side the numbers refer to: the one Polymarket US rates higher than Kalshi'),
+  "kalshi": zod.number().describe('Kalshi chance for that side, midpoint of its buy and sell prices, 0-100'),
+  "polymarket": zod.number().describe('Polymarket US chance for that side, 0-100'),
+  "points": zod.number().describe('Absolute difference in percentage points')
+}).optional().describe('Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({

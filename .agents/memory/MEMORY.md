@@ -7,3 +7,4 @@
 - [Sports game schedule](sports-game-schedule.md) — closeTime is ~2 days after a game; the game day/start time come only from the ticker, in US Eastern.
 - [Preview CSS and motion checks](preview-css-and-motion-checks.md) — restart the web workflow after stylesheet edits; verify animations with two headless chromium captures.
 - [Polymarket US public API](polymarket-us-api.md) — one order book per game (bid/ask, not per-team prices); terms bar redistribution, user chose to build anyway.
+- [Esports data and price gaps](esports-data.md) — game title comes from the series ticker; gaps use order-book midpoints; outside-source terms (PandaScore, OpenDota, Liquipedia).

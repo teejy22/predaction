@@ -8,7 +8,7 @@ import {
   newestFirst, categoryNames, eventCreatedAt, type PredictionEvent,
 } from "../lib/kalshi";
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
-import { attachPolymarket, getPolymarketGames } from "../lib/polymarket-us";
+import { attachPolymarket, attachPriceGap, getPolymarketGames } from "../lib/polymarket-us";
 import { easternDate, gameKeyFor, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -75,7 +75,7 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       (!league || league === "all" || event.league.toLowerCase() === league.toLowerCase()) &&
       (!text || matchesText(event, text)),
     ));
-    let games = attachPolymarket(groupSportsGames(events), getPolymarketGames());
+    let games = attachPolymarket(groupSportsGames(events), getPolymarketGames()).map(attachPriceGap);
     if (liveOnly) games = games.filter(game => game.polymarket?.live);
     if (req.query.major === "true") games = games.filter(game => MAJOR_LEAGUES.has(game.league.toUpperCase()));
     if (req.query.notStarted === "true") {
@@ -93,6 +93,9 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       const today = easternDate();
       games = games.filter(game => game.gameDate && game.gameDate >= today)
         .sort((a, b) => a.gameDate!.localeCompare(b.gameDate!) || b.volume24h - a.volume24h || a.title.localeCompare(b.title));
+    } else if (sort === "gap") {
+      games = games.filter(game => game.priceGap)
+        .sort((a, b) => b.priceGap!.points - a.priceGap!.points || b.volume24h - a.volume24h || a.title.localeCompare(b.title));
     } else if (sort === "closing") games.sort((a, b) => (Date.parse(a.closeTime) || Infinity) - (Date.parse(b.closeTime) || Infinity) || a.title.localeCompare(b.title));
     else if (sort === "newest") games.sort((a, b) =>
       Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
@@ -119,7 +122,7 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
   try {
     const [data, teams] = await Promise.all([getSnapshot(), getEspnTeams()]);
     const games = attachPolymarket(groupSportsGames(selectMainMarketEvents(data.events
-      .filter(event => event.categories.some(category => category.toLowerCase() === "sports")))), getPolymarketGames());
+      .filter(event => event.categories.some(category => category.toLowerCase() === "sports")))), getPolymarketGames()).map(attachPriceGap);
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
     res.json(GetSportsGameResponse.parse(attachTeamLogos(game, teams)));

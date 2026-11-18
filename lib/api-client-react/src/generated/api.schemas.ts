@@ -194,6 +194,21 @@ export interface PolymarketGameQuote {
   outcomes: PolymarketGameQuoteOutcomesItem[];
 }
 
+/**
+ * Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price.
+ */
+export interface PriceGap {
+  marketTicker: string;
+  /** Side the numbers refer to: the one Polymarket US rates higher than Kalshi */
+  name: string;
+  /** Kalshi chance for that side, midpoint of its buy and sell prices, 0-100 */
+  kalshi: number;
+  /** Polymarket US chance for that side, 0-100 */
+  polymarket: number;
+  /** Absolute difference in percentage points */
+  points: number;
+}
+
 export interface SportsGame {
   key: string;
   title: string;
@@ -211,6 +226,7 @@ export interface SportsGame {
   /** Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one */
   startTime?: string;
   polymarket?: PolymarketGameQuote;
+  priceGap?: PriceGap;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];
@@ -294,6 +310,9 @@ export type ListSportsGamesParams = {
 sport?: string;
 league?: string;
 search?: string;
+/**
+ * gap keeps only games priced on both exchanges, widest disagreement first
+ */
 sort?: ListSportsGamesSort;
 /**
  * Only games reported as in progress by Polymarket US.
@@ -326,5 +345,6 @@ export const ListSportsGamesSort = {
   closing: 'closing',
   newest: 'newest',
   upcoming: 'upcoming',
+  gap: 'gap',
 } as const;
 

@@ -307,6 +307,32 @@ export function attachPolymarket(games: SportsGame[], source: PolymarketGame[]):
   });
 }
 
+// Kalshi chance from its own order book: the midpoint, only when buy and sell prices sit close together.
+function kalshiMid(market: { yesAsk: number; noAsk: number }) {
+  const bid = 100 - market.noAsk;
+  if (!(market.yesAsk > 0 && market.yesAsk < 100 && bid > 0 && bid < 100)) return undefined;
+  const spread = market.yesAsk - bid;
+  return spread >= 0 && spread <= MAX_SPREAD * 100 + 1e-9 ? (market.yesAsk + bid) / 2 : undefined;
+}
+
+// How far apart the two exchanges are on a matched winner market. Both must have a reliable two-sided price.
+export function attachPriceGap(game: SportsGame): SportsGame {
+  if (!game.polymarket) return game;
+  const markets = game.events.flatMap(event => event.markets);
+  let best: NonNullable<SportsGame["priceGap"]> | undefined;
+  for (const outcome of game.polymarket.outcomes) {
+    const market = markets.find(item => item.ticker === outcome.marketTicker);
+    const kalshi = market ? kalshiMid(market) : undefined;
+    if (!market || kalshi === undefined || outcome.chance === undefined) continue;
+    const diff = outcome.chance - kalshi;
+    // Report the side Polymarket rates higher, so both numbers read the same way on every row.
+    if (!best || Math.abs(diff) > best.points + 1e-9 || (Math.abs(Math.abs(diff) - best.points) < 1e-9 && diff > 0)) {
+      best = { marketTicker: market.ticker, name: market.subtitle || market.title, kalshi: tenth(kalshi), polymarket: outcome.chance, points: tenth(Math.abs(diff)) };
+    }
+  }
+  return best ? { ...game, priceGap: best } : game;
+}
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const records = new Map<string, PolymarketGame>();
 const TIERS = [
