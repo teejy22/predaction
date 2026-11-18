@@ -14,7 +14,10 @@ export function Shell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   const marketLinks = [
-    { href: "/", label: "Main board", icon: TrendingUp },
+    { href: "/markets", label: "All markets", icon: TrendingUp },
+    { href: "/markets?category=Politics", label: "Politics", icon: TrendingUp },
+    { href: "/markets?category=Elections", label: "Elections", icon: TrendingUp },
+    { href: "/markets?category=Economics", label: "Economics", icon: TrendingUp },
     { href: "/sports", label: "Sports", icon: Trophy },
     { href: "/movers", label: "Market movers", icon: TrendingUp },
     { href: "/watchlist", label: "Watchlist", icon: Bookmark },
@@ -25,7 +28,7 @@ export function Shell({ children }: { children: ReactNode }) {
     { href: "/traders", label: "Trader Activity", icon: Activity },
   ];
   const toolsActive = loc.startsWith("/tools") || loc.startsWith("/traders");
-  const marketActive = loc === "/" || loc.startsWith("/sports") || loc.startsWith("/movers") || loc.startsWith("/watchlist");
+  const marketActive = loc === "/" || loc.startsWith("/markets") || loc.startsWith("/sports") || loc.startsWith("/movers") || loc.startsWith("/watchlist");
   const activeLink = (href: string) => href === "/" ? loc === "/" : loc === href || loc.startsWith(`${href}/`);
   const navClass = (active: boolean) => `group relative inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`;
   const dropItem = "flex cursor-pointer items-center gap-2 rounded px-2.5 py-2 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground";

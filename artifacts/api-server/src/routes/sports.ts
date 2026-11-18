@@ -41,7 +41,7 @@ router.get(["/events", "/sports/events"], async (req, res): Promise<void> => {
     else events.sort((a, b) => b.volume24h - a.volume24h || a.ticker.localeCompare(b.ticker));
     const pageEvents = attachKalshiVisuals(
       events.slice(offset, offset + limit).map(event => attachEventTeamLogos(event, teams)),
-      12,
+      24,
     ).map(event => {
       const gameKey = gameKeyFor(event);
       return gameKey ? { ...event, gameKey } : event;

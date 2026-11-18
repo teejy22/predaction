@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
 import EventPage from '@/pages/event';
+import MarketsPage from '@/pages/markets';
 import Watchlist from '@/pages/watchlist';
 import MoversPage from '@/pages/movers';
 import TradersPage from '@/pages/traders';
@@ -33,6 +34,7 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/markets" component={MarketsPage} />
         <Route path="/sports" component={SportsPage} />
         <Route path="/model" component={ModelPage} />
         <Route path="/sports/game/:key" component={SportsGamePage} />

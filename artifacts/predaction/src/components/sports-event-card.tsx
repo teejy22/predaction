@@ -14,7 +14,7 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
   const outcomes = topOutcomes(event);
 
   return (
-    <article className="flex min-h-[224px] flex-col rounded-lg border border-border bg-card/75 p-4 transition-colors hover:border-primary/40">
+    <article className="flex min-h-[224px] min-w-0 flex-col rounded-lg border border-border bg-card/75 p-4 transition-colors hover:border-primary/40">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-mono text-[9px] font-semibold uppercase tracking-[.16em] text-primary">
