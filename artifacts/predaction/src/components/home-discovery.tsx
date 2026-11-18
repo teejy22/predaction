@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Clock3, RotateCw }
 import { Link } from "wouter";
 import { getGetOverviewQueryKey, getListEventsQueryKey, useGetOverview, useListEvents, type PredictionEvent, type PredictionMarket } from "@workspace/api-client-react";
 import { CategoryTag, Change, ProbBar } from "@/components/bits";
+import { CategoryRail, SWIPE_ITEM, SWIPE_ROW, UpcomingSwipe } from "@/components/home-mobile";
 import { FlowframeInsights } from "@/components/flowframe-insights";
 import { MarketVisual } from "@/components/market-visual";
 import { PromoBars } from "@/components/promo-bars";
@@ -10,7 +11,7 @@ import { UpcomingTicker } from "@/components/upcoming-games";
 import { SportsEventCard } from "@/components/sports-event-card";
 import { closeLabel, fmtContracts, updatedLabel } from "@/lib/format";
 
-type DiscoveryProps = { onBrowse: (category?: string) => void };
+type DiscoveryProps = { category: string; onBrowse: (category?: string) => void };
 
 function marketOf(event: PredictionEvent): PredictionMarket | undefined {
   return [...event.markets].sort((a, b) => b.volume - a.volume)[0];
@@ -20,7 +21,7 @@ function EventLink({ event, children, className = "" }: { event: PredictionEvent
   return <Link href={`/event/${encodeURIComponent(event.ticker)}`} className={className}>{children}</Link>;
 }
 
-export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
+export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
   const moversRef = useRef<HTMLDivElement>(null);
   const query = { sort: "volume" as const, offset: 0, limit: 100 };
   const feed = useListEvents(query, {
@@ -69,6 +70,7 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
 
   return <div className="mx-auto max-w-7xl px-4 pt-5 md:px-6 md:pt-7">
     <PromoBars />
+    <CategoryRail categories={overview.data?.categories ?? []} active={category} onBrowse={onBrowse} />
 
     <section aria-label="Featured market discovery" className="grid gap-3 lg:grid-cols-[minmax(0,1.75fr)_minmax(260px,.8fr)]">
       <div
@@ -95,7 +97,7 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
           {feed.isLoading ? <FeaturedSkeleton /> : feed.isError && !featured ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> : featured ? <FeaturedEvent key={featured.ticker} event={featured} /> : <EmptyPanel label="No open event is available in the current sample." />}
         </div>
       </div>
-      <aside className="flex flex-col gap-3" aria-label="Upcoming sports events">
+      <aside className="hidden flex-col gap-3 sm:flex" aria-label="Upcoming sports events">
         <UpcomingTicker />
         <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/[.07] px-4 py-3">
           <div><p className="font-mono text-[9px] uppercase tracking-[.15em] text-primary">Follow the tape</p><p className="mt-1 text-xs text-muted-foreground">Sourced movement across venues</p></div>
@@ -104,7 +106,9 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
       </aside>
     </section>
 
-    <section className="mt-7 border-y border-border py-6" aria-label="Sports markets preview">
+    <UpcomingSwipe />
+
+    <section className="mt-7 hidden border-y border-border py-6 sm:block" aria-label="Sports markets preview">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Kalshi · current outcomes</p>
@@ -141,19 +145,19 @@ export function HomeDiscovery({ onBrowse }: DiscoveryProps) {
       <FlowframeInsights moversRef={moversRef} />
     </div>
 
-    <section className="mt-8 border-y border-border py-6" aria-label="Sampled market categories">
+    <section className="mt-8 border-border py-0 sm:border-y sm:py-6" aria-label="Sampled market categories">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <SectionHeading eyebrow="From the current sample" title="Browse the board" note="Event cards show current outcomes, not historical price charts." />
+        <SectionHeading eyebrow="From the current sample" title="Most traded" note="Event cards show current outcomes, not historical price charts." />
         <button onClick={() => onBrowse()} data-testid="button-category-all" className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline">Open full board <ArrowUpRight className="ml-1 inline h-3 w-3" /></button>
       </div>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 hidden flex-wrap gap-2 sm:flex">
         {categories.map((category) => <button key={category} onClick={() => onBrowse(category)} data-testid={`button-discovery-category-${category.toLowerCase().replace(/\s+/g, "-")}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{category}<ArrowUpRight className="ml-1 inline h-3 w-3" /></button>)}
         {sports.length > 0 && <button onClick={() => onBrowse("Sports")} data-testid="button-discovery-category-sports" className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Sports<ArrowUpRight className="ml-1 inline h-3 w-3" /></button>}
       </div>
       {feed.isLoading ? <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><RowsSkeleton rows={3} /></div> :
         feed.isError && !feed.data ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
-          events.length ? <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {cardEvents.map((event) => <MarketEventCard key={event.ticker} event={event} />)}
+          events.length ? <div className={`${SWIPE_ROW} md:grid-cols-2 lg:grid-cols-3`}>
+            {cardEvents.map((event) => <div key={event.ticker} className={SWIPE_ITEM}><MarketEventCard event={event} /></div>)}
           </div> : <EmptyPanel label="Market cards will appear when the current sample has open events." />}
     </section>
     {feed.data?.warnings?.length ? <p className="mt-4 border-l-2 border-amber-300/60 pl-3 text-xs leading-5 text-muted-foreground">{feed.data.warnings[0]}</p> : null}
@@ -219,7 +223,7 @@ function OutcomeLine({ event, market }: { event: PredictionEvent; market: Predic
 
 function MarketEventCard({ event }: { event: PredictionEvent }) {
   const markets = [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
-  return <article className="rounded-lg border border-border bg-card/60 p-4 transition-colors hover:border-primary/35">
+  return <article className="h-full rounded-2xl border border-border bg-card/60 p-4 transition-colors hover:border-primary/35 sm:rounded-lg">
     <div className="flex items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(event.volume)} contracts</span></div>
     <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
       <div className="flex items-start gap-3">
@@ -249,7 +253,7 @@ function MarketEventCard({ event }: { event: PredictionEvent }) {
 }
 
 function SectionHeading({ eyebrow, title, note }: { eyebrow: string; title: string; note?: string }) {
-  return <div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">{eyebrow}</p><h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">{title}</h2>{note && <p className="mt-1 text-[11px] text-muted-foreground">{note}</p>}</div>;
+  return <div><p className="hidden font-mono text-[9px] uppercase tracking-[.17em] text-primary sm:block">{eyebrow}</p><h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">{title}</h2>{note && <p className="mt-1 hidden text-[11px] text-muted-foreground sm:block">{note}</p>}</div>;
 }
 
 function FeaturedSkeleton() {

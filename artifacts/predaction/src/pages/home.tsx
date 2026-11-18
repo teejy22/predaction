@@ -134,7 +134,7 @@ export default function Home() {
   return (
     <div>
       <div className="hero-field border-b border-border">
-        <HomeDiscovery onBrowse={(c) => {
+        <HomeDiscovery category={category} onBrowse={(c) => {
           if (c !== undefined) {
             setCategory(c);
             setSport("");
