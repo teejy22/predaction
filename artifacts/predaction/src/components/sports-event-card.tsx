@@ -18,7 +18,7 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-mono text-[9px] font-semibold uppercase tracking-[.16em] text-primary">
-            {event.league || event.sport || "Sports"} <span className="text-muted-foreground">· Kalshi</span>
+            {event.league || event.sport || event.category || "Market"} <span className="text-muted-foreground">· Kalshi</span>
           </p>
           <Link
             href={eventHref(event)}

@@ -28,18 +28,12 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
   const feed = useListEvents(query, {
     query: { queryKey: getListEventsQueryKey(query), refetchInterval: 60000 },
   });
-  const sportsQuery = { category: "Sports", sort: "volume" as const, offset: 0, limit: 6 };
-  const sportsFeed = useListEvents(sportsQuery, {
-    query: { queryKey: getListEventsQueryKey(sportsQuery), refetchInterval: 60000 },
+  const politicsQuery = { category: "Politics", sort: "volume" as const, offset: 0, limit: 6 };
+  const politicsFeed = useListEvents(politicsQuery, {
+    query: { queryKey: getListEventsQueryKey(politicsQuery), refetchInterval: 60000 },
   });
   const overview = useGetOverview({ query: { queryKey: getGetOverviewQueryKey(), refetchInterval: 60000 } });
-  const quickSports = [...(overview.data?.sports ?? [])].sort((a, b) => b.count - a.count).slice(0, 6);
-  const quickLeagues = Array.from(new Set((overview.data?.sports ?? []).flatMap((item) => item.leagues)))
-    .sort((a, b) => {
-      const aCount = overview.data?.sports.find((item) => item.leagues.includes(a))?.count ?? 0;
-      const bCount = overview.data?.sports.find((item) => item.leagues.includes(b))?.count ?? 0;
-      return bCount - aCount || a.localeCompare(b);
-    }).slice(0, 7);
+  const politicsCount = overview.data?.categories.find((item) => item.name === "Politics")?.count;
   const events = feed.data?.events ?? [];
   // The featured set is the most traded events, at most two per category so it stays varied.
   const featuredSet = pickFeatured(events);
@@ -109,37 +103,34 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
 
     <UpcomingSwipe />
 
-    <section className="mt-7 hidden border-y border-border py-6 sm:block" aria-label="Sports markets preview">
+    <section className="mt-7 hidden border-y border-border py-6 sm:block" aria-label="Politics markets preview" data-testid="section-home-politics">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Kalshi · current outcomes</p>
-          <h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">Sports markets</h2>
-          <p className="mt-1 text-[11px] text-muted-foreground">A quick read of indexed open sports events. Prices and volume are sourced from Kalshi.</p>
+          <h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">Politics markets</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">The most traded open politics events. Prices and volume are sourced from Kalshi.</p>
         </div>
-        <Link href="/sports" data-testid="link-home-see-all-sports" className="inline-flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/[.07] px-3 py-2 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          See all {overview.data?.categories.find((item) => item.name === "Sports")?.count.toLocaleString() ?? sportsFeed.data?.total.toLocaleString() ?? "sports"} indexed events <ArrowUpRight className="h-3 w-3" />
-        </Link>
+        <button type="button" onClick={() => onBrowse("Politics")} data-testid="button-home-see-all-politics" className="inline-flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/[.07] px-3 py-2 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          See all {politicsCount?.toLocaleString() ?? politicsFeed.data?.total.toLocaleString() ?? "politics"} politics events <ArrowUpRight className="h-3 w-3" />
+        </button>
       </div>
-      {quickSports.length ? <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="mr-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Browse</span>
-        {quickSports.map((item) => <Link key={item.name} href={`/sports?sport=${encodeURIComponent(item.name)}`} data-testid={`link-home-sport-${item.name.toLowerCase().replace(/\s+/g, "-")}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">{item.name}</Link>)}
-        {quickLeagues.map((league) => {
-          const owner = overview.data?.sports.find((item) => item.leagues.includes(league))?.name;
-          return <Link key={league} href={`/sports?sport=${encodeURIComponent(owner ?? "")}&league=${encodeURIComponent(league)}`} data-testid={`link-home-league-${league.toLowerCase().replace(/\s+/g, "-")}`} className="rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">{league === "NCAAF" ? "College Football" : league}</Link>;
-        })}
-      </div> : overview.isLoading ? <div className="mb-4 h-7 w-72 animate-pulse rounded bg-muted" aria-label="Loading sports shortcuts" /> : null}
-      {sportsFeed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/65" />)}</div> :
-        sportsFeed.isError && !sportsFeed.data ? <PanelError onRetry={() => sportsFeed.refetch()} retrying={sportsFeed.isFetching} /> :
-          sportsFeed.data?.events.length ? <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${sportsFeed.isPlaceholderData ? "opacity-60" : ""}`}>
-            {sportsFeed.data.events.map((event) => <SportsEventCard key={event.ticker} event={event} />)}
+        {["Politics", "Elections", "Economics", "World"].filter((name) => (overview.data?.categories.find((item) => item.name === name)?.count ?? 0) > 0).map((name) => (
+          <button key={name} type="button" onClick={() => onBrowse(name)} data-testid={`button-home-politics-${name.toLowerCase()}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{name}</button>
+        ))}
+      </div>
+      {politicsFeed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/65" />)}</div> :
+        politicsFeed.isError && !politicsFeed.data ? <PanelError onRetry={() => politicsFeed.refetch()} retrying={politicsFeed.isFetching} /> :
+          politicsFeed.data?.events.length ? <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${politicsFeed.isPlaceholderData ? "opacity-60" : ""}`}>
+            {politicsFeed.data.events.map((event) => <SportsEventCard key={event.ticker} event={event} />)}
           </div> :
             <div className="rounded-lg border border-dashed border-border bg-card/40 px-4 py-6 text-xs text-muted-foreground">
-              {sportsFeed.data?.indexing ? "The sports index is building; indexed events will appear as they load." : "No open sports events are currently indexed."}
-              {sportsFeed.data?.partial && <span className="ml-1">Results may be partial.</span>}
+              {politicsFeed.data?.indexing ? "The index is building; politics events will appear as they load." : "No open politics events are currently indexed."}
+              {politicsFeed.data?.partial && <span className="ml-1">Results may be partial.</span>}
             </div>}
-      {(sportsFeed.data?.indexing || overview.data?.indexing) && <p className="mt-3 text-[10px] text-muted-foreground">The sports index is still building; counts and results may grow.</p>}
-      {(sportsFeed.data?.partial || overview.data?.partial) && <p className="mt-2 text-[10px] text-muted-foreground">Partial Kalshi index; indexed counts are not a global market total.</p>}
-      {[...(sportsFeed.data?.warnings ?? []), ...(overview.data?.warnings ?? [])].slice(0, 1).map((warning) => <p key={warning} className="mt-2 text-[10px] leading-4 text-muted-foreground">{warning}</p>)}
+      {(politicsFeed.data?.partial || overview.data?.partial) && <p className="mt-2 text-[10px] text-muted-foreground">Partial Kalshi index; indexed counts are not a global market total.</p>}
+      {[...(politicsFeed.data?.warnings ?? []), ...(overview.data?.warnings ?? [])].slice(0, 1).map((warning) => <p key={warning} className="mt-2 text-[10px] leading-4 text-muted-foreground">{warning}</p>)}
     </section>
 
     <div className="mt-5">
