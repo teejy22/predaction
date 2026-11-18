@@ -5,6 +5,7 @@ import { getGetOverviewQueryKey, getListSportsGamesQueryKey, useGetOverview, use
 import { ErrorPanel } from "@/components/bits";
 import { SportsGameCard } from "@/components/sports-game-card";
 import { SportsMatchupCard } from "@/components/sports-matchup-card";
+import { SportsRail } from "@/components/sports-rail";
 import { leagueName, SportsSidebar } from "@/components/sports-sidebar";
 import { dayHeading, UpcomingGames } from "@/components/upcoming-games";
 import { updatedLabel } from "@/lib/format";
@@ -117,12 +118,6 @@ export default function SportsPage() {
 
   const overview = useGetOverview({ query: { queryKey: getGetOverviewQueryKey(), refetchInterval: 60000 } });
   const sports = overview.data?.sports ?? [];
-  const activeSport = sports.find((item) => item.name === sport);
-  const availableLeagues = useMemo(
-    () => sport ? (activeSport?.leagues ?? []) : Array.from(new Set(sports.flatMap((item) => item.leagues))).filter(Boolean).sort(),
-    [activeSport, sport, sports],
-  );
-
   // Uncommitted search edits hold results on page one; no stale offset request is issued.
   // The schedule view uses compact cards, so a page holds more games.
   const byDate = sort === "date";
@@ -152,14 +147,6 @@ export default function SportsPage() {
   const chooseSport = (next: string) => {
     setSport(sport === next ? "" : next);
     setLeague("");
-    setPage(0);
-  };
-  const chooseLeague = (next: string) => {
-    if (!sport && next) {
-      const owner = sports.find((item) => item.leagues.includes(next));
-      if (owner) setSport(owner.name);
-    }
-    setLeague(league === next ? "" : next);
     setPage(0);
   };
   const pickLeague = (owner: string, next: string) => {
@@ -199,14 +186,14 @@ export default function SportsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pt-11">
-      <header className="border-b border-border pb-6">
+      <header className="pb-1 sm:border-b sm:border-border sm:pb-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Kalshi · sports markets</p>
-            <h1 className="font-display mt-2 text-3xl font-bold tracking-[-.045em] sm:text-4xl">Sports</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Every open matchup, laid out by game day. Open a game for spreads, totals and props, or sort by volume to include futures.</p>
+            <p className="hidden font-mono text-[10px] uppercase tracking-[.18em] text-primary sm:block">Kalshi · sports markets</p>
+            <h1 className="font-display text-3xl sm:mt-2 font-bold tracking-[-.045em] sm:text-4xl">Sports</h1>
+            <p className="mt-2 hidden max-w-xl text-sm leading-6 text-muted-foreground sm:block">Every open matchup, laid out by game day. Open a game for spreads, totals and props, or sort by volume to include futures.</p>
           </div>
-          <div className="text-left sm:text-right">
+          <div className="hidden text-right sm:block">
             <p className="font-mono text-xl font-semibold tabular">{indexedSports !== undefined ? indexedSports.toLocaleString() : "—"}</p>
             <p className="font-mono text-[9px] uppercase tracking-[.15em] text-muted-foreground">indexed sports events</p>
             {overview.data?.updatedAt && <p className="mt-1 text-[10px] text-muted-foreground">Updated {updatedLabel(overview.data.updatedAt)}</p>}
@@ -214,7 +201,7 @@ export default function SportsPage() {
         </div>
       </header>
 
-      <section className="mt-6 grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
+      <section className="mt-4 grid gap-5 sm:mt-6 lg:grid-cols-[245px_minmax(0,1fr)]">
         <SportsSidebar
           sports={sports} sport={sport} league={league}
           loading={overview.isLoading} failed={overview.isError && !overview.data}
@@ -223,20 +210,7 @@ export default function SportsPage() {
         />
 
         <div ref={pageRef} className="min-w-0 scroll-mt-20">
-          <div className="mb-4 grid grid-cols-2 gap-3 lg:hidden">
-            <label className="min-w-0 text-xs text-muted-foreground">Sport
-              <select value={sport} onChange={(event) => chooseSport(event.target.value)} data-testid="select-sports-sport" className="mt-1.5 h-10 w-full rounded-md border border-border bg-card px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <option value="">All sports</option>
-                {sports.map((item) => <option key={item.name} value={item.name}>{item.name} ({item.count.toLocaleString()})</option>)}
-              </select>
-            </label>
-            <label className="min-w-0 text-xs text-muted-foreground">League
-              <select value={league} onChange={(event) => chooseLeague(event.target.value)} data-testid="select-sports-league" className="mt-1.5 h-10 w-full rounded-md border border-border bg-card px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <option value="">{availableLeagues.length ? "All leagues" : "No league groups"}</option>
-                {availableLeagues.map((name) => <option key={name} value={name}>{leagueName(name)}</option>)}
-              </select>
-            </label>
-          </div>
+          <SportsRail sports={sports} sport={sport} league={league} onAll={() => { setSport(""); setLeague(""); setPage(0); }} onSport={chooseSport} onLeague={pickLeague} />
           {!byDate && !search && page === 0 && <UpcomingGames sport={sport} league={league} />}
           <div className="flex flex-col gap-3 sm:flex-row">
             <label className="relative min-w-0 flex-1">
@@ -247,8 +221,8 @@ export default function SportsPage() {
             </label>
             <div className="flex items-center gap-2">
               <span className="hidden items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline-flex"><ArrowDownWideNarrow className="h-3.5 w-3.5" /> Sort</span>
-              <div className="flex rounded-md border border-border bg-card p-1" role="group" aria-label="Sort sports markets">
-                {SORTS.map((item) => <button key={item.value} type="button" onClick={() => setSortFirst(item.value)} aria-pressed={sort === item.value} data-testid={`button-sports-sort-${item.value}`} className={`rounded px-2.5 py-1.5 text-[10px] font-semibold transition-colors sm:px-3 sm:text-xs ${sort === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>{item.label}</button>)}
+              <div className="flex w-full rounded-md border border-border bg-card p-1 sm:w-auto" role="group" aria-label="Sort sports markets">
+                {SORTS.map((item) => <button key={item.value} type="button" onClick={() => setSortFirst(item.value)} aria-pressed={sort === item.value} data-testid={`button-sports-sort-${item.value}`} className={`flex-1 whitespace-nowrap rounded px-1.5 py-2 text-[11px] font-semibold transition-colors sm:flex-none sm:px-3 sm:py-1.5 sm:text-xs ${sort === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>{item.label}</button>)}
               </div>
             </div>
           </div>
@@ -275,8 +249,8 @@ export default function SportsPage() {
               feed.isError && !data ? <ErrorPanel title="Couldn't load sports markets" onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
                 games.length && byDate ? <div className={`space-y-6 ${feed.isPlaceholderData ? "opacity-60" : ""}`}>
                   {days.map((day) => <section key={day.date} aria-label={day.date ? dayHeading(day.date) : "Scheduled games"} data-testid={`section-day-${day.date}`}>
-                    <h3 className="mb-2.5 text-sm font-bold tracking-tight">{day.date ? dayHeading(day.date) : "Scheduled"}</h3>
-                    <div className="grid items-start gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                    <h3 className="mb-3 text-lg font-bold tracking-tight sm:mb-2.5 sm:text-sm">{day.date ? dayHeading(day.date) : "Scheduled"}</h3>
+                    <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                       {day.games.map((game) => <SportsMatchupCard key={game.key} game={game} />)}
                     </div>
                   </section>)}
