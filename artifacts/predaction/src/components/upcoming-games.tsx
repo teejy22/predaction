@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link } from "wouter";
-import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getListSportsGamesQueryKey, useListSportsGames, type ListSportsGamesParams, type SportsGame } from "@workspace/api-client-react";
 import { TeamLogos } from "@/components/team-logos";
 
@@ -60,10 +60,7 @@ export function UpcomingGames({ sport, league }: { sport?: string; league?: stri
   return (
     <section className="mb-6" aria-label="Upcoming games" data-testid="section-upcoming-games">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-baseline gap-2.5">
-          <h2 className="font-display text-xl font-bold tracking-[-.035em]">Upcoming</h2>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Most traded · soonest first</span>
-        </div>
+        <h2 className="font-display text-xl font-bold tracking-[-.035em]">Upcoming</h2>
         <div className="flex gap-1.5">
           <button type="button" onClick={() => scroll(-1)} aria-label="Scroll upcoming games back" data-testid="button-upcoming-prev" className="rounded-full border border-border bg-card p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ChevronLeft className="h-4 w-4" /></button>
           <button type="button" onClick={() => scroll(1)} aria-label="Scroll upcoming games forward" data-testid="button-upcoming-next" className="rounded-full border border-border bg-card p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ChevronRight className="h-4 w-4" /></button>
@@ -118,8 +115,8 @@ export function UpcomingTicker() {
   return (
     <section className="flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card/65" aria-label="Upcoming sports events" data-testid="panel-upcoming-ticker">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <p className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[.18em] text-primary"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Upcoming games</p>
-        <Link href="/sports" data-testid="link-upcoming-all-sports" className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground transition-colors hover:text-primary">All sports <ArrowUpRight className="h-3 w-3" /></Link>
+        <h2 className="font-display text-sm font-bold tracking-[-.02em]">Upcoming games</h2>
+        <Link href="/sports" data-testid="link-upcoming-all-sports" className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground transition-colors hover:text-primary">All sports</Link>
       </div>
       {feed.isLoading ? (
         <div className="space-y-2 p-3" aria-busy="true">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 animate-pulse rounded-md bg-muted/60" />)}</div>

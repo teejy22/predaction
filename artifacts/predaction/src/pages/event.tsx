@@ -71,8 +71,7 @@ export default function EventPage() {
 
   return (
     <div>
-      <section className="hero-field relative overflow-hidden border-b border-border">
-        <div className="price-texture pointer-events-none select-none"><span>+142　29%　−180</span><span>+310　51%　−105</span><span>−26　37%　+118</span></div>
+      <section className="border-b border-border">
         <div className="relative mx-auto max-w-5xl px-4 py-10 md:px-6">
           {back}
           <div className="rise mt-6"><CategoryTag category={e.category} sport={e.sport} league={e.league} /></div>

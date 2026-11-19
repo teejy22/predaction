@@ -84,8 +84,7 @@ export default function SmartMoneyPage() {
 
   return <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-12">
     <header className="mb-6">
-      <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Tools / Smart money</p>
-      <h1 className="font-display mt-2 text-4xl font-bold tracking-[-.055em] sm:text-5xl">Market vs. PredictionPro</h1>
+      <h1 className="font-display text-4xl font-bold tracking-[-.055em] sm:text-5xl">Market vs. PredictionPro</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">See where PredictionPro’s estimate differs from the market price, plus where tracked wallet money is going.</p>
       <p className="mt-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{compared.length} markets · {yesCount} lean YES · {noCount} lean NO · biggest differences first</p>
     </header>

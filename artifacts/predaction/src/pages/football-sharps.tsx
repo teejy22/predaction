@@ -60,7 +60,7 @@ export default function FootballSharpsPage() {
 
   return <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
     <header className="mb-7 grid gap-5 overflow-hidden rounded-xl border border-primary/20 bg-card/70 px-5 py-6 sm:grid-cols-[1fr_auto] sm:items-end sm:px-8 sm:py-8">
-      <div><p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Tools / FlowFrame season file</p><h1 className="font-display mt-2 text-4xl font-bold tracking-[-.055em] sm:text-5xl">Football sharps</h1>
+      <div><h1 className="font-display text-4xl font-bold tracking-[-.055em] sm:text-5xl">Football sharps</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">A single NFL + college football season leaderboard, alongside qualifying recent wallet activity. Rankings prioritize realized ROI; these are past outcomes, not a forecast.</p>
       </div>
       <div className="flex items-center gap-3 rounded-md border border-border bg-background/50 px-4 py-3"><Trophy className="h-5 w-5 text-primary" /><div><p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Ranking scope</p><p className="text-xs font-semibold">NFL + CFB · realized positions</p></div></div>
@@ -71,7 +71,7 @@ export default function FootballSharpsPage() {
     {view === "rankings" && (
     <section className="mb-6 rounded-lg border border-border bg-card/50 p-4 sm:p-6" aria-labelledby="football-rankings-title">
       <div className="mb-4 flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
-        <div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Season snapshot</p><h2 id="football-rankings-title" className="font-display mt-1 text-2xl font-bold tracking-[-.04em]">Leaderboard</h2><p className="mt-1 max-w-xl text-[11px] leading-5 text-muted-foreground">Fully exited and resolved positions; futures and likely market-makers excluded. Ranking prioritizes ROI, then profit, consistency and activity.</p></div>
+        <div><h2 id="football-rankings-title" className="font-display text-2xl font-bold tracking-[-.04em]">Leaderboard</h2><p className="mt-1 max-w-xl text-[11px] leading-5 text-muted-foreground">Fully exited and resolved positions; futures and likely market-makers excluded. Ranking prioritizes ROI, then profit, consistency and activity.</p></div>
         <label className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:w-64">Find wallet
           <span className="relative"><Search className="absolute left-3 top-3 h-3.5 w-3.5" /><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Wallet address" data-testid="input-football-search" className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 font-sans text-xs normal-case tracking-normal text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" /></span>
         </label>
@@ -88,7 +88,7 @@ export default function FootballSharpsPage() {
     {view === "trades" && (
     <section className="rounded-lg border border-border bg-card/50 p-4 sm:p-6" aria-labelledby="football-trades-title">
       <div className="mb-4 flex flex-col gap-3 border-b border-border pb-4">
-        <div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Qualifying activity</p><h2 id="football-trades-title" className="font-display mt-1 text-2xl font-bold tracking-[-.04em]">Recent trades</h2><p className="mt-1 max-w-3xl text-[11px] leading-5 text-muted-foreground">Source window: 72 hours · $100 minimum · FlowFrame’s top 40 football wallets.</p></div>
+        <div><h2 id="football-trades-title" className="font-display text-2xl font-bold tracking-[-.04em]">Recent trades</h2><p className="mt-1 max-w-3xl text-[11px] leading-5 text-muted-foreground">Source window: 72 hours · $100 minimum · FlowFrame’s top 40 football wallets.</p></div>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">League
             <select value={league} onChange={(e) => setLeague(e.target.value as League)} data-testid="select-football-league" className="h-10 rounded-md border border-border bg-background px-3 font-sans text-xs normal-case tracking-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><option value="all">All supplied leagues</option><option value="nfl">NFL</option><option value="cfb">College football</option></select>

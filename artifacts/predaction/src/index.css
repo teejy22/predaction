@@ -371,9 +371,6 @@
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.06;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .stripes{background-image:repeating-linear-gradient(135deg,hsl(var(--foreground)/.06) 0 2px,transparent 2px 10px)}
-.hero-field{background:radial-gradient(ellipse 62% 110% at 8% 4%,hsl(262 59% 30% / .6),transparent 72%),linear-gradient(110deg,hsl(249 29% 9%),hsl(234 29% 6%) 68%)}
-.price-texture{position:absolute;right:-2%;top:5%;display:flex;flex-direction:column;gap:.45rem;white-space:nowrap;color:hsl(262 70% 66% / .1);font-family:var(--app-font-mono);font-size:clamp(1.8rem,4vw,3.3rem);font-weight:600;line-height:1.15;letter-spacing:-.06em;transform:rotate(-2deg);mask-image:linear-gradient(90deg,transparent,black 15%,black 80%,transparent)}
-.price-texture span:nth-child(2){margin-left:9%}.price-texture span:nth-child(3){margin-left:2%}.price-texture span:nth-child(4){margin-left:13%}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .animate-ticker{animation:ticker 60s linear infinite}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -391,7 +388,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 .panel-scroll::-webkit-scrollbar-thumb:hover{background:hsl(var(--muted-foreground)/.48)}
 @keyframes fillbar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .fillbar{transform-origin:left;animation:fillbar .8s cubic-bezier(.2,.8,.2,1) both}
-@media (max-width: 640px){.price-texture{right:-42%;top:7%;opacity:.6}.hero-field{background:radial-gradient(ellipse 95% 95% at 0% 0%,hsl(262 59% 28% / .55),transparent 78%),hsl(var(--background))}}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 /* Upward-drifting list: the track holds two copies, so -50% lands exactly on the repeat. */

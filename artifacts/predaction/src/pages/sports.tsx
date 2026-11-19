@@ -264,8 +264,7 @@ export default function SportsPage() {
                   {games.map((game) => <SportsGameCard key={game.key} game={game} />)}
                 </div> :
                   <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-14 text-center">
-                    <p className="font-mono text-[10px] uppercase tracking-[.17em] text-primary">No matching games</p>
-                    <h3 className="font-display mt-2 text-2xl font-bold tracking-tight">Nothing in this view yet</h3>
+                    <h3 className="font-display text-2xl font-bold tracking-tight">Nothing in this view yet</h3>
                     <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{byDate && !data?.indexing ? "No games with a scheduled day match this view. Futures and season-long markets are listed under Volume." : filtersActive ? "Try a different sport or loosen your search." : data?.indexing ? "The sports index is still building; check back shortly." : "No open sports events are currently indexed."}</p>
                     {byDate && <button type="button" onClick={() => setSortFirst("volume")} className="mr-2 mt-5 rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary" data-testid="button-sports-empty-volume">Sort by volume</button>}
                     {filtersActive && <button type="button" onClick={reset} className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" data-testid="button-sports-empty-reset">Clear filters</button>}

@@ -28,8 +28,7 @@ export default function MoversPage() {
 
   return <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
     <header className="mb-7 border-b border-border pb-6">
-      <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Cross-venue discovery / FlowFrame</p>
-      <h1 className="font-display mt-2 text-4xl font-bold tracking-[-.055em] sm:text-5xl">Market movers</h1>
+      <h1 className="font-display text-4xl font-bold tracking-[-.055em] sm:text-5xl">Market movers</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">A sourced view of markets with the largest reported price movement. Values are already normalized to probability percentages; changes are percentage points.</p>
     </header>
     <section className="rounded-lg border border-border bg-card/50 p-4 sm:p-6" aria-label={`${venue} movers`}>

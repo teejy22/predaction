@@ -18,13 +18,13 @@ export function FeedStatus({ feed, loading, error, retrying, onRetry, children, 
   if (error || !feed) return <FeedMessage title="Couldn’t load this feed" message="The FlowFrame response is temporarily unavailable." retrying={retrying} onRetry={onRetry} />;
 
   const unavailable = feed.status === "unavailable" || feed.status === "unconfigured";
-  const label = feed.status === "ready" ? "Current source data" : feed.status === "stale" ? "Stale source data" : feed.status === "unconfigured" ? "Source not configured" : "Source unavailable";
+  const label = feed.status === "stale" ? "Stale source data" : feed.status === "unconfigured" ? "Source not configured" : "Source unavailable";
   const timestamp = feed.fetchedAt || feed.checkedAt;
   return <div className="mt-4">
-    <div className={`mb-3 flex flex-wrap items-center gap-2 ${compact && feed.status === "ready" ? "justify-end" : "justify-between"}`}>
-      {(!compact || feed.status !== "ready") && (
-      <span className={`inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider ${feed.status === "ready" ? "text-emerald-200" : feed.status === "stale" ? "text-amber-200" : "text-muted-foreground"}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${feed.status === "ready" ? "bg-emerald-300" : feed.status === "stale" ? "bg-amber-300" : "bg-muted-foreground"}`} />{label}
+    <div className={`mb-3 flex flex-wrap items-center gap-2 ${feed.status === "ready" ? "justify-end" : "justify-between"}`}>
+      {feed.status !== "ready" && (
+      <span className={`inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider ${feed.status === "stale" ? "text-amber-200" : "text-muted-foreground"}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${feed.status === "stale" ? "bg-amber-300" : "bg-muted-foreground"}`} />{label}
       </span>
       )}
       <span className="text-[10px] text-muted-foreground">{timestamp ? `${feed.fetchedAt ? compact ? "Updated" : "Fetched" : "Checked"} ${formatSourceTime(timestamp)}` : "No source timestamp"}</span>
@@ -52,7 +52,7 @@ function FeedMessage({ title, message, retrying, onRetry, compact = false }: { t
 export function SourceLink({ item, testId, children }: { item: FlowframeItem; testId: string; children: ReactNode }) {
   const href = externalHref(item.url);
   return href
-    ? <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testId} className="group inline-flex max-w-full items-start gap-1.5 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{children}<ExternalLink aria-hidden="true" className="mt-1 h-3 w-3 shrink-0 opacity-50" /></a>
+    ? <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testId} className="inline-block max-w-full hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{children}</a>
     : <span data-testid={testId} className="inline-block">{children}<span className="mt-1 block text-[10px] font-medium text-muted-foreground">Source link unavailable</span></span>;
 }
 

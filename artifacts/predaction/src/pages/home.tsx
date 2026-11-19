@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className="hero-field border-b border-border">
+      <div className="border-b border-border">
         <LiveStrip />
         <HomeDiscovery category="" onBrowse={(topic) => {
           navigate(topic === "Sports" ? "/sports" : topic ? `/markets?category=${encodeURIComponent(topic)}` : "/markets");
@@ -43,8 +43,7 @@ export default function Home() {
       <section className="mx-auto mt-12 max-w-7xl px-4 md:px-6">
         <div className="grid gap-7 md:grid-cols-[.8fr_1.5fr]">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">How to read the board</p>
-            <h2 className="mt-2 max-w-md text-3xl font-bold leading-tight tracking-[-.035em] sm:text-4xl">A price is a forecast with money behind it.</h2>
+            <h2 className="max-w-md text-3xl font-bold leading-tight tracking-[-.035em] sm:text-4xl">A price is a forecast with money behind it.</h2>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">Prediction Pro doesn't forecast anything itself. We surface what traders on Kalshi are already pricing, so you can see the consensus on real-world events at a glance.</p>
           </div>
           <StepsGrid />

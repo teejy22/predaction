@@ -1,6 +1,5 @@
 import { eventHref } from "@/lib/event-href";
 import { Link } from "wouter";
-import { ArrowUpRight } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
 import { Change, CategoryTag, WatchButton } from "@/components/bits";
 import { MarketVisual } from "@/components/market-visual";
@@ -12,7 +11,7 @@ function leaderOf(event: PredictionEvent): PredictionMarket | undefined {
 
 export function EventsTable({ events, removable = false }: { events: PredictionEvent[]; removable?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[0_18px_60px_-42px_rgba(0,0,0,.9)]" data-testid="table-events">
+    <div className="overflow-hidden rounded-lg border border-border bg-card" data-testid="table-events">
       <div className="hidden grid-cols-[minmax(250px,1.7fr)_minmax(120px,1fr)_84px_100px_100px_84px_52px] gap-4 border-b border-border bg-muted/70 px-4 py-3 font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground lg:grid">
         <span>Event</span><span>Leading outcome</span><span className="text-right">Chance</span><span className="text-right">Volume</span><span className="text-right">24h vol</span><span className="text-right" title="Change from Kalshi's previous price">Change</span><span />
       </div>
@@ -38,7 +37,6 @@ export function EventsTable({ events, removable = false }: { events: PredictionE
                   <div className="mb-1.5"><CategoryTag category={event.category} sport={event.sport} league={event.league} /></div>
                   <Link href={eventHref(event)} data-testid={`link-event-${event.ticker}`} className="group inline-flex max-w-full items-center gap-1 font-semibold leading-snug text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <span className="line-clamp-2" data-testid={`text-event-title-${event.ticker}`}>{event.title}</span>
-                    <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100" />
                   </Link>
                   {event.subtitle && <p className="mt-1 truncate text-xs text-muted-foreground" title={event.subtitle}>{event.subtitle}</p>}
                 </div>

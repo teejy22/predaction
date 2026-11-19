@@ -1,6 +1,6 @@
 import { eventHref } from "@/lib/event-href";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Clock3, RotateCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
 import { Link } from "wouter";
 import { getGetOverviewQueryKey, getListEventsQueryKey, useGetOverview, useListEvents, type PredictionEvent, type PredictionMarket } from "@workspace/api-client-react";
 import { CategoryTag, Change, ProbBar } from "@/components/bits";
@@ -58,10 +58,6 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
   const categories = [...new Set(events.map((event) => event.category).filter((name) => name && (name !== "Sports" || sports.length === 0)))].slice(0, 5);
   const rankedEvents = [...events].sort((a, b) => b.volume - a.volume);
   const cardEvents = rankedEvents.filter((event, index) => rankedEvents.findIndex((candidate) => candidate.category === event.category) === index).slice(0, 3);
-  const scrollToMovers = () => moversRef.current?.scrollIntoView({
-    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    block: "start",
-  });
 
   return <div className="mx-auto max-w-7xl px-4 pt-5 md:px-6 md:pt-7">
     <PromoBars />
@@ -75,12 +71,11 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
         onFocusCapture={() => setAutoplay(false)}
       >
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[.18em] text-primary"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" /> Open markets · Kalshi</p>
-            {feed.data?.updatedAt && <span className="font-mono text-[9px] text-muted-foreground">Sample updated {updatedLabel(feed.data.updatedAt)}</span>}
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <h1 className="font-display text-xl font-bold leading-tight tracking-[-.035em]">Featured markets</h1>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="font-display text-xl font-bold leading-tight tracking-[-.035em]">Featured markets</h1>
+              {feed.data?.updatedAt && <span className="font-mono text-[9px] text-muted-foreground">Kalshi · updated {updatedLabel(feed.data.updatedAt)}</span>}
+            </div>
             {slides > 1 && <div className="flex items-center gap-2" role="group" aria-label="Featured markets">
               <button type="button" onClick={() => step(-1)} aria-label="Previous featured market" data-testid="button-featured-prev" className="rounded-full border border-border bg-background/50 p-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ChevronLeft className="h-4 w-4" /></button>
               <span className="min-w-[3.25rem] text-center font-mono text-[10px] text-muted-foreground tabular" aria-live="polite" data-testid="text-featured-position">{current + 1} of {slides}</span>
@@ -94,10 +89,6 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
       </div>
       <aside className="hidden flex-col gap-3 sm:flex" aria-label="Upcoming sports events">
         <UpcomingTicker />
-        <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/[.07] px-4 py-3">
-          <div><p className="font-mono text-[9px] uppercase tracking-[.15em] text-primary">Follow the tape</p><p className="mt-1 text-xs text-muted-foreground">Sourced movement across venues</p></div>
-          <button type="button" onClick={scrollToMovers} aria-label="Jump to market movers" className="rounded-md p-2 text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ArrowRight className="h-4 w-4" /></button>
-        </div>
       </aside>
     </section>
 
@@ -106,16 +97,14 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
     <section className="mt-7 hidden border-y border-border py-6 sm:block" aria-label="Politics markets preview" data-testid="section-home-politics">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Kalshi · current outcomes</p>
-          <h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">Politics markets</h2>
-          <p className="mt-1 text-[11px] text-muted-foreground">The most traded open politics events. Prices and volume are sourced from Kalshi.</p>
+          <h2 className="font-display text-xl font-bold tracking-[-.035em] sm:text-2xl">Politics markets</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">Most traded open events. Prices and volume from Kalshi.</p>
         </div>
         <button type="button" onClick={() => onBrowse("Politics")} data-testid="button-home-see-all-politics" className="inline-flex items-center gap-1.5 rounded-md border border-primary/35 bg-primary/[.07] px-3 py-2 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          See all {politicsCount?.toLocaleString() ?? politicsFeed.data?.total.toLocaleString() ?? "politics"} politics events <ArrowUpRight className="h-3 w-3" />
+          See all {politicsCount?.toLocaleString() ?? politicsFeed.data?.total.toLocaleString() ?? "politics"} politics events
         </button>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Browse</span>
         {["Politics", "Elections", "Economics", "World"].filter((name) => (overview.data?.categories.find((item) => item.name === name)?.count ?? 0) > 0).map((name) => (
           <button key={name} type="button" onClick={() => onBrowse(name)} data-testid={`button-home-politics-${name.toLowerCase()}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{name}</button>
         ))}
@@ -123,7 +112,7 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
       {politicsFeed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/65" />)}</div> :
         politicsFeed.isError && !politicsFeed.data ? <PanelError onRetry={() => politicsFeed.refetch()} retrying={politicsFeed.isFetching} /> :
           politicsFeed.data?.events.length ? <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${politicsFeed.isPlaceholderData ? "opacity-60" : ""}`}>
-            {politicsFeed.data.events.map((event) => <SportsEventCard key={event.ticker} event={event} />)}
+            {politicsFeed.data.events.map((event) => <SportsEventCard key={event.ticker} event={event} showCategory={false} />)}
           </div> :
             <div className="rounded-lg border border-dashed border-border bg-card/40 px-4 py-6 text-xs text-muted-foreground">
               {politicsFeed.data?.indexing ? "The index is building; politics events will appear as they load." : "No open politics events are currently indexed."}
@@ -139,12 +128,12 @@ export function HomeDiscovery({ category, onBrowse }: DiscoveryProps) {
 
     <section className="mt-8 border-border py-0 sm:border-y sm:py-6" aria-label="Sampled market categories">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <SectionHeading eyebrow="From the current sample" title="Most traded" note="Event cards show current outcomes, not historical price charts." />
-        <button onClick={() => onBrowse()} data-testid="button-category-all" className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline">Open full board <ArrowUpRight className="ml-1 inline h-3 w-3" /></button>
+        <h2 className="font-display text-xl font-bold tracking-[-.035em] sm:text-2xl">Most traded</h2>
+        <button onClick={() => onBrowse()} data-testid="button-category-all" className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline">Open full board</button>
       </div>
       <div className="mb-4 hidden flex-wrap gap-2 sm:flex">
-        {categories.map((category) => <button key={category} onClick={() => onBrowse(category)} data-testid={`button-discovery-category-${category.toLowerCase().replace(/\s+/g, "-")}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{category}<ArrowUpRight className="ml-1 inline h-3 w-3" /></button>)}
-        {sports.length > 0 && <button onClick={() => onBrowse("Sports")} data-testid="button-discovery-category-sports" className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Sports<ArrowUpRight className="ml-1 inline h-3 w-3" /></button>}
+        {categories.map((category) => <button key={category} onClick={() => onBrowse(category)} data-testid={`button-discovery-category-${category.toLowerCase().replace(/\s+/g, "-")}`} className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{category}</button>)}
+        {sports.length > 0 && <button onClick={() => onBrowse("Sports")} data-testid="button-discovery-category-sports" className="rounded-full border border-border px-3 py-1.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Sports</button>}
       </div>
       {feed.isLoading ? <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><RowsSkeleton rows={3} /></div> :
         feed.isError && !feed.data ? <PanelError onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
@@ -173,8 +162,8 @@ function pickFeatured(events: PredictionEvent[]) {
 function FeaturedEvent({ event }: { event: PredictionEvent }) {
   const lead = marketOf(event);
   const outcomes = [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
-  return <article className="flex min-h-[388px] animate-in flex-col rounded-md border border-border/80 bg-background/45 p-4 fade-in duration-300 sm:p-5">
-    <div className="flex flex-wrap items-center justify-between gap-2"><CategoryTag category={event.category} sport={event.sport} league={event.league} /><span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Most traded</span></div>
+  return <article className="flex min-h-[388px] animate-in flex-col fade-in duration-300">
+    <CategoryTag category={event.category} sport={event.sport} league={event.league} />
     <EventLink event={event} className="group mt-3 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
       <div className="flex items-start gap-3">
         <MarketVisual event={event} size="lg" />
@@ -184,13 +173,13 @@ function FeaturedEvent({ event }: { event: PredictionEvent }) {
         </div>
       </div>
     </EventLink>
-    {outcomes.length > 0 ? <div className="mt-4 divide-y divide-border/70 border-y border-border/70">
+    {outcomes.length > 0 ? <div className="mt-4 divide-y divide-border/70 border-t border-border/70">
       {outcomes.map((market) => <OutcomeLine key={market.ticker} event={event} market={market} />)}
     </div> : <p className="mt-4 border-y border-border/70 py-3 text-xs text-muted-foreground">No open outcomes available for this event.</p>}
     <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
-      <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground"><Clock3 className="h-3 w-3" /> Event · {closeLabel(event.closeTime)}</span>
+      <span className="font-mono text-[9px] text-muted-foreground">{closeLabel(event.closeTime)}</span>
       <span className="font-mono text-[9px] text-muted-foreground">{fmtContracts(lead?.volume ?? event.volume)} contracts · {lead ? "most-traded outcome" : "event"}</span>
-      <EventLink event={event} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">Event details <ArrowUpRight className="h-3 w-3" /></EventLink>
+      <EventLink event={event} className="text-[11px] font-semibold text-primary hover:underline">Event details</EventLink>
     </div>
   </article>;
 }
@@ -204,7 +193,7 @@ function OutcomeLine({ event, market }: { event: PredictionEvent; market: Predic
         <span className="shrink-0 font-mono text-[9px] text-muted-foreground">{fmtContracts(market.volume)} contracts</span>
       </div>
       <ProbBar className="mt-2 h-1.5" value={market.probability} color={market.color} />
-      <p className="mt-1 text-[9px] text-muted-foreground">Market · {closeLabel(market.closeTime)}</p>
+      {market.closeTime !== event.closeTime && <p className="mt-1 text-[9px] text-muted-foreground">{closeLabel(market.closeTime)}</p>}
     </div>
     <div className="text-right">
       <p className="font-mono text-sm font-semibold tabular">{Math.round(market.probability)}<span className="text-[10px] text-muted-foreground">%</span></p>
@@ -226,7 +215,7 @@ function MarketEventCard({ event }: { event: PredictionEvent }) {
         </div>
       </div>
     </EventLink>
-    <div className="mt-3 divide-y divide-border/70 border-y border-border/70">
+    <div className="mt-3 divide-y divide-border/70 border-t border-border/70">
       {markets.length ? markets.map((market) => <div key={market.ticker} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 py-2">
         <MarketVisual event={event} market={market} size="sm" />
         <div className="min-w-0">
@@ -240,12 +229,8 @@ function MarketEventCard({ event }: { event: PredictionEvent }) {
         <Change value={market.change} />
       </div>) : <p className="py-2 text-[10px] text-muted-foreground">No open outcomes available.</p>}
     </div>
-    <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-muted-foreground"><span>Event · {closeLabel(event.closeTime)}</span><EventLink event={event} className="font-semibold text-primary hover:underline">Details <ArrowUpRight className="inline h-3 w-3" /></EventLink></div>
+    <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-muted-foreground"><span>{closeLabel(event.closeTime)}</span><EventLink event={event} className="font-semibold text-primary hover:underline">Details</EventLink></div>
   </article>;
-}
-
-function SectionHeading({ eyebrow, title, note }: { eyebrow: string; title: string; note?: string }) {
-  return <div><p className="hidden font-mono text-[9px] uppercase tracking-[.17em] text-primary sm:block">{eyebrow}</p><h2 className="font-display mt-1 text-xl font-bold tracking-[-.035em] sm:text-2xl">{title}</h2>{note && <p className="mt-1 hidden text-[11px] text-muted-foreground sm:block">{note}</p>}</div>;
 }
 
 function FeaturedSkeleton() {

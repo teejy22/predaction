@@ -20,8 +20,8 @@ export default function Watchlist() {
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Saved on this device</p>
-          <h1 className="mt-1 text-4xl font-bold tracking-[-.04em] sm:text-5xl">Watchlist</h1>
+          <h1 className="text-4xl font-bold tracking-[-.04em] sm:text-5xl">Watchlist</h1>
+          <p className="mt-2 text-xs text-muted-foreground">Saved in this browser only.</p>
         </div>
         {items.length > 0 && (
           <button onClick={clear} data-testid="button-clear-watchlist" className="font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground underline underline-offset-4 hover:text-destructive">
@@ -34,8 +34,8 @@ export default function Watchlist() {
         <div className="mt-8 rounded-lg border border-dashed border-border bg-card/60 p-12 text-center">
           <h2 className="text-2xl font-bold tracking-tight">No saved events yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">Tap the bookmark on any event to track it here. Saved locally in your browser, no account needed.</p>
-          <Link href="/" data-testid="link-browse" className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
-            Browse markets <ArrowUpRight className="h-4 w-4" />
+          <Link href="/" data-testid="link-browse" className="mt-6 inline-block rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
+            Browse markets
           </Link>
         </div>
       ) : (

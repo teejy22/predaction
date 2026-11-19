@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
 import { getListSportsGamesQueryKey, useListSportsGames, type ListSportsGamesParams } from "@workspace/api-client-react";
 import { IconRail } from "@/components/icon-rail";
 import { SportsMatchupCard } from "@/components/sports-matchup-card";
@@ -41,7 +40,7 @@ export function UpcomingSwipe() {
     <section className="mt-7 sm:hidden" aria-label="Upcoming games" data-testid="section-home-upcoming-swipe">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="font-display text-xl font-bold tracking-[-.035em]">Upcoming games</h2>
-        <Link href="/sports" data-testid="link-home-upcoming-all" aria-label="All sports" className="rounded-full p-2 text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><ArrowRight className="h-5 w-5" /></Link>
+        <Link href="/sports" data-testid="link-home-upcoming-all" className="rounded py-2 text-sm font-semibold text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">All sports</Link>
       </div>
       <div className={`${SWIPE_ROW} items-start`}>
         {feed.isLoading

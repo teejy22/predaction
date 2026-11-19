@@ -36,7 +36,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-7 px-4 md:px-6">
           <Link href="/" data-testid="link-home" className="transition-transform active:scale-95">
             <Logo />

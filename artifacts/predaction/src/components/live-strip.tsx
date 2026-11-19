@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
 import { getListSportsGamesQueryKey, useListSportsGames, type ListSportsGamesParams, type SportsGame } from "@workspace/api-client-react";
 import { liveScore, logoFor } from "@/components/sports-matchup-card";
 
@@ -59,12 +58,12 @@ export function LiveStrip() {
       <div className="mb-1.5 flex items-center gap-3">
         <h2 className="flex shrink-0 items-center gap-2 font-display text-sm font-bold tracking-[-.02em]"><span className="live-dot h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />Live now</h2>
         <p className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground" title="Scores come from Polymarket US and can trail the game by a couple of minutes. Percentages are Kalshi chances.">Scores: Polymarket US, may lag · Chances: Kalshi</p>
-        <Link href="/sports?live=1" data-testid="link-live-all" className="inline-flex shrink-0 items-center gap-1 rounded text-[11px] font-semibold text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">All {total} live <ArrowRight className="h-3.5 w-3.5" /></Link>
+        <Link href="/sports?live=1" data-testid="link-live-all" className="inline-flex shrink-0 items-center gap-1 rounded text-[11px] font-semibold text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">All {total} live</Link>
       </div>
       <div className="panel-scroll -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1.5 md:mx-0 md:scroll-px-0 md:px-0">
         {games.map((game) => <LiveCard key={game.key} game={game} />)}
         <Link href="/sports?live=1" data-testid="card-live-all" className="flex w-24 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-center text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary/45 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-          <ArrowRight className="h-4 w-4" />See all live
+          See all live
         </Link>
       </div>
     </section>

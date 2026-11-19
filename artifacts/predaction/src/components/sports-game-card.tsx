@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ArrowUpRight, Clock3, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 import type { PredictionEvent, PredictionMarket, SportsGame } from "@workspace/api-client-react";
 import { TeamLogos } from "@/components/team-logos";
 import { closeLabel, fmtContracts } from "@/lib/format";
@@ -45,7 +45,7 @@ export function SportsGameCard({ game }: { game: SportsGame }) {
     <article data-testid={`card-sports-game-${game.key}`} className="group relative flex min-h-[224px] flex-col rounded-lg border border-border bg-card/75 p-4 transition-colors hover:border-primary/40 focus-within:border-primary/60">
       <div className="flex items-start justify-between gap-3">
         <p className="font-mono text-[9px] font-semibold uppercase tracking-[.16em] text-primary">
-          {game.league || game.sport || "Sports"} <span className="text-muted-foreground">· Kalshi</span>
+          {game.league || game.sport || "Sports"}
         </p>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground tabular" title="Grouped Kalshi events">
           <Layers className="h-3 w-3" />{game.eventCount} ev · {game.marketCount} mkt
@@ -66,7 +66,7 @@ export function SportsGameCard({ game }: { game: SportsGame }) {
               <span className={kind ? "text-foreground/80" : ""}>{kind ? NAMES[kind] : eventLabel(event)}</span>
               <span className="tabular">{fmtContracts(event.volume)} vol</span>
             </p>
-            <div className="mt-1 divide-y divide-border/60 border-y border-border/60">
+            <div className="mt-1 divide-y divide-border/60 border-t border-border/60">
               {topMarkets(event, rowsPer).map((m) => (
                 <div key={m.ticker} className="flex items-center justify-between gap-3 py-1.5">
                   <span className="min-w-0 truncate text-[11px] font-medium">{m.subtitle || m.title}</span>
@@ -82,9 +82,9 @@ export function SportsGameCard({ game }: { game: SportsGame }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground"><Clock3 className="h-3 w-3" /> {closeLabel(game.closeTime)}</span>
+        <span className="font-mono text-[9px] text-muted-foreground">{closeLabel(game.closeTime)}</span>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary" data-testid={`text-more-markets-${game.key}`}>
-          {more > 0 ? `+${more} markets` : "Game details"} <ArrowUpRight className="h-3 w-3" />
+          {more > 0 ? `+${more} markets` : "Game details"}
         </span>
       </div>
     </article>

@@ -1,6 +1,5 @@
 import { eventHref } from "@/lib/event-href";
 import { Link } from "wouter";
-import { ArrowUpRight, Clock3 } from "lucide-react";
 import type { PredictionEvent, PredictionMarket } from "@workspace/api-client-react";
 import { WatchButton } from "@/components/bits";
 import { MarketVisual } from "@/components/market-visual";
@@ -10,20 +9,19 @@ function topOutcomes(event: PredictionEvent): PredictionMarket[] {
   return [...event.markets].sort((a, b) => b.volume - a.volume).slice(0, 3);
 }
 
-export function SportsEventCard({ event }: { event: PredictionEvent }) {
+// showCategory is turned off where the surrounding section already names the category.
+export function SportsEventCard({ event, showCategory = true }: { event: PredictionEvent; showCategory?: boolean }) {
   const outcomes = topOutcomes(event);
 
   return (
     <article className="flex min-h-[224px] min-w-0 flex-col rounded-lg border border-border bg-card/75 p-4 transition-colors hover:border-primary/40">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[.16em] text-primary">
-            {event.league || event.sport || event.category || "Market"} <span className="text-muted-foreground">· Kalshi</span>
-          </p>
+          {showCategory && <p className="mb-2 font-mono text-[9px] font-semibold uppercase tracking-[.16em] text-primary">{event.league || event.sport || event.category || "Market"}</p>}
           <Link
             href={eventHref(event)}
             data-testid={`link-sports-event-${event.ticker}`}
-            className="group mt-2 flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <MarketVisual event={event} size="md" />
             <span className="min-w-0">
@@ -35,7 +33,7 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
         <WatchButton event={{ ticker: event.ticker, title: event.title, category: event.category, sport: event.sport, league: event.league }} />
       </div>
 
-      <div className="mt-4 flex-1 divide-y divide-border/70 border-y border-border/70">
+      <div className="mt-4 flex-1 divide-y divide-border/70 border-t border-border/70">
         {outcomes.length ? outcomes.map((market) => (
           <div key={market.ticker} className="flex items-center justify-between gap-3 py-2">
             {/* Per-outcome pictures (people, companies) are shown when Kalshi provides them. */}
@@ -50,12 +48,8 @@ export function SportsEventCard({ event }: { event: PredictionEvent }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground">
-          <Clock3 className="h-3 w-3" /> {closeLabel(event.closeTime)}
-        </span>
-        <Link href={eventHref(event)} className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">
-          Event details <ArrowUpRight className="h-3 w-3" />
-        </Link>
+        <span className="font-mono text-[9px] text-muted-foreground">{closeLabel(event.closeTime)}</span>
+        <Link href={eventHref(event)} className="text-[10px] font-semibold text-primary hover:underline">Event details</Link>
       </div>
     </article>
   );

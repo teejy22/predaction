@@ -105,8 +105,7 @@ export default function MarketsPage() {
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 md:pt-9">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="hidden font-mono text-[10px] uppercase tracking-[.18em] text-primary sm:block">Kalshi · open events</p>
-          <h1 className="font-display text-3xl font-bold tracking-[-.045em] sm:mt-2 sm:text-4xl" data-testid="text-markets-heading">{category || "All markets"}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-[-.045em] sm:text-4xl" data-testid="text-markets-heading">{category || "All markets"}</h1>
         </div>
         <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground" data-testid="text-markets-count">
           {data ? `${total.toLocaleString()} ${total === 1 ? "event" : "events"}` : "Loading"}{indexing ? " · still loading more" : ""}
@@ -114,7 +113,7 @@ export default function MarketsPage() {
         </p>
       </header>
 
-      <div ref={topRef} className="sticky top-14 z-30 -mx-4 mt-4 scroll-mt-14 border-b border-border bg-background/95 px-4 backdrop-blur md:-mx-6 md:px-6">
+      <div ref={topRef} className="sticky top-14 z-30 -mx-4 mt-4 scroll-mt-14 border-b border-border bg-background px-4 md:-mx-6 md:px-6">
         <nav aria-label="Topics" className="flex gap-2 overflow-x-auto py-3 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
           <button type="button" onClick={() => go({ category: "" })} aria-pressed={!category} data-testid="button-topic-all" className={chipClass(!category)}>All</button>
           <Link href="/sports" data-testid="link-topic-sports" className={chipClass(false)}>Sports</Link>
@@ -145,7 +144,7 @@ export default function MarketsPage() {
         {feed.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading markets">{Array.from({ length: 9 }).map((_, i) => <div key={i} className="h-56 animate-pulse rounded-lg border border-border bg-card/65" />)}</div> :
           feed.isError && !data ? <ErrorPanel onRetry={() => feed.refetch()} retrying={feed.isFetching} /> :
             events.length ? <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${feed.isPlaceholderData ? "opacity-60" : ""}`} data-testid="grid-markets">
-              {events.map((event) => <SportsEventCard key={event.ticker} event={event} />)}
+              {events.map((event) => <SportsEventCard key={event.ticker} event={event} showCategory={!category} />)}
             </div> :
               <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-14 text-center">
                 <h2 className="font-display text-2xl font-bold tracking-tight">Nothing matches yet</h2>

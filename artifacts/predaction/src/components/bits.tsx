@@ -63,7 +63,7 @@ export function WatchButton({
       <button
         onClick={click}
         data-testid={`button-watch-${event.ticker}`}
-        className={`inline-flex items-center gap-2 rounded-md border-2 border-foreground px-4 py-2.5 text-sm font-bold uppercase tracking-wide transition-all hover:-translate-y-0.5 hover:shadow-[3px_3px_0_hsl(var(--foreground))] active:translate-y-0 active:shadow-none ${on ? "bg-accent" : "bg-card"}`}
+        className={`inline-flex items-center gap-2 rounded-md border-2 border-foreground px-4 py-2.5 text-sm font-bold uppercase tracking-wide transition-all hover:border-primary hover:text-primary ${on ? "bg-accent" : "bg-card"}`}
       >
         <Icon key={pop} className="h-4 w-4 animate-in zoom-in-50 duration-300" />
         {on ? "Watching" : "Watch"}

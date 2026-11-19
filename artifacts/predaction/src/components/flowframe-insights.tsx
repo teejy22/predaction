@@ -1,5 +1,4 @@
 import { useState, type RefObject } from "react";
-import { ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
 import type { FlowframeFeed } from "@workspace/api-client-react";
 import { useFlowframeData } from "@/components/flowframe-data";
@@ -22,11 +21,11 @@ export function FlowframeInsights({ moversRef }: { moversRef?: RefObject<HTMLDiv
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section ref={moversRef} className="min-w-0 scroll-mt-20 rounded-lg border border-border bg-card/55 p-4 sm:p-5" aria-labelledby="flowframe-movers-title">
         <header className="flex flex-wrap items-start justify-between gap-3">
-          <div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Source movement</p>
-            <h2 id="flowframe-movers-title" className="font-display mt-1 text-xl font-bold tracking-[-.035em]">Market movers</h2>
+          <div>
+            <h2 id="flowframe-movers-title" className="font-display text-xl font-bold tracking-[-.035em]">Market movers</h2>
             <p className="mt-1 text-[10px] text-muted-foreground">{venue === "kalshi" ? "Kalshi · since midnight UTC · percentage-point move" : "Polymarket · rolling 24 hours · percentage-point move"}</p>
           </div>
-          <Link href={`/movers?venue=${venue}&direction=${direction}`} data-testid="link-movers-all" className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">All movers <ArrowUpRight className="h-3 w-3" /></Link>
+          <Link href={`/movers?venue=${venue}&direction=${direction}`} data-testid="link-movers-all" className="mt-1 text-[10px] font-semibold text-primary hover:underline">All movers</Link>
         </header>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <div className="inline-flex rounded-md border border-border bg-background/60 p-0.5" role="group" aria-label="Choose mover venue">
@@ -42,7 +41,7 @@ export function FlowframeInsights({ moversRef }: { moversRef?: RefObject<HTMLDiv
       </section>
 
       <section className="min-w-0 rounded-lg border border-border bg-card/55 p-4 sm:p-5" aria-labelledby="home-trades-title">
-        <div className="mb-1 flex flex-wrap items-end justify-between gap-3"><div><p className="font-mono text-[9px] uppercase tracking-[.17em] text-primary">Tracked-wallet activity</p><h2 id="home-trades-title" className="font-display mt-1 text-xl font-bold tracking-[-.035em]">Recent trades</h2><p className="mt-1 text-[10px] text-muted-foreground">Polymarket trades of $1,000+ from tracked wallets.</p></div><Link href="/traders" data-testid="link-traders-all" className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline">All trades <ArrowUpRight className="h-3 w-3" /></Link></div>
+        <div className="mb-1 flex flex-wrap items-end justify-between gap-3"><div><h2 id="home-trades-title" className="font-display text-xl font-bold tracking-[-.035em]">Recent trades</h2><p className="mt-1 text-[10px] text-muted-foreground">Polymarket trades of $1,000+ from tracked wallets.</p></div><Link href="/traders" data-testid="link-traders-all" className="text-[10px] font-semibold text-primary hover:underline">All trades</Link></div>
         <FeedStatus compact feed={data?.trades} loading={query.isLoading} error={query.isError && !data} retrying={query.isFetching} onRetry={retry}>
           {(data?.trades.items ?? []).some((item) => (item.usdcSize ?? 0) >= 1000)
             ? <TradeList items={(data?.trades.items ?? []).filter((item) => (item.usdcSize ?? 0) >= 1000)} limit={3} />

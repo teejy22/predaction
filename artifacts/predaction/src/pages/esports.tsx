@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ChevronRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { getGetOverviewQueryKey, getListSportsGamesQueryKey, useGetOverview, useListSportsGames, type ListSportsGamesParams, type SportsGame } from "@workspace/api-client-react";
 import { ErrorPanel } from "@/components/bits";
 import { IconRail } from "@/components/icon-rail";
@@ -47,7 +47,6 @@ function GapRow({ game }: { game: SportsGame }) {
       <span className="shrink-0 rounded-full bg-primary/20 px-2.5 py-1.5 text-center font-mono text-sm font-bold tabular text-[hsl(262_80%_84%)]" aria-label={`Gap of ${gap.points} points`}>
         {gap.points.toFixed(gap.points < 10 ? 1 : 0)}<span className="ml-0.5 text-[10px] font-semibold">pts</span>
       </span>
-      <ChevronRight className="hidden h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary sm:block" />
     </Link>
   );
 }
