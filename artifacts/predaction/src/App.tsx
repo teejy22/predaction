@@ -17,6 +17,7 @@ import SportsPage from '@/pages/sports';
 import EsportsPage from '@/pages/esports';
 import SportsGamePage from '@/pages/sports-game';
 import ModelPage from '@/pages/model';
+import SweatStationPage from '@/pages/sweat-station';
 import { Shell } from '@/components/shell';
 import {
   Route,
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/sports" component={SportsPage} />
         <Route path="/esports" component={EsportsPage} />
         <Route path="/model" component={ModelPage} />
+        <Route path="/sweat-station" component={SweatStationPage} />
         <Route path="/sports/game/:key" component={SportsGamePage} />
         <Route path="/event/:ticker" component={EventPage} />
         <Route path="/watchlist" component={Watchlist} />
