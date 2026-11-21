@@ -1,0 +1,63 @@
+.ss-compact-race {
+  --race-panel: 234 23% 9%;
+  --race-panel-raised: 234 21% 11%;
+  --race-line: 234 16% 19%;
+}
+
+.ss-compact-race .race-tile {
+  background: hsl(var(--race-panel));
+  border: 1px solid hsl(var(--race-line));
+  transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.ss-compact-race .race-tile:hover {
+  border-color: hsl(var(--muted-foreground) / .42);
+}
+
+.ss-compact-race .race-tile.is-featured {
+  background: hsl(var(--race-panel-raised));
+  border-color: hsl(var(--primary) / .62);
+}
+
+.ss-compact-race .race-meter {
+  background: hsl(var(--foreground) / .12);
+}
+
+.ss-compact-race .race-meter-fill {
+  transform-origin: left center;
+  transition: transform .7s cubic-bezier(.2,.8,.2,1);
+}
+
+.ss-compact-race .race-team-mark {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  font: 600 9px/1 var(--app-font-mono);
+  letter-spacing: -.04em;
+}
+
+.ss-compact-race .race-entry {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 10px;
+  border-radius: 2px;
+  background: hsl(var(--foreground) / .82);
+}
+
+.ss-compact-race button:focus-visible,
+.ss-compact-race select:focus-visible,
+.ss-compact-race input:focus-visible {
+  outline: 2px solid hsl(var(--primary-readable));
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-compact-race .race-tile,
+  .ss-compact-race .race-meter-fill {
+    transition: none;
+  }
+}
