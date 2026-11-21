@@ -29,7 +29,7 @@ function RaceCard({ game, featured, onSelect }: { game: LiveGame; featured: bool
   const currentValue = valueOf(game);
   return (
     <article
-      className={`race-tile rounded-xl p-4 ${featured ? "is-featured" : ""}`}
+      className={`race-tile rounded-xl p-4 sm:px-5 sm:py-4 ${featured ? "is-featured" : ""}`}
       aria-label={`${game.away} at ${game.home}, holding ${held}, ${game.price}% chance`}
       aria-current={featured ? "true" : undefined}
       role="button"
@@ -46,46 +46,48 @@ function RaceCard({ game, featured, onSelect }: { game: LiveGame; featured: bool
         {featured && <span className="rounded-full border border-primary/35 px-2 py-1 text-[10px] text-primary-readable">In focus</span>}
       </div>
 
-      <div className={`mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 ${featured ? "gap-y-3" : "gap-y-2"}`}>
-        <div className="flex min-w-0 items-center gap-2.5">
-          <TeamMark team={game.away} />
-          <span className={`truncate ${game.bet.side === "away" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.away}</span>
-          {game.bet.side === "away" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
+      <div className="race-card-body mt-4">
+        <div className="race-scoreboard grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <TeamMark team={game.away} />
+            <span className={`truncate ${game.bet.side === "away" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.away}</span>
+            {game.bet.side === "away" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
+          </div>
+          <span className={`font-mono text-lg tabular ${game.bet.side === "away" ? "font-semibold" : "text-muted-foreground"}`}>{game.awayScore}</span>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <TeamMark team={game.home} />
+            <span className={`truncate ${game.bet.side === "home" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.home}</span>
+            {game.bet.side === "home" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
+          </div>
+          <span className={`font-mono text-lg tabular ${game.bet.side === "home" ? "font-semibold" : "text-muted-foreground"}`}>{game.homeScore}</span>
         </div>
-        <span className={`font-mono tabular ${featured ? "text-xl" : "text-lg"} ${game.bet.side === "away" ? "font-semibold" : "text-muted-foreground"}`}>{game.awayScore}</span>
-        <div className="flex min-w-0 items-center gap-2.5">
-          <TeamMark team={game.home} />
-          <span className={`truncate ${game.bet.side === "home" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.home}</span>
-          {game.bet.side === "home" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
-        </div>
-        <span className={`font-mono tabular ${featured ? "text-xl" : "text-lg"} ${game.bet.side === "home" ? "font-semibold" : "text-muted-foreground"}`}>{game.homeScore}</span>
-      </div>
 
-      <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="text-[11px] text-muted-foreground">Chance to pay</span>
-          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 font-mono text-xs font-semibold tabular">
-            {game.price}<span className="ml-0.5 text-[10px] font-normal text-muted-foreground">%</span>
-          </span>
+        <div className="race-probability min-w-0">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] text-muted-foreground">Chance to pay</span>
+            <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 font-mono text-xs font-semibold tabular">
+              {game.price}<span className="ml-0.5 text-[10px] font-normal text-muted-foreground">%</span>
+            </span>
+          </div>
+          <div className="race-meter relative h-[5px] rounded-full" role="meter" aria-label={`${held} chance to pay`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={game.price}>
+            <div className="race-meter-fill absolute inset-0 rounded-full" style={{ backgroundColor: "hsl(var(--primary-readable))", transform: `scaleX(${game.price / 100})` }} />
+            <span className="race-entry" style={{ left: `calc(${game.bet.entryCents}% - 1px)` }} title={`Entered at ${game.bet.entryCents} cents`} />
+          </div>
+          <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+            <span>0</span><span className="font-mono tabular">Entry {game.bet.entryCents}¢</span><span>100</span>
+          </div>
         </div>
-        <div className="race-meter relative h-[5px] rounded-full" role="meter" aria-label={`${held} chance to pay`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={game.price}>
-          <div className="race-meter-fill absolute inset-0 rounded-full" style={{ backgroundColor: "hsl(var(--primary-readable))", transform: `scaleX(${game.price / 100})` }} />
-          <span className="race-entry" style={{ left: `calc(${game.bet.entryCents}% - 1px)` }} title={`Entered at ${game.bet.entryCents} cents`} />
-        </div>
-        <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-          <span>0</span><span className="font-mono tabular">Entry {game.bet.entryCents}¢</span><span>100</span>
-        </div>
-      </div>
 
-      <div className="mt-4 flex items-end justify-between gap-3 border-t border-border/70 pt-3">
+        <div className="race-payout flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] text-muted-foreground">Payout if won</p>
-          <p className={`mt-0.5 font-mono font-semibold tabular ${featured ? "text-xl" : "text-lg"}`}>{usd(contracts(game.bet))}</p>
+          <p className="mt-0.5 font-mono text-lg font-semibold tabular">{usd(contracts(game.bet))}</p>
         </div>
         <div className="text-right">
           <p className="text-[10px] text-muted-foreground">Now {usd(currentValue)}</p>
           <p className={`mt-0.5 font-mono text-sm font-medium tabular ${tone(pnlOf(game))}`}>{signedUsd(pnlOf(game))} <span className="text-[10px] font-normal text-muted-foreground">P/L</span></p>
         </div>
+      </div>
       </div>
     </article>
   );
@@ -183,14 +185,9 @@ export function CompactRace() {
             <h2 className="font-display text-lg font-medium">Your games</h2>
             <span className="flex items-center gap-2 text-[10px] text-muted-foreground"><span className="inline-block h-3 w-[2px] rounded bg-foreground/80" />Entry point</span>
           </div>
-          {games.length > 0 ? <>
-            <div className="mb-3">
-              <RaceCard game={games[0]} featured onSelect={() => setPriority(games[0].id === priority ? "" : games[0].id)} />
-            </div>
-            {games.length > 1 && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {games.slice(1).map(game => <RaceCard key={game.id} game={game} featured={false} onSelect={() => setPriority(game.id === priority ? "" : game.id)} />)}
-            </div>}
-          </> : <div className="race-tile rounded-xl px-5 py-12 text-center">
+          {games.length > 0 ? <div className="race-list">
+            {games.map(game => <RaceCard key={game.id} game={game} featured={game.id === priority} onSelect={() => setPriority(game.id === priority ? "" : game.id)} />)}
+          </div> : <div className="race-tile rounded-xl px-5 py-12 text-center">
             <h3 className="font-display text-xl font-semibold">No positions on the board</h3>
             <button className={`${control} mt-4 bg-primary text-primary-foreground`} onClick={() => setHidden([])}>Show every position</button>
           </div>}

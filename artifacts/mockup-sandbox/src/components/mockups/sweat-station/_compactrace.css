@@ -19,6 +19,36 @@
   border-color: hsl(var(--primary) / .62);
 }
 
+.ss-compact-race .race-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ss-compact-race .race-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.ss-compact-race .race-payout {
+  padding-top: 12px;
+  border-top: 1px solid hsl(var(--race-line) / .72);
+}
+
+@media (min-width: 900px) {
+  .ss-compact-race .race-card-body {
+    grid-template-columns: minmax(220px, .8fr) minmax(240px, 1.2fr) minmax(180px, .6fr);
+    align-items: center;
+    gap: 28px;
+    margin-top: 14px;
+  }
+
+  .ss-compact-race .race-payout {
+    padding: 0;
+    border: 0;
+  }
+}
+
 .ss-compact-race .race-meter {
   background: hsl(var(--foreground) / .12);
 }
