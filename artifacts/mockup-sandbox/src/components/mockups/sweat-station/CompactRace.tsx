@@ -14,14 +14,42 @@ const teamColors: Record<string, string> = {
   Alabama: "#ba6d79", Georgia: "#b87a83",
 };
 
+// Public ESPN team marks keep the preview self-contained and use the teams
+// already represented by the sample board. Text initials remain as a fallback.
+const teamLogos: Record<string, string> = {
+  "NBA:Celtics": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+  "NBA:Bucks": "https://a.espncdn.com/i/teamlogos/nba/500/mil.png",
+  "NBA:Suns": "https://a.espncdn.com/i/teamlogos/nba/500/phx.png",
+  "NBA:Nuggets": "https://a.espncdn.com/i/teamlogos/nba/500/den.png",
+  "NBA:Knicks": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
+  "NBA:Heat": "https://a.espncdn.com/i/teamlogos/nba/500/mia.png",
+  "NFL:Bills": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+  "NFL:Chiefs": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
+  "NFL:Seahawks": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
+  "NFL:49ers": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png",
+  "NHL:Canucks": "https://a.espncdn.com/i/teamlogos/nhl/500/van.png",
+  "NHL:Oilers": "https://a.espncdn.com/i/teamlogos/nhl/500/edm.png",
+  "NHL:Bruins": "https://a.espncdn.com/i/teamlogos/nhl/500/bos.png",
+  "NHL:Rangers": "https://a.espncdn.com/i/teamlogos/nhl/500/nyr.png",
+  "NCAAB:North Carolina": "https://a.espncdn.com/i/teamlogos/ncaa/500/153.png",
+  "NCAAB:Duke": "https://a.espncdn.com/i/teamlogos/ncaa/500/150.png",
+  "NCAAF:Alabama": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png",
+  "NCAAF:Georgia": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png",
+};
+
 function initials(team: string) {
   const words = team.replace(/[^A-Za-z0-9 ]/g, "").split(/\s+/).filter(Boolean);
   return (words.length > 1 ? words.map(word => word[0]).join("") : words[0]?.slice(0, 3) ?? "—").toUpperCase();
 }
 
-function TeamMark({ team }: { team: string }) {
+function TeamMark({ team, league }: { team: string; league: string }) {
   const color = teamColors[team] ?? "#8c91a8";
-  return <span className="race-team-mark" style={{ color, backgroundColor: `${color}22`, border: `1px solid ${color}44` }} aria-hidden="true">{initials(team)}</span>;
+  return (
+    <span className="race-team-mark relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background/70" style={{ color, border: `1px solid ${color}44` }} aria-hidden="true">
+      <span className="absolute font-mono text-[9px] font-semibold">{initials(team)}</span>
+      {teamLogos[`${league}:${team}`] && <img src={teamLogos[`${league}:${team}`]} alt="" loading="lazy" referrerPolicy="no-referrer" className="relative z-[1] h-[78%] w-[78%] object-contain" onError={event => { event.currentTarget.style.display = "none"; }} />}
+    </span>
+  );
 }
 
 function RaceCard({ game, featured, onSelect }: { game: LiveGame; featured: boolean; onSelect: () => void }) {
@@ -49,13 +77,13 @@ function RaceCard({ game, featured, onSelect }: { game: LiveGame; featured: bool
       <div className="race-card-body mt-4">
         <div className="race-scoreboard grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <TeamMark team={game.away} />
+            <TeamMark team={game.away} league={game.league} />
             <span className={`truncate ${game.bet.side === "away" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.away}</span>
             {game.bet.side === "away" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
           </div>
           <span className={`font-mono text-lg tabular ${game.bet.side === "away" ? "font-semibold" : "text-muted-foreground"}`}>{game.awayScore}</span>
           <div className="flex min-w-0 items-center gap-2.5">
-            <TeamMark team={game.home} />
+            <TeamMark team={game.home} league={game.league} />
             <span className={`truncate ${game.bet.side === "home" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{game.home}</span>
             {game.bet.side === "home" && <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold text-primary-readable" style={{ backgroundColor: "hsl(var(--primary) / .15)" }}>Held</span>}
           </div>
