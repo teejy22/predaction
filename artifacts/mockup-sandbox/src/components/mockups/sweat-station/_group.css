@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Prediction Pro brand tokens, copied from the live site. */
+:root, .dark {
+  --background: 234 29% 6%;
+  --foreground: 250 25% 96%;
+  --border: 234 18% 17%;
+  --card: 234 24% 9%;
+  --card-foreground: 250 25% 96%;
+  --card-border: 234 18% 17%;
+  --popover: 234 24% 10%;
+  --popover-foreground: 250 25% 96%;
+  --primary: 262 59% 50%;
+  --primary-readable: 262 84% 72%;
+  --primary-foreground: 250 25% 98%;
+  --secondary: 234 18% 15%;
+  --secondary-foreground: 250 25% 96%;
+  --muted: 234 20% 12%;
+  --muted-foreground: 232 15% 58%;
+  --accent: 262 59% 50%;
+  --accent-foreground: 250 25% 98%;
+  --destructive: 0 68% 62%;
+  --destructive-foreground: 250 25% 98%;
+  --input: 234 18% 20%;
+  --ring: 262 70% 64%;
+  --chart-1: 262 59% 50%;
+  --chart-2: 158 55% 52%;
+  --chart-3: 37 88% 63%;
+  --chart-4: 202 72% 62%;
+  --chart-5: 0 68% 62%;
+  --app-font-sans: 'DM Sans', system-ui, sans-serif;
+  --app-font-mono: 'JetBrains Mono', monospace;
+  --radius: 0.55rem;
+}
+.font-display{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-0.04em}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* Small helpers the Sweat Station page uses from the live site. */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.rise{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.live-dot{animation:pulse-dot 1.4s ease-in-out infinite}
+.ss-root{font-family:var(--app-font-sans);background:hsl(var(--background));color:hsl(var(--foreground));min-height:100dvh}
+.ss-root .font-mono{font-family:var(--app-font-mono)}
+@media (prefers-reduced-motion: reduce){.rise,.live-dot{animation:none}}
