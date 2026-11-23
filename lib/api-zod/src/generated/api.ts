@@ -912,7 +912,7 @@ export const GetSportsGameResponse = zod.object({
 
 
 /**
- * @summary Largest open Polymarket positions of one football leaderboard wallet
+ * @summary Largest open NFL and college football Polymarket positions of one football leaderboard wallet
  */
 export const GetSharpWalletParams = zod.object({
   "wallet": zod.coerce.string()
@@ -932,7 +932,7 @@ export const GetSharpWalletResponse = zod.object({
   "pnl": zod.number().optional().describe('Unrealized profit or loss in US dollars'),
   "url": zod.string().optional()
 }))
-}).describe('Largest open Polymarket positions of one wallet on FlowFrame\'s football sharps leaderboard, on any market. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.')
+}).describe('Largest open NFL and college football Polymarket positions (games, props and season markets) of one wallet on FlowFrame\'s football sharps leaderboard. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.')
 
 
 /**

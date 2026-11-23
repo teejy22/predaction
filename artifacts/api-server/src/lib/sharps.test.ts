@@ -77,3 +77,14 @@ test("wallet list keeps open positions on any market and drops settled ones", as
   assert.equal(walletPosition({ status: "OPEN", title: "A", outcome: "Yes", current_size: 10, avg_price: 0.5, current_value: 0.4 }), undefined);
   assert.equal(walletPosition({ status: "OPEN", title: "A", outcome: "Yes", event_slug: "javascript:x", current_size: 10, avg_price: 0.5, current_value: 5 })?.url, undefined);
 });
+
+test("only NFL and college football markets count as football", async () => {
+  const { isFootball } = await import("./sharps");
+  assert.equal(isFootball({ event_slug: "nfl-cin-was-2026-11-24", title: "Spread: Bengals (-6.5)" }), true);
+  assert.equal(isFootball({ event_slug: "cfb-osu-mich-2026-11-28", title: "Ohio State vs. Michigan" }), true);
+  assert.equal(isFootball({ event_slug: "pro-football-afc-north-champion", title: "Will Cincinnati Bengals win the 2026 AFC North?" }), true);
+  assert.equal(isFootball({ event_slug: "nfl-team-to-make-postseason", title: "Will the Pittsburgh Steelers make the 2027 NFL Playoffs?" }), true);
+  assert.equal(isFootball({ event_slug: "epl-2027-champion-1", title: "Will Liverpool win the 2026-27 English Premier League (EPL) Championship?" }), false);
+  assert.equal(isFootball({ event_slug: "cbb-den-kan-2026-11-24", title: "Denver Pioneers vs. Kansas Jayhawks: O/U 157.5" }), false);
+  assert.equal(isFootball({ event_slug: "nba-2027-champion", title: "Will Los Angeles Lakers win the 2027 NBA Finals?" }), false);
+});

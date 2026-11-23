@@ -541,7 +541,7 @@ export const getGetSharpWalletUrl = (wallet: string,) => {
 }
 
 /**
- * @summary Largest open Polymarket positions of one football leaderboard wallet
+ * @summary Largest open NFL and college football Polymarket positions of one football leaderboard wallet
  */
 export const getSharpWallet = async (wallet: string, options?: Parameters<typeof customFetch>[1]): Promise<SharpWallet> => {
 
@@ -588,7 +588,7 @@ export type GetSharpWalletQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Largest open Polymarket positions of one football leaderboard wallet
+ * @summary Largest open NFL and college football Polymarket positions of one football leaderboard wallet
  */
 
 export function useGetSharpWallet<TData = Awaited<ReturnType<typeof getSharpWallet>>, TError = ErrorType<unknown>>(

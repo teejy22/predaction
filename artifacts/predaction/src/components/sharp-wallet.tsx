@@ -5,7 +5,7 @@ import { updatedLabel } from "@/lib/format";
 const cents = (value: number) => `${value < 10 ? value.toFixed(1).replace(/\.0$/, "") : value.toFixed(0)}¢`;
 const signed = (value: number) => `${value >= 0 ? "+" : "−"}${fmtDollars(Math.abs(value))}`;
 
-// A leaderboard wallet's five largest open Polymarket positions, loaded when its row is opened.
+// A leaderboard wallet's five largest open NFL and college football positions on Polymarket, loaded when its row is opened.
 export function SharpWalletPositions({ wallet, profile }: { wallet: string; profile?: string }) {
   const query = useGetSharpWallet(wallet, {
     query: {
@@ -19,13 +19,13 @@ export function SharpWalletPositions({ wallet, profile }: { wallet: string; prof
   return (
     <div className="border-t border-border/60 px-3 pb-4 pt-3 sm:px-4 sm:pl-[4.5rem]" data-testid={`panel-wallet-positions-${wallet}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="text-xs font-semibold">Top open positions{data?.name ? <span className="font-normal text-muted-foreground"> · {data.name}</span> : null}</p>
+        <p className="text-xs font-semibold">Top open football positions{data?.name ? <span className="font-normal text-muted-foreground"> · {data.name}</span> : null}</p>
         {profile && <a href={profile} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Polymarket profile</a>}
       </div>
       {query.isLoading ? <p className={`mt-2 ${note}`}>Loading positions…</p>
         : query.isError || !data ? <p className={`mt-2 ${note}`}>Positions for this wallet could not be loaded right now.</p>
         : !data.loaded ? <p className={`mt-2 ${note}`}>Still reading this wallet's positions. This fills in within a minute or two.</p>
-        : !data.positions.length ? <p className={`mt-2 ${note}`}>No open positions right now.</p>
+        : !data.positions.length ? <p className={`mt-2 ${note}`}>No open NFL or college football positions right now.</p>
         : <>
           <ol className="mt-1 divide-y divide-border/60">
             {data.positions.map((position, index) => {
@@ -46,7 +46,7 @@ export function SharpWalletPositions({ wallet, profile }: { wallet: string; prof
               );
             })}
           </ol>
-          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">Largest open positions on Polymarket by current value, on any market. The colored figure is unrealized profit or loss.{data.updatedAt ? ` Checked ${updatedLabel(data.updatedAt)}.` : ""}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">Largest open NFL and college football positions on Polymarket by current value, including season-long bets. The colored figure is unrealized profit or loss.{data.updatedAt ? ` Checked ${updatedLabel(data.updatedAt)}.` : ""}</p>
         </>}
     </div>
   );

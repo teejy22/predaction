@@ -292,7 +292,7 @@ export type SharpWalletPositionsItem = {
 };
 
 /**
- * Largest open Polymarket positions of one wallet on FlowFrame's football sharps leaderboard, on any market. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.
+ * Largest open NFL and college football Polymarket positions (games, props and season markets) of one wallet on FlowFrame's football sharps leaderboard. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.
  */
 export interface SharpWallet {
   wallet: string;

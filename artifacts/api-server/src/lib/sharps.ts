@@ -27,7 +27,7 @@ export type RawPosition = {
   current_price?: number; unrealized_pnl?: number; name?: string;
 };
 export type WalletPosition = { title: string; outcome: string; value: number; avgPrice: number; price?: number; pnl?: number; url?: string };
-// How many of a wallet's largest open positions are kept for its detail view.
+// How many of a wallet's largest open football positions are kept for its detail view.
 const TOP_POSITIONS = 5;
 export type SharpBet = {
   wallet: string; rank: number; league: string; date: string; codes: [string, string];
@@ -89,7 +89,13 @@ export function normalizePosition(raw: RawPosition, wallet: string, rank: number
   return undefined;
 }
 
-// Any open position on any market, for a wallet's own list. Settled and empty positions are not current holdings.
+// Whether a position is on NFL or college football: games, props, season-long and futures markets. Polymarket files
+// games under "nfl-"/"cfb-" and season markets under "pro-football-"/"college-football-"; titles name the league otherwise.
+export function isFootball(raw: RawPosition): boolean {
+  return /^(nfl|cfb|pro-football|college-football)-/.test(raw.event_slug ?? "") || /\b(NFL|CFB|College Football|Heisman|Super Bowl)\b/i.test(raw.title ?? "");
+}
+
+// Any open position, for a wallet's own list. Settled and empty positions are not current holdings.
 export function walletPosition(raw: RawPosition): WalletPosition | undefined {
   const size = finite(raw.current_size), avg = finite(raw.avg_price), value = finite(raw.current_value);
   if (raw.status !== "OPEN" || raw.redeemable === true) return undefined;
@@ -230,7 +236,7 @@ async function fetchWallet(wallet: string, rank: number): Promise<Loaded> {
     for (const raw of body.data) {
       const bet = normalizePosition(raw, wallet, rank);
       if (bet) bets.push(bet);
-      const held = walletPosition(raw);
+      const held = isFootball(raw) ? walletPosition(raw) : undefined;
       if (held) top.push(held);
       name ||= clean(raw.name) || undefined;
     }
@@ -287,7 +293,7 @@ function refreshWhenDue() {
     .finally(() => { pending = undefined; });
 }
 
-// The largest open positions of one leaderboard wallet, from the same shared load. "unknown" means the wallet is not
+// The largest open NFL and college football positions of one leaderboard wallet, from the same shared load. "unknown" means the wallet is not
 // on the leaderboard; "pending" means its positions are not loaded (yet, or not recently enough to call current).
 export function getSharpWallet(wallet: string):
   { status: "unknown" } | { status: "pending" } | { status: "ready"; name?: string; updatedAt: string; positions: WalletPosition[] } {
