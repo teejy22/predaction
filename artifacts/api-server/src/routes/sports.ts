@@ -10,6 +10,7 @@ import {
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
 import { attachDotaTeams } from "../lib/opendota";
 import { attachPolymarket, attachPriceGap, getPolymarketGames } from "../lib/polymarket-us";
+import { attachSharps, getSharpBets } from "../lib/sharps";
 import { easternDate, gameKeyFor, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -105,10 +106,11 @@ router.get("/sports/games", async (req, res): Promise<void> => {
       Math.max(...b.events.map(eventCreatedAt)) - Math.max(...a.events.map(eventCreatedAt)) || a.title.localeCompare(b.title),
     );
     else games.sort((a, b) => b.volume24h - a.volume24h || a.title.localeCompare(b.title));
+    const sharps = getSharpBets();
     res.json(ListSportsGamesResponse.parse({
       // Logos are matched only for the page being returned, not the whole index.
-      games: games.slice(offset, offset + limit).map(game => summarizeSportsGame(attachDotaTeams(attachTeamLogos(game, teams)))), total: games.length,
-      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos · OpenDota (Dota 2 team logos and records) · Polymarket US public API (winner prices on matched games)",
+      games: games.slice(offset, offset + limit).map(game => summarizeSportsGame(attachSharps(attachDotaTeams(attachTeamLogos(game, teams)), sharps.bets, sharps))), total: games.length,
+      updatedAt: data.updatedAt, source: "Kalshi public API · grouped regular open sports events (excludes multivariate combinations; football/basketball limited to full-game Winner, Spread, and Total) · ESPN team logos · OpenDota (Dota 2 team logos and records) · Polymarket US public API (winner prices on matched games) · Polymarket public positions of FlowFrame football leaderboard wallets",
       partial: data.partial, indexing: data.indexing, warnings: data.warnings,
       indexedEvents: data.events.length, hasMore: offset + limit < games.length,
       nextOffset: Math.min(offset + limit, games.length),
@@ -129,7 +131,8 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
       .filter(event => event.categories.some(category => category.toLowerCase() === "sports")))), getPolymarketGames()).map(attachPriceGap);
     const game = games.find(item => item.key === parsed.data.key);
     if (!game) { res.status(404).json({ error: "Sports game not found in the open index." }); return; }
-    res.json(GetSportsGameResponse.parse(attachDotaTeams(attachTeamLogos(game, teams))));
+    const sharps = getSharpBets();
+    res.json(GetSportsGameResponse.parse(attachSharps(attachDotaTeams(attachTeamLogos(game, teams)), sharps.bets, sharps)));
   } catch (err) {
     sourceError(res, req, err, "Kalshi sports game request failed");
   }

@@ -723,6 +723,21 @@ export const ListSportsGamesResponse = zod.object({
   "polymarket": zod.number().describe('Polymarket US chance for that side, 0-100'),
   "points": zod.number().describe('Absolute difference in percentage points')
 }).optional().describe('Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price.'),
+  "sharps": zod.object({
+  "wallets": zod.number().int().describe('Distinct leaderboard wallets with an open position on this game'),
+  "value": zod.number().describe('Current value of those positions in US dollars'),
+  "tracked": zod.number().int().optional().describe('Leaderboard wallets whose positions were loaded'),
+  "updatedAt": zod.string(),
+  "bets": zod.array(zod.object({
+  "kind": zod.enum(['winner', 'spread', 'total']),
+  "label": zod.string().describe('The bet as held, e.g. \'Bengals -6.5\', \'Under 54.5\', \'Ravens to win\''),
+  "marketTicker": zod.string().optional().describe('Kalshi winner market for the team this bet backs; absent for totals'),
+  "wallets": zod.number().int(),
+  "value": zod.number().describe('Current value in US dollars'),
+  "avgPrice": zod.number().describe('Size-weighted average entry price in cents'),
+  "topRank": zod.number().int().optional().describe('Best leaderboard rank among the holders')
+}))
+}).optional().describe('Open Polymarket positions on this game held by wallets on FlowFrame\'s football sharps leaderboard. Absent when none of those wallets holds a full-game position, or when positions could not be loaded; absence is not zero.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({
@@ -828,6 +843,21 @@ export const GetSportsGameResponse = zod.object({
   "polymarket": zod.number().describe('Polymarket US chance for that side, 0-100'),
   "points": zod.number().describe('Absolute difference in percentage points')
 }).optional().describe('Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price.'),
+  "sharps": zod.object({
+  "wallets": zod.number().int().describe('Distinct leaderboard wallets with an open position on this game'),
+  "value": zod.number().describe('Current value of those positions in US dollars'),
+  "tracked": zod.number().int().optional().describe('Leaderboard wallets whose positions were loaded'),
+  "updatedAt": zod.string(),
+  "bets": zod.array(zod.object({
+  "kind": zod.enum(['winner', 'spread', 'total']),
+  "label": zod.string().describe('The bet as held, e.g. \'Bengals -6.5\', \'Under 54.5\', \'Ravens to win\''),
+  "marketTicker": zod.string().optional().describe('Kalshi winner market for the team this bet backs; absent for totals'),
+  "wallets": zod.number().int(),
+  "value": zod.number().describe('Current value in US dollars'),
+  "avgPrice": zod.number().describe('Size-weighted average entry price in cents'),
+  "topRank": zod.number().int().optional().describe('Best leaderboard rank among the holders')
+}))
+}).optional().describe('Open Polymarket positions on this game held by wallets on FlowFrame\'s football sharps leaderboard. Absent when none of those wallets holds a full-game position, or when positions could not be loaded; absence is not zero.'),
   "eventCount": zod.number().int(),
   "marketCount": zod.number().int(),
   "teams": zod.array(zod.object({

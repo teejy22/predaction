@@ -196,7 +196,7 @@ function abbreviates(short: string, long: string) {
 }
 
 // How confidently one written name refers to the same team as another: 0 none, 0.5 a shared distinctive word, 1 the same words.
-function nameScore(sideName: string, teamName: string) {
+export function nameScore(sideName: string, teamName: string) {
   const a = tokens(sideName);
   const b = tokens(teamName);
   if (!a.length || !b.length) return 0;

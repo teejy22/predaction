@@ -8,6 +8,7 @@
 import type { PolymarketGameQuote } from './polymarketGameQuote';
 import type { PredictionEvent } from './predictionEvent';
 import type { PriceGap } from './priceGap';
+import type { SharpPositions } from './sharpPositions';
 import type { TeamLogo } from './teamLogo';
 
 export interface SportsGame {
@@ -28,6 +29,7 @@ export interface SportsGame {
   startTime?: string;
   polymarket?: PolymarketGameQuote;
   priceGap?: PriceGap;
+  sharps?: SharpPositions;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];

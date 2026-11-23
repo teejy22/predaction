@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, ChevronDown } from "lucide-react";
 import { getGetSportsGameQueryKey, useGetSportsGame, type PredictionEvent, type PredictionMarket, type SportsGame, type TeamLogo } from "@workspace/api-client-react";
 import { ErrorPanel, KalshiCTA, WatchButton } from "@/components/bits";
 import { eventLabel } from "@/components/sports-game-card";
+import { SharpsPanel } from "@/components/sharps";
 import { liveScore, logoFor, polymarketChance } from "@/components/sports-matchup-card";
 import { leagueName } from "@/components/sports-sidebar";
 import { TeamLogos } from "@/components/team-logos";
@@ -80,6 +81,8 @@ export default function SportsGamePage() {
       {q.isRefetchError && <div className="mt-6 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs">Latest refresh failed. Showing last loaded data. <button onClick={() => q.refetch()} className="font-semibold text-primary underline">Retry</button></div>}
 
       {main && <WinnerPanel e={main} teams={g.teams} game={g} />}
+
+      {g.sharps && <SharpsPanel sharps={g.sharps} />}
 
       {g.teams.some((team) => team.wins !== undefined && team.losses !== undefined) && (
         <div className="mt-4 rounded-lg border border-border bg-card/75 px-4 py-3" data-testid="panel-team-records">

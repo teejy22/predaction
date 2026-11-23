@@ -291,6 +291,7 @@ components:
         startTime: { type: string, description: "Scheduled start (ISO 8601) from Polymarket US for matched games, otherwise from Kalshi when it publishes one" }
         polymarket: { $ref: "#/components/schemas/PolymarketGameQuote" }
         priceGap: { $ref: "#/components/schemas/PriceGap" }
+        sharps: { $ref: "#/components/schemas/SharpPositions" }
         eventCount: { type: integer }
         marketCount: { type: integer }
         teams:
@@ -299,6 +300,28 @@ components:
         events:
           type: array
           items: { $ref: "#/components/schemas/PredictionEvent" }
+    SharpPositions:
+      type: object
+      description: "Open Polymarket positions on this game held by wallets on FlowFrame's football sharps leaderboard. Absent when none of those wallets holds a full-game position, or when positions could not be loaded; absence is not zero."
+      required: [wallets, value, updatedAt, bets]
+      properties:
+        wallets: { type: integer, description: "Distinct leaderboard wallets with an open position on this game" }
+        value: { type: number, description: "Current value of those positions in US dollars" }
+        tracked: { type: integer, description: "Leaderboard wallets whose positions were loaded" }
+        updatedAt: { type: string }
+        bets:
+          type: array
+          items:
+            type: object
+            required: [kind, label, wallets, value, avgPrice]
+            properties:
+              kind: { type: string, enum: [winner, spread, total] }
+              label: { type: string, description: "The bet as held, e.g. 'Bengals -6.5', 'Under 54.5', 'Ravens to win'" }
+              marketTicker: { type: string, description: "Kalshi winner market for the team this bet backs; absent for totals" }
+              wallets: { type: integer }
+              value: { type: number, description: "Current value in US dollars" }
+              avgPrice: { type: number, description: "Size-weighted average entry price in cents" }
+              topRank: { type: integer, description: "Best leaderboard rank among the holders" }
     PriceGap:
       type: object
       description: "Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price."

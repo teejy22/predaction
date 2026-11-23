@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import type { PredictionMarket, SportsGame, TeamLogo } from "@workspace/api-client-react";
+import { SharpsLine } from "@/components/sharps";
 import { dayLabel, formatStartTime } from "@/components/upcoming-games";
 import { fmtContracts } from "@/lib/format";
 
@@ -87,6 +88,7 @@ export function SportsMatchupCard({ game }: { game: SportsGame }) {
           );
         }) : <p className="py-2 text-[10px] text-muted-foreground">No open outcomes available.</p>}
       </div>
+      {game.sharps ? <SharpsLine sharps={game.sharps} gameKey={game.key} /> : null}
       <div className="mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground sm:mt-3 sm:text-[10px]">
         <span className="font-mono tabular">{fmtContracts(game.volume)} vol</span>
         <span className="inline-flex items-center gap-0.5 font-semibold transition-colors group-hover:text-primary">

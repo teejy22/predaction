@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Layers } from "lucide-react";
 import type { PredictionEvent, PredictionMarket, SportsGame } from "@workspace/api-client-react";
+import { SharpsLine } from "@/components/sharps";
 import { TeamLogos } from "@/components/team-logos";
 import { closeLabel, fmtContracts } from "@/lib/format";
 
@@ -81,6 +82,7 @@ export function SportsGameCard({ game }: { game: SportsGame }) {
         )) : <p className="py-3 text-[10px] text-muted-foreground">No open outcomes available.</p>}
       </div>
 
+      {game.sharps ? <SharpsLine sharps={game.sharps} gameKey={game.key} /> : null}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <span className="font-mono text-[9px] text-muted-foreground">{closeLabel(game.closeTime)}</span>
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary" data-testid={`text-more-markets-${game.key}`}>

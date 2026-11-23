@@ -213,6 +213,44 @@ export interface PriceGap {
   points: number;
 }
 
+export type SharpPositionsBetsItemKind = typeof SharpPositionsBetsItemKind[keyof typeof SharpPositionsBetsItemKind];
+
+
+export const SharpPositionsBetsItemKind = {
+  winner: 'winner',
+  spread: 'spread',
+  total: 'total',
+} as const;
+
+export type SharpPositionsBetsItem = {
+  kind: SharpPositionsBetsItemKind;
+  /** The bet as held, e.g. 'Bengals -6.5', 'Under 54.5', 'Ravens to win' */
+  label: string;
+  /** Kalshi winner market for the team this bet backs; absent for totals */
+  marketTicker?: string;
+  wallets: number;
+  /** Current value in US dollars */
+  value: number;
+  /** Size-weighted average entry price in cents */
+  avgPrice: number;
+  /** Best leaderboard rank among the holders */
+  topRank?: number;
+};
+
+/**
+ * Open Polymarket positions on this game held by wallets on FlowFrame's football sharps leaderboard. Absent when none of those wallets holds a full-game position, or when positions could not be loaded; absence is not zero.
+ */
+export interface SharpPositions {
+  /** Distinct leaderboard wallets with an open position on this game */
+  wallets: number;
+  /** Current value of those positions in US dollars */
+  value: number;
+  /** Leaderboard wallets whose positions were loaded */
+  tracked?: number;
+  updatedAt: string;
+  bets: SharpPositionsBetsItem[];
+}
+
 export interface SportsGame {
   key: string;
   title: string;
@@ -231,6 +269,7 @@ export interface SportsGame {
   startTime?: string;
   polymarket?: PolymarketGameQuote;
   priceGap?: PriceGap;
+  sharps?: SharpPositions;
   eventCount: number;
   marketCount: number;
   teams: TeamLogo[];

@@ -7,12 +7,13 @@
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
-    "test": "esbuild src/lib/kalshi.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/kalshi.test.mjs && NODE_ENV=production node --test dist/kalshi.test.mjs && pnpm run test:sports-games && pnpm run test:espn && pnpm run test:flowframe && pnpm run test:polymarket-us",
+    "test": "esbuild src/lib/kalshi.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/kalshi.test.mjs && NODE_ENV=production node --test dist/kalshi.test.mjs && pnpm run test:sports-games && pnpm run test:espn && pnpm run test:flowframe && pnpm run test:polymarket-us && pnpm run test:sharps",
     "test:polymarket-us": "esbuild src/lib/polymarket-us.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/polymarket-us.test.mjs && node --test dist/polymarket-us.test.mjs",
     "test:sports-games": "esbuild src/lib/sports-games.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/sports-games.test.mjs && node --test dist/sports-games.test.mjs",
     "test:espn": "esbuild src/lib/espn.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/espn.test.mjs && node --test dist/espn.test.mjs",
     "test:flowframe": "esbuild src/lib/flowframe.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/flowframe.test.mjs && node --test dist/flowframe.test.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:sharps": "esbuild src/lib/sharps.test.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/sharps.test.mjs && node --test dist/sharps.test.mjs"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",
