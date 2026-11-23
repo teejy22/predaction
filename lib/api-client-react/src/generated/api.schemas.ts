@@ -276,6 +276,33 @@ export interface SportsGame {
   events: PredictionEvent[];
 }
 
+export type SharpWalletPositionsItem = {
+  title: string;
+  /** The side held */
+  outcome: string;
+  /** Current value in US dollars */
+  value: number;
+  /** Average entry price in cents */
+  avgPrice: number;
+  /** Current price in cents */
+  price?: number;
+  /** Unrealized profit or loss in US dollars */
+  pnl?: number;
+  url?: string;
+};
+
+/**
+ * Largest open Polymarket positions of one wallet on FlowFrame's football sharps leaderboard, on any market. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.
+ */
+export interface SharpWallet {
+  wallet: string;
+  loaded: boolean;
+  /** Public Polymarket username, when the account has one */
+  name?: string;
+  updatedAt?: string;
+  positions: SharpWalletPositionsItem[];
+}
+
 export interface SportsGameFeed {
   games: SportsGame[];
   total: number;

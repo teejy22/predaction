@@ -94,6 +94,18 @@ paths:
           content:
             application/json:
                schema: { $ref: "#/components/schemas/SportsGame" }
+  /sports/sharps/{wallet}:
+    get:
+      operationId: getSharpWallet
+      summary: Largest open Polymarket positions of one football leaderboard wallet
+      parameters:
+        - { name: wallet, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The wallet's largest open positions, or loaded=false while they are not available
+          content:
+            application/json:
+               schema: { $ref: "#/components/schemas/SharpWallet" }
   /overview:
     get:
       operationId: getOverview
@@ -322,6 +334,28 @@ components:
               value: { type: number, description: "Current value in US dollars" }
               avgPrice: { type: number, description: "Size-weighted average entry price in cents" }
               topRank: { type: integer, description: "Best leaderboard rank among the holders" }
+    SharpWallet:
+      type: object
+      description: "Largest open Polymarket positions of one wallet on FlowFrame's football sharps leaderboard, on any market. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing."
+      required: [wallet, loaded, positions]
+      properties:
+        wallet: { type: string }
+        loaded: { type: boolean }
+        name: { type: string, description: "Public Polymarket username, when the account has one" }
+        updatedAt: { type: string }
+        positions:
+          type: array
+          items:
+            type: object
+            required: [title, outcome, value, avgPrice]
+            properties:
+              title: { type: string }
+              outcome: { type: string, description: "The side held" }
+              value: { type: number, description: "Current value in US dollars" }
+              avgPrice: { type: number, description: "Average entry price in cents" }
+              price: { type: number, description: "Current price in cents" }
+              pnl: { type: number, description: "Unrealized profit or loss in US dollars" }
+              url: { type: string }
     PriceGap:
       type: object
       description: "Disagreement between the two exchanges on the same winner market. Present only when both have a reliable two-sided price."

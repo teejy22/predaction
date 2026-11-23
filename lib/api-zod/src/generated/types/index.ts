@@ -31,6 +31,8 @@ export * from './priceGap';
 export * from './sharpPositions';
 export * from './sharpPositionsBetsItem';
 export * from './sharpPositionsBetsItemKind';
+export * from './sharpWallet';
+export * from './sharpWalletPositionsItem';
 export * from './sportCategory';
 export * from './sportCategoryLeagueCountsItem';
 export * from './sportsGame';

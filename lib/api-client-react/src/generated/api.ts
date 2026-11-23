@@ -24,6 +24,7 @@ import type {
   ListSportsGamesParams,
   MarketOverview,
   PredictionEvent,
+  SharpWallet,
   SportsGame,
   SportsGameFeed
 } from './api.schemas';
@@ -519,6 +520,83 @@ export function useGetSportsGame<TData = Awaited<ReturnType<typeof getSportsGame
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetSportsGameQueryOptions(key,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSharpWalletUrl = (wallet: string,) => {
+
+
+
+
+  return `/api/sports/sharps/${wallet}`
+}
+
+/**
+ * @summary Largest open Polymarket positions of one football leaderboard wallet
+ */
+export const getSharpWallet = async (wallet: string, options?: Parameters<typeof customFetch>[1]): Promise<SharpWallet> => {
+
+  return customFetch<SharpWallet>(getGetSharpWalletUrl(wallet),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSharpWalletQueryKey = (wallet: string,) => {
+    return [
+    `/api/sports/sharps/${wallet}`
+    ] as const;
+    }
+
+
+export const getGetSharpWalletQueryOptions = <TData = Awaited<ReturnType<typeof getSharpWallet>>, TError = ErrorType<unknown>>(wallet: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSharpWallet>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSharpWalletQueryKey(wallet);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSharpWallet>>> = ({ signal }) => getSharpWallet(wallet, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: wallet !== null && wallet !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSharpWallet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSharpWalletQueryResult = NonNullable<Awaited<ReturnType<typeof getSharpWallet>>>
+export type GetSharpWalletQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Largest open Polymarket positions of one football leaderboard wallet
+ */
+
+export function useGetSharpWallet<TData = Awaited<ReturnType<typeof getSharpWallet>>, TError = ErrorType<unknown>>(
+ wallet: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSharpWallet>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSharpWalletQueryOptions(wallet,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

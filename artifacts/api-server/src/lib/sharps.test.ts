@@ -68,3 +68,12 @@ test("matches by team nickname when the short codes differ", () => {
   } as Partial<SportsGame>);
   assert.equal(attachSharps(g, bets([jax, W1, 1]), meta).sharps?.bets[0]!.marketTicker, "KXNFLGAME-26NOV23JACWAS-JAC");
 });
+
+test("wallet list keeps open positions on any market and drops settled ones", async () => {
+  const { walletPosition } = await import("./sharps");
+  const held = walletPosition({ status: "OPEN", redeemable: false, title: "Will Liverpool win the league?", outcome: "Yes", event_slug: "epl-2027-champion", current_size: 2753.97, avg_price: 0.0302, current_price: 0.1365, current_value: 375.9169, unrealized_pnl: 292.671 });
+  assert.deepEqual(held, { title: "Will Liverpool win the league?", outcome: "Yes", value: 375.92, avgPrice: 3, price: 13.7, pnl: 292.67, url: "https://polymarket.com/event/epl-2027-champion" });
+  assert.equal(walletPosition({ status: "REDEEMABLE", redeemable: true, title: "A", outcome: "Yes", current_size: 10, avg_price: 0.5, current_value: 10 }), undefined);
+  assert.equal(walletPosition({ status: "OPEN", title: "A", outcome: "Yes", current_size: 10, avg_price: 0.5, current_value: 0.4 }), undefined);
+  assert.equal(walletPosition({ status: "OPEN", title: "A", outcome: "Yes", event_slug: "javascript:x", current_size: 10, avg_price: 0.5, current_value: 5 })?.url, undefined);
+});

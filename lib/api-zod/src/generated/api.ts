@@ -912,6 +912,30 @@ export const GetSportsGameResponse = zod.object({
 
 
 /**
+ * @summary Largest open Polymarket positions of one football leaderboard wallet
+ */
+export const GetSharpWalletParams = zod.object({
+  "wallet": zod.coerce.string()
+})
+
+export const GetSharpWalletResponse = zod.object({
+  "wallet": zod.string(),
+  "loaded": zod.boolean(),
+  "name": zod.string().optional().describe('Public Polymarket username, when the account has one'),
+  "updatedAt": zod.string().optional(),
+  "positions": zod.array(zod.object({
+  "title": zod.string(),
+  "outcome": zod.string().describe('The side held'),
+  "value": zod.number().describe('Current value in US dollars'),
+  "avgPrice": zod.number().describe('Average entry price in cents'),
+  "price": zod.number().optional().describe('Current price in cents'),
+  "pnl": zod.number().optional().describe('Unrealized profit or loss in US dollars'),
+  "url": zod.string().optional()
+}))
+}).describe('Largest open Polymarket positions of one wallet on FlowFrame\'s football sharps leaderboard, on any market. When loaded is false the positions are not available yet and the empty list does not mean the wallet holds nothing.')
+
+
+/**
  * @summary Indexed category counts and feed statistics
  */
 export const GetOverviewResponse = zod.object({

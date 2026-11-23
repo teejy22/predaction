@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import {
   ListEventsQueryParams, ListEventsResponse, GetEventParams, GetEventResponse, GetOverviewResponse,
-  ListSportsGamesQueryParams, ListSportsGamesResponse, GetSportsGameParams, GetSportsGameResponse,
+  ListSportsGamesQueryParams, ListSportsGamesResponse, GetSportsGameParams, GetSportsGameResponse, GetSharpWalletResponse,
 } from "@workspace/api-zod";
 import {
   attachKalshiVisual, attachKalshiVisuals, getSnapshot, getEvent, KalshiError,
@@ -10,7 +10,7 @@ import {
 import { attachEventTeamLogos, attachTeamLogos, getEspnTeams } from "../lib/espn";
 import { attachDotaTeams } from "../lib/opendota";
 import { attachPolymarket, attachPriceGap, getPolymarketGames } from "../lib/polymarket-us";
-import { attachSharps, getSharpBets } from "../lib/sharps";
+import { attachSharps, getSharpBets, getSharpWallet } from "../lib/sharps";
 import { easternDate, gameKeyFor, groupSportsGames, selectMainMarketEvents, summarizeSportsGame } from "../lib/sports-games";
 
 const router: IRouter = Router();
@@ -136,6 +136,16 @@ router.get("/sports/games/:key", async (req, res): Promise<void> => {
   } catch (err) {
     sourceError(res, req, err, "Kalshi sports game request failed");
   }
+});
+
+router.get("/sports/sharps/:wallet", (req, res): void => {
+  const wallet = String(req.params.wallet ?? "").toLowerCase();
+  if (!/^0x[0-9a-f]{40}$/.test(wallet)) { res.status(400).json({ error: "Invalid wallet address." }); return; }
+  const found = getSharpWallet(wallet);
+  if (found.status === "unknown") { res.status(404).json({ error: "This wallet is not on the football leaderboard." }); return; }
+  res.json(GetSharpWalletResponse.parse(found.status === "ready"
+    ? { wallet, loaded: true, ...(found.name ? { name: found.name } : {}), updatedAt: found.updatedAt, positions: found.positions }
+    : { wallet, loaded: false, positions: [] }));
 });
 
 router.get(["/events/:ticker", "/sports/events/:ticker"], async (req, res): Promise<void> => {

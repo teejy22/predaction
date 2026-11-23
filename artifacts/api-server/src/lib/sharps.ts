@@ -24,7 +24,11 @@ const LEAGUE_BY_SERIES: Record<string, string> = { KXNFLGAME: "nfl", KXNCAAFGAME
 export type RawPosition = {
   status?: string; redeemable?: boolean; slug?: string; event_slug?: string; title?: string;
   outcome?: string; opposite_outcome?: string; current_size?: number; avg_price?: number; current_value?: number;
+  current_price?: number; unrealized_pnl?: number; name?: string;
 };
+export type WalletPosition = { title: string; outcome: string; value: number; avgPrice: number; price?: number; pnl?: number; url?: string };
+// How many of a wallet's largest open positions are kept for its detail view.
+const TOP_POSITIONS = 5;
 export type SharpBet = {
   wallet: string; rank: number; league: string; date: string; codes: [string, string];
   kind: "winner" | "spread" | "total"; label: string;
@@ -83,6 +87,24 @@ export function normalizePosition(raw: RawPosition, wallet: string, rank: number
     return { ...base, kind: "spread", label: `${outcome} ${fav === mine ? "-" : "+"}${line}`, teams, backs: mine };
   }
   return undefined;
+}
+
+// Any open position on any market, for a wallet's own list. Settled and empty positions are not current holdings.
+export function walletPosition(raw: RawPosition): WalletPosition | undefined {
+  const size = finite(raw.current_size), avg = finite(raw.avg_price), value = finite(raw.current_value);
+  if (raw.status !== "OPEN" || raw.redeemable === true) return undefined;
+  if (size === undefined || avg === undefined || value === undefined || size <= 0 || value < 1 || avg <= 0 || avg > 1) return undefined;
+  const title = (raw.title ?? "").replace(/\s+/g, " ").trim().slice(0, 160);
+  const outcome = (raw.outcome ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+  if (!title || !outcome) return undefined;
+  const price = finite(raw.current_price), pnl = finite(raw.unrealized_pnl);
+  const slug = raw.event_slug ?? "";
+  return {
+    title, outcome, value: round(value, 2), avgPrice: round(avg * 100, 1),
+    ...(price !== undefined && price >= 0 && price <= 1 ? { price: round(price * 100, 1) } : {}),
+    ...(pnl !== undefined ? { pnl: round(pnl, 2) } : {}),
+    ...(/^[a-z0-9-]{1,200}$/.test(slug) ? { url: `https://polymarket.com/event/${slug}` } : {}),
+  };
 }
 
 type Side = { ticker: string; name: string; code: string; full?: string };
@@ -182,12 +204,17 @@ export function attachSharps(game: SportsGame, bets: SharpBet[], meta: { tracked
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-const byWallet = new Map<string, { bets: SharpBet[]; at: number }>();
+type Loaded = { bets: SharpBet[]; top: WalletPosition[]; name?: string };
+const byWallet = new Map<string, Loaded & { at: number }>();
+// Wallets on the leaderboard as of the last refresh; undefined until the leaderboard has been read once.
+let listedWallets: Set<string> | undefined;
 let nextRefresh = 0;
 let pending: Promise<void> | undefined;
 
-async function fetchWallet(wallet: string, rank: number): Promise<SharpBet[]> {
+async function fetchWallet(wallet: string, rank: number): Promise<Loaded> {
   const bets: SharpBet[] = [];
+  const top: WalletPosition[] = [];
+  let name: string | undefined;
   let cursor = "";
   for (let page = 0; page < MAX_PAGES; page++) {
     const url = `${API}?user=${wallet}&limit=${PAGE_SIZE}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
@@ -203,6 +230,9 @@ async function fetchWallet(wallet: string, rank: number): Promise<SharpBet[]> {
     for (const raw of body.data) {
       const bet = normalizePosition(raw, wallet, rank);
       if (bet) bets.push(bet);
+      const held = walletPosition(raw);
+      if (held) top.push(held);
+      name ||= clean(raw.name) || undefined;
     }
     // Positions arrive largest current value first, so a page ending in worthless ones has no open bets after it.
     const last = body.data[body.data.length - 1];
@@ -210,7 +240,9 @@ async function fetchWallet(wallet: string, rank: number): Promise<SharpBet[]> {
     cursor = body.pagination.next_cursor;
     await sleep(PAUSE);
   }
-  return bets;
+  top.sort((a, b) => b.value - a.value);
+  // An unnamed account reports its own address as the name; that is not a name.
+  return { bets, top: top.slice(0, TOP_POSITIONS), ...(name && !/^0x[0-9a-f]{6,}/i.test(name) ? { name } : {}) };
 }
 
 async function refresh() {
@@ -219,6 +251,7 @@ async function refresh() {
     item.wallet && /^0x[0-9a-f]{40}$/i.test(item.wallet) && item.rank ? [{ wallet: item.wallet.toLowerCase(), rank: item.rank }] : []);
   if (!wallets.length) throw new Error("Football leaderboard is unavailable");
   const listed = new Set(wallets.map(item => item.wallet));
+  listedWallets = listed;
   for (const wallet of byWallet.keys()) if (!listed.has(wallet)) byWallet.delete(wallet);
   let failed = 0;
   let reason = "";
@@ -230,7 +263,7 @@ async function refresh() {
     const have = byWallet.get(item.wallet);
     if (have && Date.now() - have.at < REFRESH / 2) continue;
     try {
-      byWallet.set(item.wallet, { bets: await fetchWallet(item.wallet, item.rank), at: Date.now() });
+      byWallet.set(item.wallet, { ...await fetchWallet(item.wallet, item.rank), at: Date.now() });
       streak = 0;
     } catch (err) {
       streak++;
@@ -245,15 +278,31 @@ async function refresh() {
   if (streak >= 3) throw new Error("Polymarket positions are being refused; retrying later");
 }
 
+function refreshWhenDue() {
+  const now = Date.now();
+  if (pending || now < nextRefresh) return;
+  nextRefresh = now + REFRESH;
+  pending = refresh()
+    .catch(err => { nextRefresh = Date.now() + RETRY; logger.warn({ err }, "Sharp positions refresh failed; keeping the last loaded positions"); })
+    .finally(() => { pending = undefined; });
+}
+
+// The largest open positions of one leaderboard wallet, from the same shared load. "unknown" means the wallet is not
+// on the leaderboard; "pending" means its positions are not loaded (yet, or not recently enough to call current).
+export function getSharpWallet(wallet: string):
+  { status: "unknown" } | { status: "pending" } | { status: "ready"; name?: string; updatedAt: string; positions: WalletPosition[] } {
+  refreshWhenDue();
+  const key = wallet.toLowerCase();
+  if (listedWallets && !listedWallets.has(key)) return { status: "unknown" };
+  const entry = byWallet.get(key);
+  if (!entry || Date.now() - entry.at >= STALE_AFTER) return { status: "pending" };
+  return { status: "ready", ...(entry.name ? { name: entry.name } : {}), updatedAt: new Date(entry.at).toISOString(), positions: entry.top };
+}
+
 // Never blocks a request: returns what is loaded and refreshes in the background when due.
 export function getSharpBets(): { bets: SharpBet[]; tracked: number; updatedAt: string } {
+  refreshWhenDue();
   const now = Date.now();
-  if (!pending && now >= nextRefresh) {
-    nextRefresh = now + REFRESH;
-    pending = refresh()
-      .catch(err => { nextRefresh = Date.now() + RETRY; logger.warn({ err }, "Sharp positions refresh failed; keeping the last loaded positions"); })
-      .finally(() => { pending = undefined; });
-  }
   const fresh = [...byWallet.values()].filter(entry => now - entry.at < STALE_AFTER);
   return {
     bets: fresh.flatMap(entry => entry.bets), tracked: fresh.length,

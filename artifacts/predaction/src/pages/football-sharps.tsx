@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Search, Trophy } from "lucide-react";
+import { ChevronDown, Search, Trophy } from "lucide-react";
 import type { FlowframeItem } from "@workspace/api-client-react";
 import { usePageMeta } from "@/lib/meta";
 import { useFlowframeToolsData } from "@/components/flowframe-data";
 import { FeedStatus, FlowframeAttribution, SourceLink } from "@/components/flowframe-feed-ui";
 import { TradeList } from "@/components/flowframe-lists";
+import { SharpWalletPositions } from "@/components/sharp-wallet";
 import { externalHref, shortWallet } from "@/components/flowframe-data";
 
 type League = "all" | "nfl" | "cfb";
@@ -18,13 +19,16 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 }
 
 function RankingRow({ item }: { item: FlowframeItem }) {
+  const [open, setOpen] = useState(false);
   const pnlTone = item.realizedPnl === undefined ? "text-muted-foreground" : item.realizedPnl >= 0 ? "text-emerald-200" : "text-rose-200";
   const profile = externalHref(item.profileUrl);
+  const wallet = item.wallet && /^0x[0-9a-fA-F]{40}$/.test(item.wallet) ? item.wallet.toLowerCase() : undefined;
   const walletName = item.wallet ? shortWallet(item.wallet) : item.title;
-  return <article data-testid={`row-football-rank-${item.id}`} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 border-b border-border/70 px-3 py-4 last:border-0 sm:grid-cols-[3rem_minmax(0,1.7fr)_repeat(4,minmax(4.5rem,.7fr))] sm:items-center sm:px-4">
+  const grid = "grid w-full grid-cols-[2.5rem_minmax(0,1fr)] gap-3 px-3 py-4 text-left sm:grid-cols-[3rem_minmax(0,1.7fr)_repeat(4,minmax(4.5rem,.7fr))] sm:items-center sm:px-4";
+  const cells = <>
     <div className="font-mono text-lg font-semibold text-primary tabular">{item.rank === undefined ? "—" : `#${item.rank}`}</div>
     <div className="min-w-0">
-      {profile ? <a href={profile} target="_blank" rel="noopener noreferrer" title={item.wallet} className="inline-flex max-w-full items-center gap-1 truncate text-sm font-semibold hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{walletName}<ExternalLink aria-hidden="true" className="h-3 w-3 shrink-0 text-muted-foreground" /></a> : <p className="truncate text-sm font-semibold" title={item.wallet}>{walletName}</p>}
+      <p className="flex items-center gap-1.5 text-sm font-semibold" title={item.wallet}><span className="truncate">{walletName}</span>{wallet && <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />}</p>
       <p className="mt-1 text-[10px] text-muted-foreground">{item.realizedCount === undefined ? "—" : `${number(item.realizedCount)} realized`} · NFL {number(item.nflCount)} · CFB {number(item.cfbCount)}</p>
       <div className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
         <Stat label="Realized P&L" value={currency(item.realizedPnl)} accent={pnlTone} /><Stat label="ROI" value={pct(item.roi)} accent={pnlTone} /><Stat label="Win rate" value={pct(item.winRate)} />
@@ -34,6 +38,12 @@ function RankingRow({ item }: { item: FlowframeItem }) {
     <div className="hidden sm:block"><Stat label="ROI" value={pct(item.roi)} accent={pnlTone} /></div>
     <div className="hidden sm:block"><Stat label="Win rate" value={pct(item.winRate)} /></div>
     <div className="hidden sm:block"><Stat label="Median stake" value={currency(item.medianStake)} /></div>
+  </>;
+  return <article data-testid={`row-football-rank-${item.id}`} className="border-b border-border/70 last:border-0">
+    {wallet
+      ? <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} data-testid={`button-football-rank-${item.id}`} className={`${grid} transition-colors hover:bg-foreground/[.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary`}>{cells}</button>
+      : <div className={grid}>{cells}</div>}
+    {wallet && open && <SharpWalletPositions wallet={wallet} profile={profile} />}
   </article>;
 }
 
@@ -71,7 +81,7 @@ export default function FootballSharpsPage() {
     {view === "rankings" && (
     <section className="mb-6 rounded-lg border border-border bg-card/50 p-4 sm:p-6" aria-labelledby="football-rankings-title">
       <div className="mb-4 flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
-        <div><h2 id="football-rankings-title" className="font-display text-2xl font-bold tracking-[-.04em]">Leaderboard</h2><p className="mt-1 max-w-xl text-[11px] leading-5 text-muted-foreground">Fully exited and resolved positions; futures and likely market-makers excluded. Ranking prioritizes ROI, then profit, consistency and activity.</p></div>
+        <div><h2 id="football-rankings-title" className="font-display text-2xl font-bold tracking-[-.04em]">Leaderboard</h2><p className="mt-1 max-w-xl text-[11px] leading-5 text-muted-foreground">Fully exited and resolved positions; futures and likely market-makers excluded. Ranking prioritizes ROI, then profit, consistency and activity. Tap a wallet to see its five largest open positions.</p></div>
         <label className="flex flex-col gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:w-64">Find wallet
           <span className="relative"><Search className="absolute left-3 top-3 h-3.5 w-3.5" /><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Wallet address" data-testid="input-football-search" className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 font-sans text-xs normal-case tracking-normal text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" /></span>
         </label>
