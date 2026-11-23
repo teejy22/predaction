@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bookmark, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy, Globe, Gamepad2, MonitorPlay } from "lucide-react";
+import { Bookmark, ExternalLink, Menu, X, Activity, TrendingUp, ChevronDown, Radio, ChartNoAxesCombined, Trophy, Globe, Gamepad2, MonitorPlay, Wallet } from "lucide-react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -56,6 +56,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link href="/esports" data-testid="link-nav-esports-top" aria-current={activeLink("/esports") ? "page" : undefined} className={navClass(activeLink("/esports"))}>Esports</Link>
             <Link href="/model" data-testid="link-nav-model" aria-current={activeLink("/model") ? "page" : undefined} className={navClass(activeLink("/model"))}>Model</Link>
             <Link href="/sweat-station" data-testid="link-nav-sweat-station" aria-current={activeLink("/sweat-station") ? "page" : undefined} className={navClass(activeLink("/sweat-station"))}>Sweat Station</Link>
+            <Link href="/portfolio" data-testid="link-nav-portfolio" aria-current={activeLink("/portfolio") ? "page" : undefined} className={navClass(activeLink("/portfolio"))}>Portfolio</Link>
             <DropdownMenu>
               <DropdownMenuTrigger className={`${navClass(toolsActive)} data-[state=open]:text-foreground`} data-testid="button-nav-tools">Tools <ChevronDown className="h-3 w-3 opacity-60" /></DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52 border-border bg-popover p-1.5">
@@ -78,6 +79,7 @@ export function Shell({ children }: { children: ReactNode }) {
             {marketLinks.map((n) => <Link key={n.href} href={n.href} aria-current={activeLink(n.href) ? "page" : undefined} onClick={() => setOpen(false)} data-testid={`link-mobile-${n.label.toLowerCase().replace(/\s+/g, "-")}`} className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink(n.href) ? "text-primary" : "text-foreground"}`}><n.icon className="h-4 w-4" />{n.label}{n.href === "/watchlist" && items.length > 0 && <span className="text-primary">({items.length})</span>}</Link>)}
             <Link href="/model" aria-current={activeLink("/model") ? "page" : undefined} onClick={() => setOpen(false)} data-testid="link-mobile-model" className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink("/model") ? "text-primary" : "text-foreground"}`}><Globe className="h-4 w-4" />Model</Link>
             <Link href="/sweat-station" aria-current={activeLink("/sweat-station") ? "page" : undefined} onClick={() => setOpen(false)} data-testid="link-mobile-sweat-station" className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink("/sweat-station") ? "text-primary" : "text-foreground"}`}><MonitorPlay className="h-4 w-4" />Sweat Station</Link>
+            <Link href="/portfolio" aria-current={activeLink("/portfolio") ? "page" : undefined} onClick={() => setOpen(false)} data-testid="link-mobile-portfolio" className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink("/portfolio") ? "text-primary" : "text-foreground"}`}><Wallet className="h-4 w-4" />Portfolio</Link>
             <p className="pb-1 pt-4 font-mono text-[9px] uppercase tracking-[.17em] text-muted-foreground">Tools</p>
             {toolLinks.map((n) => <Link key={n.href} href={n.href} aria-current={activeLink(n.href) ? "page" : undefined} onClick={() => setOpen(false)} data-testid={`link-mobile-${n.href.split("/").filter(Boolean).join("-")}`} className={`flex items-center gap-2 py-2 text-sm font-semibold ${activeLink(n.href) ? "text-primary" : "text-foreground"}`}><n.icon className="h-4 w-4" />{n.label}</Link>)}
             <Link href="/pulse" aria-current={activeLink("/pulse") ? "page" : undefined} onClick={() => setOpen(false)} data-testid="link-mobile-articles" className={`flex items-center gap-2 py-2.5 text-sm font-semibold ${activeLink("/pulse") ? "text-primary" : "text-foreground"}`}><Radio className="h-4 w-4" />Articles</Link>
